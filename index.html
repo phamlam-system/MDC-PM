@@ -3,6 +3,7 @@
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
+<!-- MDC-PM v4.7 — 3 MODULE THEO PHÒNG BAN (nav riêng): Thiết kế · Nhà máy · Thương mại. Bước 1 (chạy ngay, không cần deploy BE): mỗi module = bảng điều hành phòng — gom công việc theo giai đoạn của phòng xuyên suốt mọi dự án + KPI + việc quá hạn + mốc từ Kế hoạch chi tiết (kho mdc_pm_khc) + (Thương mại) bảng Mua sắm/Đặt hàng. Chừa khung "Nghiệp vụ chuyên sâu (bước 2)". Lọc theo dự án. -->
 <!-- MDC-PM v4.6 — TÍCH HỢP Kế hoạch chung VÀO module DỰ ÁN: (1) Trang Dự án có 2 chế độ xem "Danh sách dự án" ↔ "Kế hoạch chung" (lưới dòng chảy bộ phận) — bỏ mục nav riêng. (2) Chi tiết mỗi dự án có tab "Kế hoạch chi tiết" = kế hoạch phòng ban của riêng dự án đó (Hợp đồng + Thiết kế + SX&Lắp đặt + Thương mại + Đối tác/Thầu phụ), nhập dạng form. Cả hai DÙNG CHUNG 1 kho mdc_pm_khc → sửa ở đâu cũng đồng bộ. Nút "Gợi ý mốc từ công việc" ngay trong tab dự án. -->
 <!-- MDC-PM v4.5 — KẾ HOẠCH CHUNG dựng LẠI thành LƯỚI NHẬP LIỆU bám ĐÚNG sheet "KẾ HOẠCH CHUNG CÁC DỰ ÁN": khối HỢP ĐỒNG (Số HĐ, Ngày ký, Tiến độ, Hoàn thành HĐ, Số ngày TH/còn lại) + KẾT QUẢ HĐ + 4 phòng ban đầy đủ cột con — PHÒNG THIẾT KẾ (Khảo sát, NV/Leader, BV sơ bộ BĐ/HT, SPEC/Ký mẫu, Shop DW HT/Ký HS, Deadline chuyển HS, Số ngày HT, Đạt/Không), SẢN XUẤT & LẮP ĐẶT, THƯƠNG MẠI (Dự toán, Đặt/Nhận hàng, BG nội bộ, BG khách), ĐỐI TÁC/THẦU PHỤ (Báo giá, Chốt thầu, Thi công). Nhập từng mốc (date/số/Đạt-Không); số ngày tự tính; "⚡ Gợi ý từ công việc" tự điền mốc từ đầu việc theo giai đoạn. Lưu localStorage (mdc_pm_khc). Xuất Excel/PDF & Nhập Excel theo đầy đủ cột. -->
 <html lang="vi">
@@ -1643,6 +1644,9 @@ const NAV_GROUPS = [
     {id:'congviec',  name:'Công việc',       icon:'✓'},
     {id:'khachhang', name:'Khách hàng',      icon:'◎'},
     {id:'duan',      name:'Dự án',           icon:'▤'},
+    {id:'mThietKe',  name:'Thiết kế',        icon:'✏'},
+    {id:'mNhaMay',   name:'Nhà máy',         icon:'🏭'},
+    {id:'mThuongMai',name:'Thương mại',      icon:'💼'},
     {id:'hientruong',name:'Hiện trường',     icon:'📍'},
     {id:'bienban',   name:'Biên bản nghiệm thu', icon:'📝'},
     {id:'thaubo',    name:'Thầu phụ',        icon:'◈'},
@@ -1823,7 +1827,7 @@ function onAddClick(){
 function render(){
   const root = document.getElementById('viewRoot');
   const fn = {
-    dashboard:vDashboard, duan:vProjects, congviec:vTasks, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, congKH:vPortalMgr,
+    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, congKH:vPortalMgr,
     chiphi:vExpenses, lichhen:vAppointments, thaubo:vSubcontractors,
     nhansu:vStaff, caidat:vSettings, kiemtra:vDataHealth,
     // v2.0 mới
@@ -2907,6 +2911,119 @@ function vProjects(){
     : '<div class="empty"><b>Không có dự án phù hợp</b>'+(capBacRank_(user['Vai trò'])==='nhanvien'?'Bạn chỉ thấy dự án được phân làm thành viên.':'Đổi bộ lọc hoặc bấm "+ Tạo dự án"')+'</div>';
   return html;
 }
+
+/* ================================================================
+   ★ v4.7 — 3 MODULE THEO PHÒNG BAN: Thiết kế · Nhà máy · Thương mại
+   Bước 1 (chạy ngay, không cần deploy BE): bảng điều hành mỗi phòng —
+   gom công việc theo giai đoạn của phòng (xuyên suốt mọi dự án) + mốc
+   từ Kế hoạch chi tiết (kho mdc_pm_khc) + KPI + việc quá hạn. Chừa sẵn
+   khung "Nghiệp vụ chuyên sâu (bước 2)" để gắn biểu mẫu riêng sau.
+================================================================ */
+function khcShow(ma,key){ const v=khcRaw(ma,key); return (v===undefined||v===null)?'':v; }
+function khcShowFmt(ma,key){ const v=khcShow(ma,key); return /^\d{4}-\d{2}-\d{2}$/.test(v)?fmtDMY(v):v; }
+// Cấu hình 3 phòng
+const DEPT_CFG = {
+  mThietKe:{ ten:'Phòng Thiết kế', icon:'✏', mau:'#2F6DB5',
+    giaiDoan:['Thiết kế concept','Thiết kế kỹ thuật','Thiết kế kiến trúc & kết cấu'],
+    khc:[['tk_nv','NV'],['tk_ld','Leader'],['tk_ks','Khảo sát'],['tk_sb_ht','BV sơ bộ HT'],['tk_spec','SPEC'],['tk_sd_ht','Shop DW HT'],['tk_dl','Deadline HS'],['tk_kq','Đạt/Không']],
+    buoc2:['Hồ sơ bản vẽ theo phiên bản (concept · kỹ thuật · shop drawing)','Bảng SPEC vật liệu & duyệt mẫu','Nhật ký duyệt hồ sơ với khách / BLĐ'] },
+  mNhaMay:{ ten:'Nhà máy (Sản xuất & Lắp đặt)', icon:'🏭', mau:'#7A5AA6',
+    giaiDoan:['Sản xuất tại xưởng','Thi công lắp đặt'],
+    khc:[['sx_sx_bd','SX bắt đầu'],['sx_sx_ht','SX hoàn thành'],['sx_ld_bd','Lắp đặt BĐ'],['sx_ld_ht','Lắp đặt HT'],['sx_bg','Bàn giao'],['sx_kq','Đạt/Không']],
+    buoc2:['Lệnh sản xuất (LSX) & tiến độ tổ/chuyền','Phiếu QC nhập – xuất xưởng','Tồn nguyên vật liệu & định mức'] },
+  mThuongMai:{ ten:'Thương mại (Mua sắm & Đặt hàng)', icon:'💼', mau:'#B9772E',
+    giaiDoan:['Tiếp nhận & Báo giá'],
+    khc:[['tm_dt','Dự toán'],['tm_dh','Đặt hàng'],['tm_nh','Nhận hàng'],['tm_bgkh','BG khách'],['tm_kq','Đạt/Không']],
+    muaSam:true,
+    buoc2:['Đơn đặt hàng NCC & theo dõi giao nhận','Bảng báo giá / so sánh nhà cung cấp','Công nợ phải trả nhà cung cấp'] }
+};
+function deptTasks(cfg, da){
+  return tvSong(visibleTasks()).filter(c=> cfg.giaiDoan.includes(c['Giai đoạn']) && (!da || c['Mã DA']===da));
+}
+function vDeptDash(key){
+  const cfg=DEPT_CFG[key]; if(!cfg) return '<div class="empty">Không tìm thấy module</div>';
+  const da=window._deptDA||'';
+  const myDuan=visibleProjects();
+  const tasks=deptTasks(cfg, da);
+  const done=tasks.filter(c=>c['Trạng thái']==='Hoàn thành'||c['Trạng thái']==='Đã phê duyệt').length;
+  const doing=tasks.filter(c=>c['Trạng thái']==='Đang làm'||c['Trạng thái']==='Đang vướng').length;
+  const late=tasks.filter(c=>c['Trạng thái']!=='Hoàn thành'&&c['Trạng thái']!=='Đã phê duyệt'&&c['Hạn hoàn thành']&&daysLeft(c['Hạn hoàn thành'])<0);
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+
+  let html='<div class="cv-head"><div><h2 style="margin:0">'+cfg.icon+' '+esc(cfg.ten)+'</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Điều hành công việc & mốc kế hoạch của phòng, xuyên suốt mọi dự án</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    + '<select onchange="window._deptDA=this.value;render()"><option value="">Tất cả dự án</option>'
+      + myDuan.map(d=>'<option value="'+esc(d['Mã DA'])+'"'+(da===d['Mã DA']?' selected':'')+'>'+esc(d['Tên dự án'])+'</option>').join('')+'</select>'
+    + '</div></div>';
+
+  html+='<div class="kpis">'
+    + kpi('Đầu việc của phòng', tasks.length, (da?projName(da):'toàn bộ dự án'))
+    + kpi('Đang thực hiện', doing, 'đang làm / đang vướng','accent')
+    + kpi('Quá hạn', late.length, late.length?'cần xử lý ngay':'không có việc trễ', late.length?'bad':'')
+    + kpi('Hoàn thành', pct+'%', done+'/'+tasks.length+' đầu việc')
+    + '</div>';
+
+  // Việc quá hạn nổi bật
+  if(late.length){
+    html+='<div class="card" style="border-color:var(--bad)"><div class="ct" style="color:var(--bad)">⚠ Việc quá hạn ('+late.length+')</div>'
+      + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Công việc</th><th>Dự án</th><th>Phụ trách</th><th>Hạn</th><th>Trễ</th></tr></thead><tbody>'
+      + late.sort((a,b)=>daysLeft(a['Hạn hoàn thành'])-daysLeft(b['Hạn hoàn thành'])).slice(0,12).map(c=>
+        '<tr class="row-click" onclick="formTask(\''+esc(c['Mã CV'])+'\')"><td><b>'+esc(c['Tên công việc'])+'</b></td><td class="muted">'+esc(projName(c['Mã DA']))+'</td><td>'+esc(c['Phụ trách']||'—')+'</td><td>'+esc(fmtDMY(c['Hạn hoàn thành']))+'</td><td><span class="tag t-bad">'+Math.abs(daysLeft(c['Hạn hoàn thành']))+' ngày</span></td></tr>').join('')
+      + '</tbody></table></div></div></div>';
+  }
+
+  // Công việc theo giai đoạn của phòng
+  html+='<div class="card"><div class="ct">Công việc theo giai đoạn'
+    + '<span class="ct-r">'+tasks.length+' đầu việc'+(can('edit')?' · <button class="btn btn-ghost" style="padding:4px 10px;font-size:11.5px" onclick="'+(da?'window._ftp=\''+esc(da)+'\';':'')+'formTask()">+ Giao việc</button>':'')+'</span></div>';
+  const groups=cfg.giaiDoan.map(g=>({g,items:tasks.filter(t=>t['Giai đoạn']===g)})).filter(x=>x.items.length);
+  if(!groups.length){ html+='<div class="empty"><b>Chưa có đầu việc</b>Lập ở tab Kế hoạch của dự án → “⚡ Lập kế hoạch từ thư viện”.</div>'; }
+  groups.forEach(gr=>{
+    const gdone=gr.items.filter(x=>x['Trạng thái']==='Hoàn thành').length;
+    html+='<div class="phase-head"><span>'+esc(gr.g)+'</span><span class="cnt">'+gdone+'/'+gr.items.length+' hoàn thành</span></div>'
+      + '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Công việc</th><th>Dự án</th><th>Phụ trách</th><th>Bắt đầu</th><th>Hạn</th><th>Tiến độ</th><th>Trạng thái</th></tr></thead><tbody>'
+      + gr.items.map(c=>{ const dl=daysLeft(c['Hạn hoàn thành']); const hc=c['Trạng thái']==='Hoàn thành'?'':dl==null?'':dl<0?'t-bad':dl<=3?'t-warn':'';
+        return '<tr class="row-click" onclick="formTask(\''+esc(c['Mã CV'])+'\')"><td><b>'+esc(c['Tên công việc'])+'</b>'+(c['Thầu phụ']?'<div class="muted" style="font-size:11px">◈ '+esc(c['Thầu phụ'])+'</div>':'')+'</td><td class="muted">'+esc(projName(c['Mã DA']))+'</td><td>'+esc(c['Phụ trách']||'—')+'</td><td class="muted">'+esc(fmtDMY(c['Ngày bắt đầu'])||'—')+'</td><td>'+(c['Hạn hoàn thành']?(hc?'<span class="tag '+hc+'">':'')+esc(fmtDMY(c['Hạn hoàn thành']))+(hc?'</span>':''):'—')+'</td><td><div class="bar" style="width:70px"><i style="width:'+(Number(c['Tiến độ (%)'])||0)+'%"></i></div></td><td>'+tagTT(c['Trạng thái'])+'</td></tr>'; }).join('')
+      + '</tbody></table></div>';
+  });
+  html+='</div>';
+
+  // Mốc kế hoạch theo dự án (từ Kế hoạch chi tiết — kho mdc_pm_khc)
+  const projList=(da?myDuan.filter(d=>d['Mã DA']===da):myDuan.filter(d=>d['Trạng thái']==='Đang triển khai'));
+  html+='<div class="card"><div class="ct">Mốc kế hoạch theo dự án <span class="muted" style="font-weight:400">(đồng bộ với Dự án → Kế hoạch chi tiết)</span></div>'
+    + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Dự án</th>'
+    + cfg.khc.map(k=>'<th>'+esc(k[1])+'</th>').join('')+'<th></th></tr></thead><tbody>';
+  if(!projList.length){ html+='<tr><td colspan="'+(cfg.khc.length+2)+'"><div class="empty">Chưa có dự án phù hợp</div></td></tr>'; }
+  projList.forEach(d=>{
+    const ma=d['Mã DA'];
+    html+='<tr><td><b class="ks-link" onclick="window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';go(\'duanDetail\')">'+esc(d['Tên dự án']||ma)+'</b><div class="muted" style="font-size:11px">'+esc(ma)+'</div></td>'
+      + cfg.khc.map(k=>{ const v=khcShowFmt(ma,k[0]); const cls=(k[0].endsWith('_kq'))?(v==='Đạt'?'t-ok':v==='Không'?'t-bad':''):''; return '<td class="ks-c">'+(v?(cls?'<span class="tag '+cls+'">'+esc(v)+'</span>':esc(v)):'<span class="muted">—</span>')+'</td>'; }).join('')
+      + '<td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';go(\'duanDetail\')">Mở kế hoạch →</button></td></tr>';
+  });
+  html+='</tbody></table></div></div></div>';
+
+  // Riêng Thương mại: bảng Mua sắm / Đặt hàng
+  if(cfg.muaSam){
+    const ms=(S.muasam||[]).filter(x=>!da||x['Mã DA']===da);
+    const tong=ms.reduce((a,x)=>a+(Number(x['Tổng tiền'])||0),0);
+    const daNhan=ms.filter(x=>x['Trạng thái']==='Đã nhận').length;
+    html+='<div class="card"><div class="ct">Mua sắm & Đặt hàng NCC<span class="ct-r">'+ms.length+' đơn · '+daNhan+' đã nhận · '+fmt(tong)+(can('edit')?' · <button class="btn btn-ghost" style="padding:4px 10px;font-size:11.5px" onclick="'+(da?'window._msDA=\''+esc(da)+'\';':'')+'formPurchase()">+ Đơn mua</button>':'')+'</span></div>'
+      + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hạng mục</th><th>Dự án</th><th>NCC</th><th class="num">Số lượng</th><th class="num">Tổng tiền</th><th>Ngày đặt</th><th>Nhận DK</th><th>Trạng thái</th></tr></thead><tbody>'
+      + (ms.length?[...ms].sort((a,b)=>(b['Ngày đặt']||'')>(a['Ngày đặt']||'')?1:-1).map(x=>
+        '<tr class="row-click" onclick="formPurchase(\''+esc(x['Mã MS'])+'\')"><td><b>'+esc(x['Hạng mục'])+'</b></td><td class="muted">'+esc(projName(x['Mã DA']))+'</td><td>'+esc(x['NCC / Thầu phụ']||'—')+'</td><td class="num">'+esc(x['Số lượng']||'—')+'</td><td class="num"><b>'+fmt(x['Tổng tiền'])+'</b></td><td class="muted">'+esc(fmtDMY(x['Ngày đặt'])||'—')+'</td><td class="muted">'+esc(fmtDMY(x['Ngày nhận dự kiến'])||'—')+'</td><td>'+tagTT(x['Trạng thái']||'Đang soạn')+'</td></tr>').join('')
+        :'<tr><td colspan="8"><div class="empty"><b>Chưa có đơn mua</b>Bấm "+ Đơn mua" để tạo.</div></td></tr>')
+      + '</tbody></table></div></div></div>';
+  }
+
+  // Khung nghiệp vụ chuyên sâu — bước 2
+  html+='<div class="card" style="border-style:dashed"><div class="ct" style="color:var(--ink-soft)">🧩 Nghiệp vụ chuyên sâu (bước 2 — sẽ bổ sung)</div>'
+    + '<div class="card-body"><div class="muted" style="font-size:12.5px;line-height:1.7">Các biểu mẫu nghiệp vụ riêng của phòng sẽ được gắn vào đây khi triển khai bước 2 (cần thêm backend + deploy):<ul style="margin:6px 0 0 18px">'
+    + cfg.buoc2.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div></div>';
+  return html;
+}
+function vThietKe(){ return vDeptDash('mThietKe'); }
+function vNhaMay(){ return vDeptDash('mNhaMay'); }
+function vThuongMai(){ return vDeptDash('mThuongMai'); }
 
 /* ---------- Trang Công việc (nhóm theo thứ tự giai đoạn quy trình) ---------- */
 function vTasks(){
