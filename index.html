@@ -4,6 +4,7 @@
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
 <!-- MDC-PM v4.7 — 3 MODULE THEO PHÒNG BAN (nav riêng): Thiết kế · Nhà máy · Thương mại. Bước 1 (chạy ngay, không cần deploy BE): mỗi module = bảng điều hành phòng — gom công việc theo giai đoạn của phòng xuyên suốt mọi dự án + KPI + việc quá hạn + mốc từ Kế hoạch chi tiết (kho mdc_pm_khc) + (Thương mại) bảng Mua sắm/Đặt hàng. Chừa khung "Nghiệp vụ chuyên sâu (bước 2)". Lọc theo dự án. -->
+<!-- MDC-PM v4.8 — QUY RA THỜI GIAN theo tính chất HĐ (tab Kế hoạch chi tiết): thêm ô "Cách tính ngày" (Lịch cả CN&lễ / Trừ Chủ nhật / Trừ CN & ngày lễ). "Hoàn thành HĐ (tính)" TỰ tính = Ngày ký + Tiến độ (số ngày) theo cách tính, và tự áp vào Ngày kết thúc DK của dự án (Số ngày còn lại/Gantt ăn theo). Nút "🗓 Ngày lễ" quản lý danh mục ngày lễ (localStorage mdc_pm_holidays; nạp sẵn lễ 2026-2027, sửa được). khcAddDays() cộng ngày làm việc; áp cho cả lưới Kế hoạch chung + Xuất Excel/PDF + Nhập Excel. -->
 <!-- MDC-PM v4.6 — TÍCH HỢP Kế hoạch chung VÀO module DỰ ÁN: (1) Trang Dự án có 2 chế độ xem "Danh sách dự án" ↔ "Kế hoạch chung" (lưới dòng chảy bộ phận) — bỏ mục nav riêng. (2) Chi tiết mỗi dự án có tab "Kế hoạch chi tiết" = kế hoạch phòng ban của riêng dự án đó (Hợp đồng + Thiết kế + SX&Lắp đặt + Thương mại + Đối tác/Thầu phụ), nhập dạng form. Cả hai DÙNG CHUNG 1 kho mdc_pm_khc → sửa ở đâu cũng đồng bộ. Nút "Gợi ý mốc từ công việc" ngay trong tab dự án. -->
 <!-- MDC-PM v4.5 — KẾ HOẠCH CHUNG dựng LẠI thành LƯỚI NHẬP LIỆU bám ĐÚNG sheet "KẾ HOẠCH CHUNG CÁC DỰ ÁN": khối HỢP ĐỒNG (Số HĐ, Ngày ký, Tiến độ, Hoàn thành HĐ, Số ngày TH/còn lại) + KẾT QUẢ HĐ + 4 phòng ban đầy đủ cột con — PHÒNG THIẾT KẾ (Khảo sát, NV/Leader, BV sơ bộ BĐ/HT, SPEC/Ký mẫu, Shop DW HT/Ký HS, Deadline chuyển HS, Số ngày HT, Đạt/Không), SẢN XUẤT & LẮP ĐẶT, THƯƠNG MẠI (Dự toán, Đặt/Nhận hàng, BG nội bộ, BG khách), ĐỐI TÁC/THẦU PHỤ (Báo giá, Chốt thầu, Thi công). Nhập từng mốc (date/số/Đạt-Không); số ngày tự tính; "⚡ Gợi ý từ công việc" tự điền mốc từ đầu việc theo giai đoạn. Lưu localStorage (mdc_pm_khc). Xuất Excel/PDF & Nhập Excel theo đầy đủ cột. -->
 <html lang="vi">
@@ -1882,12 +1883,66 @@ function ksSoHDStore(){ try{ return JSON.parse(localStorage.getItem('mdc_pm_sohd
 function ksSoHD(maDA){ const d=(S.duan||[]).find(x=>x['Mã DA']===maDA); return (d&&(d['Số hợp đồng']||d['Số HĐ'])) || ksSoHDStore()[maDA] || ''; }
 function ksSetSoHD(maDA,v){ if(!maDA) return; const s=ksSoHDStore(); if(v) s[maDA]=String(v); else delete s[maDA]; try{ localStorage.setItem('mdc_pm_sohd', JSON.stringify(s)); }catch(e){} }
 
+// ---- Cách tính ngày theo tính chất hợp đồng + Danh mục ngày lễ (v4.8) ----
+const KHC_MODES = ['Lịch (cả CN, lễ)','Trừ Chủ nhật','Trừ CN & ngày lễ'];
+// Ngày lễ mặc định (dương lịch cố định + Tết/Giỗ Tổ 2026 gần đúng — SỬA LẠI được ở "🗓 Ngày lễ")
+const HOL_DEFAULT = [
+  '2026-01-01',                                                       // Tết Dương lịch
+  '2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20',   // Tết Nguyên đán 2026 (mùng 1 = 17/02) — kiểm tra lịch nghỉ chính thức
+  '2026-04-26',                                                       // Giỗ Tổ Hùng Vương (10/3 ÂL 2026)
+  '2026-04-30','2026-05-01',                                          // 30/4 & 1/5
+  '2026-09-01','2026-09-02',                                          // Quốc khánh
+  '2027-01-01','2027-04-30','2027-05-01','2027-09-02'
+];
+function holStore(){ try{ const v=localStorage.getItem('mdc_pm_holidays'); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function holList(){ let h=holStore(); if(!Array.isArray(h)){ h=HOL_DEFAULT.slice(); try{ localStorage.setItem('mdc_pm_holidays', JSON.stringify(h)); }catch(e){} } return h; }
+function holSave(arr){ arr=[...new Set(arr.filter(Boolean))].sort(); try{ localStorage.setItem('mdc_pm_holidays', JSON.stringify(arr)); }catch(e){} return arr; }
+// Cộng "n ngày làm việc" vào ngày bắt đầu theo cách tính → trả ISO ngày hoàn thành
+function khcAddDays(startISO, n, mode){
+  n=Number(n)||0; if(!/^\d{4}-\d{2}-\d{2}$/.test(String(startISO||'')) || n<=0) return '';
+  mode = mode || KHC_MODES[0];
+  const hols = (mode===KHC_MODES[2]) ? holList() : [];
+  let d=new Date(startISO+'T00:00:00'), c=0, guard=0;
+  while(c<n && guard<200000){
+    d.setDate(d.getDate()+1); guard++;
+    const dow=d.getDay(); // 0 = Chủ nhật
+    const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(mode===KHC_MODES[0]) c++;
+    else if(mode===KHC_MODES[1]){ if(dow!==0) c++; }
+    else { if(dow!==0 && !hols.includes(iso)) c++; }
+  }
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+/* ===== Quản lý danh mục ngày lễ ===== */
+function holManage(){
+  const render=()=>{
+    const list=holList();
+    let h='<div class="muted" style="margin-bottom:10px;line-height:1.55">Ngày lễ dùng cho cách tính <b>“Trừ CN & ngày lễ”</b>. Thêm/bớt cho đúng lịch nghỉ công ty. Ngày dạng dd/mm/yyyy.</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+      + '<input id="holAdd" type="date" class="khc-in khc-date" style="border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:7px 9px">'
+      + '<button type="button" class="btn btn-brass" style="padding:7px 12px;font-size:12.5px" onclick="holAdd()">+ Thêm ngày lễ</button>'
+      + '<button type="button" class="btn btn-ghost" style="padding:7px 12px;font-size:12.5px" onclick="if(confirm(\'Nạp lại danh sách ngày lễ mẫu?\')){holSave(HOL_DEFAULT.slice());holManage();}">↻ Nạp lại mẫu</button></div>'
+      + '<div class="tbl-wrap" style="max-height:300px;overflow:auto"><table class="tbl"><thead><tr><th>Ngày</th><th>Thứ</th><th></th></tr></thead><tbody>';
+    const THU=['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+    if(!list.length) h+='<tr><td colspan="3"><div class="empty">Chưa có ngày lễ nào</div></td></tr>';
+    list.forEach(iso=>{ const dt=new Date(iso+'T00:00:00'); h+='<tr><td><b>'+fmtDMY(iso)+'</b></td><td class="muted">'+THU[dt.getDay()]+'</td><td style="text-align:right"><button class="btn btn-ghost" style="padding:3px 9px;font-size:11px" onclick="holDel(\''+iso+'\')">Xóa</button></td></tr>'; });
+    h+='</tbody></table></div>';
+    document.getElementById('modalBody').innerHTML=h;
+  };
+  openModal('Danh mục ngày lễ', '', null);
+  document.getElementById('modalSave').classList.add('hide');
+  window.__holRender=render; render();
+}
+function holAdd(){ const el=document.getElementById('holAdd'); if(!el||!el.value) return; holSave([...holList(), el.value]); if(window.__holRender) window.__holRender(); toast('✓ Đã thêm ngày lễ'); }
+function holDel(iso){ holSave(holList().filter(x=>x!==iso)); if(window.__holRender) window.__holRender(); }
+
 // ---- Cấu hình cột (bám đúng sheet) ----
 const KHC_CHUNG = [
   {leaf:'Số hợp đồng',       key:'soHD',     t:'text'},
   {leaf:'Ngày ký',           key:'ngayKy',   t:'date', def:d=>d['Ngày ký']||d['Ngày bắt đầu']||''},
   {leaf:'Tiến độ HĐ (ngày)', key:'tienDoHD', t:'num',  def:d=>{const a=d['Ngày bắt đầu'],b=d['Ngày kết thúc DK']; return (a&&b)?Math.max(0,ksDiff(a,b)):'';}},
-  {leaf:'Hoàn thành HĐ',     key:'htHD',     t:'date', def:d=>d['Ngày kết thúc DK']||''},
+  {leaf:'Cách tính ngày',    key:'hd_mode',  t:'sel', opts:KHC_MODES, def:()=>KHC_MODES[0]},
+  {leaf:'Hoàn thành HĐ (tính)', key:'htHD',  t:'calc'},
   {leaf:'Số ngày TH',        key:'soNgayTH', t:'calc'},
   {leaf:'Số ngày còn lại',   key:'soNgayCL', t:'calc'}
 ];
@@ -1978,13 +2033,20 @@ function khcSpanDays(d, span){
   span.forEach(k=>{ const v=khcRaw(d['Mã DA'],k); const val=(v!==undefined)?v:''; if(val && /^\d{4}-\d{2}-\d{2}$/.test(val)){ if(!min||val<min)min=val; if(!max||val>max)max=val; } });
   return (min&&max)?Math.max(1,ksDiff(min,max)+1):'';
 }
+function khcColByKey(key){ return KHC_CHUNG.find(c=>c.key===key); }
 function khcCalc(d){
-  const ngayKy=khcVal(d,KHC_CHUNG[1]), htHD=khcVal(d,KHC_CHUNG[3]);
+  const ma=d['Mã DA'];
+  const ngayKy = khcVal(d, khcColByKey('ngayKy'));
+  const tienDo = Number(khcVal(d, khcColByKey('tienDoHD')))||0;
+  const mode   = khcVal(d, khcColByKey('hd_mode')) || KHC_MODES[0];
+  // Hoàn thành HĐ = ngày ký + tiến độ (theo cách tính); nếu thiếu → dùng giá trị nhập tay/ngày kết thúc DK
+  let htHD = (ngayKy && tienDo>0) ? khcAddDays(ngayKy, tienDo, mode) : '';
+  if(!htHD){ const raw=khcRaw(ma,'htHD'); htHD = (raw!==undefined && raw!=='') ? raw : (d['Ngày kết thúc DK']||''); }
   const soNgayTH = ngayKy?Math.max(0,ksDiff(ngayKy,today())):'';
   const soNgayCL = htHD?ksDiff(today(),htHD):'';
   const deptHT={};
   KHC_DEPTS.forEach(dp=>dp.cols.forEach(c=>{ if(c.t==='calc') deptHT[c.key]=khcSpanDays(d,c.span); }));
-  return {soNgayTH, soNgayCL, deptHT};
+  return {htHD, soNgayTH, soNgayCL, mode, ngayKy, tienDo, deptHT};
 }
 // Render nội dung 1 ô (input/select/calc) — dùng chung cho lưới & form chi tiết
 function khcInput(d, col, canEd){
@@ -1992,15 +2054,17 @@ function khcInput(d, col, canEd){
   if(col.t==='calc'){
     let val='';
     if(col.span) val=khcSpanDays(d,col.span);
-    else { const c=khcCalc(d); val=(col.key==='soNgayTH')?c.soNgayTH:(col.key==='soNgayCL')?c.soNgayCL:''; }
+    else { const c=khcCalc(d); val=(col.key==='soNgayTH')?c.soNgayTH:(col.key==='soNgayCL')?c.soNgayCL:(col.key==='htHD')?(c.htHD?fmtDMY(c.htHD):''):''; }
     return '<span class="khc-calc" id="khc_'+esc(ma)+'_'+col.key+'">'+esc((val===''||val==null)?'—':val)+'</span>';
   }
   const v=khcVal(d,col);
   const dis=canEd?'':' disabled';
   const oc='onchange="khcEdit(\''+esc(ma)+'\',\''+col.key+'\',this)"';
   if(col.t==='sel'){
-    const opts=['','Đạt','Không'].map(o=>'<option'+(v===o?' selected':'')+'>'+o+'</option>').join('');
-    return '<select class="khc-in khc-kq'+(v==='Đạt'?' ok':v==='Không'?' no':'')+'" '+oc+dis+'>'+opts+'</select>';
+    const list=col.opts||['','Đạt','Không'];
+    const opts=(col.opts?col.opts:['','Đạt','Không']).map(o=>'<option'+(String(v)===String(o)?' selected':'')+'>'+esc(o)+'</option>').join('');
+    const kqCls=col.opts?'':(v==='Đạt'?' ok':v==='Không'?' no':'');
+    return '<select class="khc-in khc-kq'+kqCls+'" '+oc+dis+'>'+opts+'</select>';
   }
   const type=col.t==='num'?'number':col.t==='date'?'date':'text';
   const cls=col.t==='date'?'khc-in khc-date':col.t==='num'?'khc-in khc-num':'khc-in khc-txt';
@@ -2017,10 +2081,11 @@ function pjKeHoachChiTiet(d){
   const ma=d['Mã DA'];
   const canEd = (typeof canEditProject==='function') ? canEditProject(d) : can('edit');
   let html='<div class="card"><div class="ct">Kế hoạch chi tiết theo bộ phận <span class="muted" style="font-weight:400">— dòng chảy công việc qua các phòng</span>'
-    + (canEd?'<span class="ct-r"><button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khcAutoFill(\''+esc(ma)+'\')">⚡ Gợi ý mốc từ công việc</button></span>':'')
+    + '<span class="ct-r"><button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="holManage()">🗓 Ngày lễ</button>'
+    + (canEd?' <button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khcAutoFill(\''+esc(ma)+'\')">⚡ Gợi ý mốc từ công việc</button>':'')+'</span>'
     + '</div><div class="card-body">';
   // Khối Hợp đồng + Kết quả HĐ
-  html += '<div class="khc-sec"><div class="khc-sec-h" style="border-color:var(--brass)">HỢP ĐỒNG</div><div class="khc-form">'
+  html += '<div class="khc-sec"><div class="khc-sec-h" style="border-color:var(--brass)">HỢP ĐỒNG <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">— Ngày ký + Tiến độ (số ngày) theo cách tính → tự ra Ngày hoàn thành, áp vào tiến độ dự án</span></div><div class="khc-form">'
     + KHC_CHUNG.map(c=>khcField(d,c,canEd)).join('')
     + KHC_KQHD.map(c=>khcField(d,c,canEd,'Kết quả HĐ · '+c.leaf)).join('')
     + '</div></div>';
@@ -2038,12 +2103,18 @@ function khcEdit(ma, key, el){
   khcSet(ma, key, el.value);
   if(key==='soHD') ksSetSoHD(ma, el.value);
   if(key==='hd_kq'){ el.classList.toggle('ok', el.value==='Đạt'); el.classList.toggle('no', el.value==='Không'); }
-  // cập nhật các ô calc trong cùng dòng (không render lại toàn trang → giữ vị trí cuộn)
   const d=(S.duan||[]).find(x=>x['Mã DA']===ma); if(!d) return;
   const c=khcCalc(d);
   const set=(k,val)=>{ const e=document.getElementById('khc_'+ma+'_'+k); if(e) e.textContent=(val===''||val==null)?'—':val; };
-  set('soNgayTH',c.soNgayTH); set('soNgayCL',c.soNgayCL);
+  set('htHD', c.htHD?fmtDMY(c.htHD):''); set('soNgayTH',c.soNgayTH); set('soNgayCL',c.soNgayCL);
   Object.keys(c.deptHT).forEach(k=>set(k,c.deptHT[k]));
+  // ★ v4.8 — đổi Ngày ký / Tiến độ / Cách tính → QUY RA thời gian & áp vào tiến độ dự án
+  if(key==='ngayKy' || key==='tienDoHD' || key==='hd_mode'){
+    const rec={'Mã DA':ma};
+    if(c.ngayKy){ rec['Ngày ký']=c.ngayKy; if(!d['Ngày bắt đầu']) rec['Ngày bắt đầu']=c.ngayKy; }
+    if(c.htHD) rec['Ngày kết thúc DK']=c.htHD;
+    if(Object.keys(rec).length>1){ Object.assign(d, rec); pushOp('saveProject', rec); }
+  }
 }
 // Gợi ý tự điền mốc từ đầu việc theo giai đoạn (chỉ điền ô đang trống)
 function khcAutoFill(ma){
@@ -2153,15 +2224,17 @@ function ksExportCsv(){
   const cols = khcAllCols();
   const head = ['STT','Tên dự án','Mã DA'];
   KHC_CHUNG.forEach(c=>head.push(c.leaf));
-  head.push('Số ngày TH','Số ngày còn lại');
   KHC_KQHD.forEach(c=>head.push('KQ HĐ: '+c.leaf));
   KHC_DEPTS.forEach(dp=>dp.cols.forEach(c=>head.push(dp.ten+' — '+c.leaf)));
+  const chungVal=(d,c,calc)=>{
+    if(c.t==='calc'){ if(c.key==='htHD') return calc.htHD?fmtDMY(calc.htHD):''; if(c.key==='soNgayTH') return calc.soNgayTH; if(c.key==='soNgayCL') return calc.soNgayCL; return ''; }
+    const v=khcVal(d,c); return c.t==='date'?fmtDMY(v):v;
+  };
   const rows=[head];
   list.forEach((d,i)=>{
     const calc=khcCalc(d);
     const r=[i+1, d['Tên dự án']||'', d['Mã DA']];
-    KHC_CHUNG.forEach(c=>{ const v=khcVal(d,c); r.push(c.t==='date'?fmtDMY(v):v); });
-    r.push(calc.soNgayTH, calc.soNgayCL);
+    KHC_CHUNG.forEach(c=>r.push(chungVal(d,c,calc)));
     KHC_KQHD.forEach(c=>r.push(khcVal(d,c)));
     KHC_DEPTS.forEach(dp=>dp.cols.forEach(c=>{
       if(c.t==='calc'){ r.push(calc.deptHT[c.key]||''); return; }
@@ -2186,7 +2259,7 @@ function ksPrint(){
   list.forEach((d,i)=>{
     const calc=khcCalc(d);
     body+='<tr><td>'+(i+1)+'</td><td class="l"><b>'+esc(d['Tên dự án']||d['Mã DA'])+'</b><br><small>'+esc(d['Mã DA'])+'</small></td>';
-    KHC_CHUNG.forEach(c=>{ let v=khcVal(d,c); if(c.key==='soNgayTH')v=calc.soNgayTH; if(c.key==='soNgayCL')v=calc.soNgayCL; body+='<td>'+esc(c.t==='date'?fmtDMY(v):(v===''?'':v))+'</td>'; });
+    KHC_CHUNG.forEach(c=>{ let v; if(c.t==='calc'){ v=c.key==='htHD'?(calc.htHD?fmtDMY(calc.htHD):''):c.key==='soNgayTH'?calc.soNgayTH:c.key==='soNgayCL'?calc.soNgayCL:''; } else { v=khcVal(d,c); if(c.t==='date')v=fmtDMY(v); } body+='<td>'+esc(v===''||v==null?'':v)+'</td>'; });
     KHC_KQHD.forEach(c=>body+='<td>'+esc(khcVal(d,c))+'</td>');
     KHC_DEPTS.forEach(dp=>dp.cols.forEach(c=>{ let v; if(c.t==='calc')v=calc.deptHT[c.key]||''; else { v=khcVal(d,c); if(c.t==='date')v=fmtDMY(v); } body+='<td>'+esc(v)+'</td>'; }));
     body+='</tr>';
@@ -2281,12 +2354,12 @@ function ksImportConfirm(){
       const rec={'Mã DA':ma,'Tên dự án':d.ten||ma,'Loại hình':'Thiết kế & Thi công','Giai đoạn':GIAI_DOAN[0],
         'Trạng thái':'Đang triển khai','Tiến độ (%)':0,'Ghi chú':'Nhập từ Excel — Kế hoạch chung'};
       if(d.vals.ngayKy){ rec['Ngày ký']=d.vals.ngayKy; rec['Ngày bắt đầu']=d.vals.ngayKy; }
-      if(d.vals.htHD) rec['Ngày kết thúc DK']=d.vals.htHD;
+      { const ht=d.vals.htHD || khcAddDays(d.vals.ngayKy, d.vals.tienDoHD, d.vals.hd_mode); if(ht) rec['Ngày kết thúc DK']=ht; }
       S.duan.push(rec); pushOp('saveProject', rec); nNew++;
     } else {
       const rec={'Mã DA':ma}; if(d.ten) rec['Tên dự án']=d.ten;
       if(d.vals.ngayKy){ rec['Ngày ký']=d.vals.ngayKy; rec['Ngày bắt đầu']=d.vals.ngayKy; }
-      if(d.vals.htHD) rec['Ngày kết thúc DK']=d.vals.htHD;
+      { const ht=d.vals.htHD || khcAddDays(d.vals.ngayKy, d.vals.tienDoHD, d.vals.hd_mode); if(ht) rec['Ngày kết thúc DK']=ht; }
       const cur=(S.duan||[]).find(x=>x['Mã DA']===ma); if(cur) Object.assign(cur, rec);
       if(Object.keys(rec).length>1) pushOp('saveProject', rec);
       nUpd++;
