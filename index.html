@@ -4,6 +4,7 @@
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
 <!-- MDC-PM v4.7 — 3 MODULE THEO PHÒNG BAN (nav riêng): Thiết kế · Nhà máy · Thương mại. Bước 1 (chạy ngay, không cần deploy BE): mỗi module = bảng điều hành phòng — gom công việc theo giai đoạn của phòng xuyên suốt mọi dự án + KPI + việc quá hạn + mốc từ Kế hoạch chi tiết (kho mdc_pm_khc) + (Thương mại) bảng Mua sắm/Đặt hàng. Chừa khung "Nghiệp vụ chuyên sâu (bước 2)". Lọc theo dự án. -->
+<!-- MDC-PM v4.9 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC: trong tab "Kế hoạch chi tiết" thêm nút chuyển "🏢 Theo bộ phận ↔ 📦 Theo hạng mục". Bản theo hạng mục = bảng bóc từ hợp đồng (mỗi hạng mục 1 dòng: Tên_Phòng_Tầng, Phân loại, Phân bổ NM/TM/TP, ĐVT, SL) + mốc kế hoạch từng khâu (Hồ sơ: chốt Spec/chuyển HS/duyệt mẫu/HT · Sản xuất: tình trạng/BĐ/HT · Lắp đặt · Đặt hàng TM · Thầu phụ) + % HT + ghi chú. Nhập tay (＋ Thêm hạng mục) hoặc "⬆ Nhập từ hợp đồng" (dán từ Excel/Sheet hoặc CSV, tự map cột & bỏ dòng nhóm/tổng). Xuất Excel/PDF. Kho localStorage mdc_pm_khhm (không cần deploy BE). -->
 <!-- MDC-PM v4.8 — QUY RA THỜI GIAN theo tính chất HĐ (tab Kế hoạch chi tiết): thêm ô "Cách tính ngày" (Lịch cả CN&lễ / Trừ Chủ nhật / Trừ CN & ngày lễ). "Hoàn thành HĐ (tính)" TỰ tính = Ngày ký + Tiến độ (số ngày) theo cách tính, và tự áp vào Ngày kết thúc DK của dự án (Số ngày còn lại/Gantt ăn theo). Nút "🗓 Ngày lễ" quản lý danh mục ngày lễ (localStorage mdc_pm_holidays; nạp sẵn lễ 2026-2027, sửa được). khcAddDays() cộng ngày làm việc; áp cho cả lưới Kế hoạch chung + Xuất Excel/PDF + Nhập Excel. -->
 <!-- MDC-PM v4.6 — TÍCH HỢP Kế hoạch chung VÀO module DỰ ÁN: (1) Trang Dự án có 2 chế độ xem "Danh sách dự án" ↔ "Kế hoạch chung" (lưới dòng chảy bộ phận) — bỏ mục nav riêng. (2) Chi tiết mỗi dự án có tab "Kế hoạch chi tiết" = kế hoạch phòng ban của riêng dự án đó (Hợp đồng + Thiết kế + SX&Lắp đặt + Thương mại + Đối tác/Thầu phụ), nhập dạng form. Cả hai DÙNG CHUNG 1 kho mdc_pm_khc → sửa ở đâu cũng đồng bộ. Nút "Gợi ý mốc từ công việc" ngay trong tab dự án. -->
 <!-- MDC-PM v4.5 — KẾ HOẠCH CHUNG dựng LẠI thành LƯỚI NHẬP LIỆU bám ĐÚNG sheet "KẾ HOẠCH CHUNG CÁC DỰ ÁN": khối HỢP ĐỒNG (Số HĐ, Ngày ký, Tiến độ, Hoàn thành HĐ, Số ngày TH/còn lại) + KẾT QUẢ HĐ + 4 phòng ban đầy đủ cột con — PHÒNG THIẾT KẾ (Khảo sát, NV/Leader, BV sơ bộ BĐ/HT, SPEC/Ký mẫu, Shop DW HT/Ký HS, Deadline chuyển HS, Số ngày HT, Đạt/Không), SẢN XUẤT & LẮP ĐẶT, THƯƠNG MẠI (Dự toán, Đặt/Nhận hàng, BG nội bộ, BG khách), ĐỐI TÁC/THẦU PHỤ (Báo giá, Chốt thầu, Thi công). Nhập từng mốc (date/số/Đạt-Không); số ngày tự tính; "⚡ Gợi ý từ công việc" tự điền mốc từ đầu việc theo giai đoạn. Lưu localStorage (mdc_pm_khc). Xuất Excel/PDF & Nhập Excel theo đầy đủ cột. -->
@@ -194,6 +195,17 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 .khc-f .khc-in{width:100%;border:1px solid var(--line-strong);background:var(--card);border-radius:var(--r-sm);padding:7px 9px;font-size:12.5px}
 .khc-f .khc-in:focus{border-color:var(--brass);outline:none}
 .khc-f .khc-calc{padding:7px 9px;font-weight:700;color:var(--brass-deep);background:var(--paper);border-radius:var(--r-sm);border:1px dashed var(--line-strong);font-variant-numeric:tabular-nums}
+/* Kế hoạch chi tiết theo hạng mục (v4.9) */
+.khhm-table{min-width:1560px}
+.khhm-table td{padding:4px 5px}
+.khhm-table .ks-name{min-width:190px;text-align:left}
+.khhm-in{width:100%;border:1px solid var(--line-strong);background:var(--card);border-radius:6px;padding:5px 6px;font-size:12px;color:var(--ink)}
+.khhm-in:focus{border-color:var(--brass);outline:none}
+.khhm-pb.pb-nm{background:#EAF3EC;border-color:#9CC6A6}
+.khhm-pb.pb-tm{background:#F3ECF3;border-color:#C6A6C6}
+.khhm-pb.pb-tp{background:#F5ECE8;border-color:#D6B3A3}
+.khhm-del{border:1px solid var(--line-strong);background:var(--card);color:var(--bad);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;line-height:1}
+.khhm-del:hover{background:var(--bad-bg);border-color:var(--bad)}
 .bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;min-width:70px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--brass-deep));border-radius:4px}
 .bar.green i{background:var(--ok)} .bar.red i{background:var(--bad)}
@@ -2079,6 +2091,12 @@ function khcField(d, col, canEd, labelOverride){
 /* ===== TAB "Kế hoạch chi tiết" trong 1 dự án — dùng CHUNG kho mdc_pm_khc ===== */
 function pjKeHoachChiTiet(d){
   const ma=d['Mã DA'];
+  const view = window._khctView || 'bp';
+  const seg = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(view==='bp'?' on':'')+'" onclick="window._khctView=\'bp\';render()">🏢 Theo bộ phận <span class="muted" style="font-weight:400">— dòng chảy qua các phòng</span></button>'
+    + '<button class="cv-pill'+(view==='hm'?' on':'')+'" onclick="window._khctView=\'hm\';render()">📦 Theo hạng mục <span class="muted" style="font-weight:400">— bóc từ hợp đồng</span></button>'
+    + '</div>';
+  if(view==='hm') return seg + pjKeHoachHangMuc(d);
   const canEd = (typeof canEditProject==='function') ? canEditProject(d) : can('edit');
   let html='<div class="card"><div class="ct">Kế hoạch chi tiết theo bộ phận <span class="muted" style="font-weight:400">— dòng chảy công việc qua các phòng</span>'
     + '<span class="ct-r"><button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="holManage()">🗓 Ngày lễ</button>'
@@ -2097,7 +2115,221 @@ function pjKeHoachChiTiet(d){
   });
   html += '</div></div>'
     + '<p class="muted" style="font-size:12px">Nhập ngày từng mốc; “Số ngày” tự tính. Đây cũng là dữ liệu hiển thị ở <b>Dự án → Kế hoạch chung</b>. Lưu tại máy (localStorage).</p>';
+  return seg + html;
+}
+/* ===== v4.9 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC (bóc từ hợp đồng) — kho localStorage mdc_pm_khhm ===== */
+const KHHM_PHANBO  = ['','Nhà máy','Thương mại','Thầu phụ'];
+const KHHM_ST_HS   = ['','Chưa','Đã chốt'];
+const KHHM_ST_DUYET= ['','Chưa','Đã duyệt'];
+const KHHM_ST_SX   = ['','Chưa','Đang SX','Đã xong'];
+const KHHM_ST_LD   = ['','Chưa','Đang','Đã xong'];
+const KHHM_ST_DH   = ['','Chưa đặt','Đã đặt','Đã nhận'];
+const KHHM_GROUPS = [
+  {ten:'HẠNG MỤC', mau:'#7A5A2E', cols:[
+    {key:'ten',      leaf:'Tên hạng mục', t:'text', w:200, cls:'ks-name'},
+    {key:'phanLoai', leaf:'Phân loại',    t:'text', w:96},
+    {key:'phanBo',   leaf:'Phân bổ',      t:'sel',  opts:KHHM_PHANBO, w:112},
+    {key:'dvt',      leaf:'ĐVT',          t:'text', w:56},
+    {key:'sl',       leaf:'SL/KL',        t:'text', w:66},
+  ]},
+  {ten:'HỒ SƠ', mau:'#3E6E8E', cols:[
+    {key:'hs_spec',  leaf:'Chốt Spec',    t:'sel',  opts:KHHM_ST_HS, w:96},
+    {key:'hs_chuyen',leaf:'Chuyển hồ sơ', t:'date', w:132},
+    {key:'hs_duyet', leaf:'Duyệt mẫu',    t:'sel',  opts:KHHM_ST_DUYET, w:100},
+    {key:'hs_ht',    leaf:'HT hồ sơ',     t:'date', w:132},
+  ]},
+  {ten:'SẢN XUẤT', mau:'#8E6E3E', cols:[
+    {key:'sx_tt',    leaf:'Tình trạng',   t:'sel',  opts:KHHM_ST_SX, w:100},
+    {key:'sx_bd',    leaf:'Bắt đầu',      t:'date', w:132},
+    {key:'sx_ht',    leaf:'Hoàn thành',   t:'date', w:132},
+  ]},
+  {ten:'LẮP ĐẶT', mau:'#5E8E3E', cols:[
+    {key:'ld_tt',    leaf:'Tình trạng',   t:'sel',  opts:KHHM_ST_LD, w:100},
+    {key:'ld_bd',    leaf:'Thi công',     t:'date', w:132},
+    {key:'ld_ht',    leaf:'Hoàn thành',   t:'date', w:132},
+  ]},
+  {ten:'ĐẶT HÀNG (TM)', mau:'#8E5E8E', cols:[
+    {key:'dh_tt',    leaf:'Tình trạng',   t:'sel',  opts:KHHM_ST_DH, w:104},
+    {key:'dh_ht',    leaf:'Ngày nhận',    t:'date', w:132},
+  ]},
+  {ten:'THẦU PHỤ', mau:'#8E5A4A', cols:[
+    {key:'tp_tt',    leaf:'Tình trạng',   t:'sel',  opts:KHHM_ST_LD, w:100},
+    {key:'tp_ht',    leaf:'Hoàn thành',   t:'date', w:132},
+  ]},
+  {ten:'TIẾN ĐỘ', mau:'#5A5A5A', cols:[
+    {key:'pct',      leaf:'% HT',         t:'num',  w:60},
+    {key:'ghichu',   leaf:'Ghi chú',      t:'text', w:150},
+  ]},
+];
+function khhmCols(){ const a=[]; KHHM_GROUPS.forEach(g=>g.cols.forEach(c=>a.push(c))); return a; }
+function khhmStore(){ try{ return JSON.parse(localStorage.getItem('mdc_pm_khhm')||'{}'); }catch(e){ return {}; } }
+function khhmSaveStore(o){ try{ localStorage.setItem('mdc_pm_khhm', JSON.stringify(o)); }catch(e){} }
+function khhmGet(ma){ const a=khhmStore()[ma]; return Array.isArray(a)?a:[]; }
+function khhmSetRows(ma, arr){ const s=khhmStore(); s[ma]=arr; khhmSaveStore(s); }
+function khhmNewId(){ return 'h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function khhmCanEd(ma){ const d=(S.duan||[]).find(x=>x['Mã DA']===ma)||{}; return (typeof canEditProject==='function')?canEditProject(d):can('edit'); }
+function khhmPbCls(v){ return v==='Nhà máy'?'pb-nm':v==='Thương mại'?'pb-tm':v==='Thầu phụ'?'pb-tp':''; }
+function khhmAdd(ma){ if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true); const rows=khhmGet(ma); rows.push({id:khhmNewId()}); khhmSetRows(ma,rows); render(); }
+function khhmDel(ma,id){ if(!khhmCanEd(ma)) return; const row=khhmGet(ma).find(r=>r.id===id); const nm=(row&&row.ten)?('“'+row.ten+'”'):'hạng mục này';
+  openModal('Xóa hạng mục', '<div style="line-height:1.6">Xóa '+esc(nm)+' khỏi kế hoạch?</div>', ()=>{ khhmSetRows(ma, khhmGet(ma).filter(r=>r.id!==id)); closeModal(); render(); }); }
+function khhmEdit(ma,id,key,el){ const rows=khhmGet(ma); const row=rows.find(r=>r.id===id); if(!row) return; row[key]=el.value; khhmSetRows(ma,rows);
+  if(key==='phanBo') el.className='khhm-in khhm-pb '+khhmPbCls(el.value);
+  khhmUpdSummary(ma); }
+function khhmCell(ma,r,c,canEd){
+  const v=(r[c.key]==null)?'':r[c.key];
+  if(!canEd){ if(c.t==='date') return esc(v?fmtDMY(v):'—'); if(c.key==='pct') return v!==''?esc(v)+'%':'—'; return esc(v||'—'); }
+  const oc='onchange="khhmEdit(\''+esc(ma)+'\',\''+r.id+'\',\''+c.key+'\',this)"';
+  const oi='oninput="khhmEdit(\''+esc(ma)+'\',\''+r.id+'\',\''+c.key+'\',this)"';
+  if(c.t==='sel'){ const cls=(c.key==='phanBo')?('khhm-in khhm-pb '+khhmPbCls(v)):'khhm-in';
+    return '<select class="'+cls+'" '+oc+'>'+c.opts.map(o=>'<option value="'+esc(o)+'"'+(o===v?' selected':'')+'>'+(o===''?'—':esc(o))+'</option>').join('')+'</select>'; }
+  if(c.t==='date') return '<input type="date" class="khhm-in" value="'+esc(v)+'" '+oc+'>';
+  if(c.t==='num')  return '<input type="number" min="0" max="100" class="khhm-in" style="width:56px" value="'+esc(v)+'" placeholder="%" '+oi+'>';
+  return '<input type="text" class="khhm-in" value="'+esc(v)+'" '+oi+'>';
+}
+function khhmSummaryHtml(ma){
+  const rows=khhmGet(ma); const n=rows.length;
+  const cnt=v=>rows.filter(r=>r.phanBo===v).length;
+  const pcts=rows.map(r=>parseFloat(r.pct)).filter(x=>!isNaN(x));
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<div class="ks-kpi"><b>'+n+'</b><span>hạng mục</span></div>'
+    + '<div class="ks-kpi"><b>'+cnt('Nhà máy')+'</b><span>Nhà máy</span></div>'
+    + '<div class="ks-kpi"><b>'+cnt('Thương mại')+'</b><span>Thương mại</span></div>'
+    + '<div class="ks-kpi"><b>'+cnt('Thầu phụ')+'</b><span>Thầu phụ</span></div>'
+    + '<div class="ks-kpi"><b>'+avg+'%</b><span>tiến độ TB</span></div>'
+    + '</div>';
+}
+function khhmUpdSummary(ma){ const el=document.getElementById('khhmSum_'+ma); if(el) el.innerHTML=khhmSummaryHtml(ma); }
+function pjKeHoachHangMuc(d){
+  const ma=d['Mã DA'];
+  const canEd=(typeof canEditProject==='function')?canEditProject(d):can('edit');
+  const rows=khhmGet(ma); const cols=khhmCols();
+  let html='<div class="card"><div class="ct">Kế hoạch chi tiết theo hạng mục '
+    + '<span class="muted" style="font-weight:400">— bóc tách từ bảng hạng mục hợp đồng</span>'
+    + '<span class="ct-r">'
+    + (canEd?'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmImport(\''+esc(ma)+'\')">⬆ Nhập từ hợp đồng</button> ':'')
+    + '<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmExportCsv(\''+esc(ma)+'\')">⬇ Xuất Excel</button> '
+    + '<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmPrint(\''+esc(ma)+'\')">🖨 Xuất PDF</button>'
+    + (canEd?' <button class="btn btn-brass" style="padding:6px 12px;font-size:12.5px" onclick="khhmAdd(\''+esc(ma)+'\')">＋ Thêm hạng mục</button>':'')
+    + '</span></div><div class="card-body">';
+  html+='<div id="khhmSum_'+esc(ma)+'">'+khhmSummaryHtml(ma)+'</div>';
+  if(!rows.length){
+    html+='<div class="muted" style="padding:26px;text-align:center;border:1px dashed var(--line-strong);border-radius:var(--r-sm)">Chưa có hạng mục nào. '
+      + (canEd?'Bấm <b>⬆ Nhập từ hợp đồng</b> để dán bảng hạng mục từ file HĐ, hoặc <b>＋ Thêm hạng mục</b> để nhập tay.':'Chưa có dữ liệu.')
+      + '</div></div></div>';
+    return html;
+  }
+  html+='<div class="tbl-wrap"><table class="tbl ks-table khhm-table"><thead>';
+  html+='<tr><th rowspan="2" class="ks-stt">#</th>';
+  KHHM_GROUPS.forEach(g=>{ html+='<th colspan="'+g.cols.length+'" class="ks-grp" style="border-bottom:2px solid '+g.mau+'">'+esc(g.ten)+'</th>'; });
+  html+='<th rowspan="2">Xóa</th></tr><tr>';
+  KHHM_GROUPS.forEach(g=>g.cols.forEach(c=>{ html+='<th style="min-width:'+(c.w||90)+'px">'+esc(c.leaf)+'</th>'; }));
+  html+='</tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    html+='<tr><td class="ks-stt">'+(i+1)+'</td>';
+    cols.forEach(c=>{ html+='<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+khhmCell(ma,r,c,canEd)+'</td>'; });
+    html+='<td>'+(canEd?'<button class="khhm-del" title="Xóa hạng mục" onclick="khhmDel(\''+esc(ma)+'\',\''+r.id+'\')">✕</button>':'')+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+  html+='<p class="muted" style="font-size:12px;margin-top:10px">Mỗi hạng mục = 1 dòng bóc từ hợp đồng. Nhập mốc ngày & tình trạng từng khâu (Hồ sơ · Sản xuất · Lắp đặt · Đặt hàng · Thầu phụ) và % hoàn thành. Lưu tại máy (localStorage · <code>mdc_pm_khhm</code>).</p>';
+  html+='</div></div>';
   return html;
+}
+/* Nhập hạng mục từ hợp đồng (dán từ Excel/Sheet hoặc chọn file CSV) */
+function khhmImport(ma){
+  if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true);
+  window.__khhmImp=null; window.__khhmImpMa=ma;
+  const body='<div class="muted" style="margin-bottom:10px;line-height:1.55">Dán bảng hạng mục copy từ <b>file hợp đồng</b> (sheet kiểu “HĐ Tuấn Anh ĐN”) vào ô dưới — mỗi hạng mục 1 dòng. '
+    + 'Tự nhận diện cột: <b>Chi tiết đơn hàng / Mã sản phẩm</b> (tên), <b>Phân loại hạng mục</b>, <b>ĐVT</b>, <b>Số lượng / Khối lượng</b>, và <b>Phân bổ</b> (Nhà máy MDC · Thương mại · Thầu phụ). '
+    + 'Dòng tiêu đề, dòng nhóm (Tầng/Phòng) và dòng tổng sẽ được bỏ qua. Nếu không có dòng tiêu đề, hệ đọc theo đúng thứ tự cột của file HĐ.</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+    + '<label class="btn btn-ghost" style="cursor:pointer">📂 Chọn file CSV<input type="file" accept=".csv,text/csv" style="display:none" onchange="khhmImpFile(this)"></label>'
+    + '</div>'
+    + '<textarea id="khhmImpTxt" placeholder="Dán bảng hạng mục ở đây (copy từ Excel/Google Sheet)…" style="width:100%;min-height:130px;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:9px;font-size:12px;font-family:monospace" oninput="khhmImpParse()"></textarea>'
+    + '<div id="khhmImpPv" style="margin-top:10px"></div>';
+  openModal('Nhập hạng mục từ hợp đồng', body, khhmImpConfirm);
+  document.getElementById('modalSave').classList.add('hide');
+}
+function khhmImpFile(inputEl){ const f=inputEl.files&&inputEl.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{ const ta=document.getElementById('khhmImpTxt'); if(ta){ ta.value=rd.result; khhmImpParse(); } }; rd.readAsText(f,'UTF-8'); }
+function khhmImpParse(){
+  const ta=document.getElementById('khhmImpTxt'); const pv=document.getElementById('khhmImpPv'); if(!pv) return;
+  const src=(ta?ta.value:'').trim();
+  const saveBtn=document.getElementById('modalSave');
+  if(!src){ pv.innerHTML=''; window.__khhmImp=null; if(saveBtn) saveBtn.classList.add('hide'); return; }
+  let rows;
+  if(src.indexOf('\t')>=0){ rows=src.split(/\r?\n/).map(l=>l.split('\t')); }
+  else { try{ rows=parseCSV(src); }catch(e){ rows=src.split(/\r?\n/).map(l=>l.split(',')); } }
+  rows=rows.filter(r=>r && r.some(c=>String(c).trim()!==''));
+  if(!rows.length){ pv.innerHTML='<span class="tag t-bad">Không có dữ liệu</span>'; window.__khhmImp=null; if(saveBtn) saveBtn.classList.add('hide'); return; }
+  const norm=s=>vnorm(s).replace(/[^a-z0-9]+/g,' ').trim();
+  let hdr=-1, idx={};
+  for(let i=0;i<Math.min(rows.length,6);i++){
+    const H=rows[i].map(norm); const has=k=>H.findIndex(h=>h.indexOf(k)>=0);
+    const iTen=Math.max(has('chi tiet don hang'), has('ma san pham'), has('ten san pham'), has('hang muc'));
+    if(iTen>=0){ hdr=i;
+      idx.chiTiet=has('chi tiet don hang'); idx.ma=Math.max(has('ma san pham'),has('ma sp'));
+      idx.phanLoai=Math.max(has('phan loai hang muc'),has('phan loai'));
+      idx.dvt=Math.max(has('don vi tinh'),has('dvt')); idx.kl=has('khoi luong'); idx.sl=has('so luong');
+      idx.nm=Math.max(has('nha may'),has('mdc')); idx.tm=has('thuong mai'); idx.tp=has('thau phu');
+      break; }
+  }
+  const positional = hdr<0;
+  const P={chiTiet:1, ma:2, dvt:7, kl:8, sl:9, dg:10, phanLoai:12, nm:13, tm:14, tp:15};
+  const get=(row,key)=>{ let ci=positional?P[key]:idx[key]; if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
+  const start=positional?0:hdr+1; const drafts=[];
+  for(let r=start;r<rows.length;r++){
+    const row=rows[r]; const maSp=get(row,'ma'), ct=get(row,'chiTiet'); let ten=maSp||ct;
+    if(!ten) continue;
+    const dvt=get(row,'dvt'), kl=get(row,'kl'), sl=get(row,'sl');
+    if(!dvt && !sl && !kl) continue;                 // bỏ dòng nhóm/tổng (không có ĐVT/SL/KL)
+    if(/^[\d.,\s\-]+$/.test(ten)) continue;          // bỏ dòng chỉ toàn số
+    const phanLoai=get(row,'phanLoai');
+    let phanBo=''; if(get(row,'nm')) phanBo='Nhà máy'; else if(get(row,'tm')) phanBo='Thương mại'; else if(get(row,'tp')) phanBo='Thầu phụ';
+    drafts.push({ten, phanLoai, phanBo, dvt, sl:sl||kl});
+  }
+  window.__khhmImp=drafts;
+  if(!drafts.length){ pv.innerHTML='<span class="tag t-bad">Không nhận diện được hạng mục nào — kiểm tra lại các cột.</span>'; if(saveBtn) saveBtn.classList.add('hide'); return; }
+  let h='<div style="margin:2px 0 8px;font-size:13px"><b>'+drafts.length+'</b> hạng mục nhận diện '+(positional?'<span class="muted">(đọc theo thứ tự cột file HĐ)</span>':'<span class="muted">(đọc theo tiêu đề cột)</span>')+'</div>';
+  h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Phân bổ</th><th>ĐVT</th><th>SL/KL</th></tr></thead><tbody>';
+  drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.sl)+'</td></tr>'; });
+  h+='</tbody></table></div><div class="muted" style="margin-top:8px">Bấm <b>Lưu</b> để thêm '+drafts.length+' hạng mục (nối tiếp danh sách hiện có).</div>';
+  pv.innerHTML=h; if(saveBtn) saveBtn.classList.remove('hide');
+}
+function khhmImpConfirm(){
+  const ma=window.__khhmImpMa; const drafts=window.__khhmImp||[];
+  if(!ma||!drafts.length){ toast('Không có hạng mục để nhập', true); return; }
+  const rows=khhmGet(ma);
+  drafts.forEach(d=>rows.push({id:khhmNewId(), ten:d.ten, phanLoai:d.phanLoai, phanBo:d.phanBo, dvt:d.dvt, sl:d.sl}));
+  khhmSetRows(ma,rows); window.__khhmImp=null; closeModal();
+  toast('✓ Đã nhập '+drafts.length+' hạng mục vào kế hoạch'); render();
+}
+function khhmExportCsv(ma){
+  const rows=khhmGet(ma); if(!rows.length) return toast('Chưa có hạng mục để xuất', true);
+  const cols=khhmCols(); const head=['STT']; cols.forEach(c=>head.push(c.leaf));
+  const out=[head];
+  rows.forEach((r,i)=>{ const line=[i+1]; cols.forEach(c=>{ let v=(r[c.key]==null)?'':r[c.key]; if(c.t==='date'&&v) v=fmtDMY(v); line.push(v); }); out.push(line); });
+  dlCsv(out, 'MDC_KeHoachHangMuc_'+(ma||'DA')+'_'+today()+'.csv');
+  toast('✓ Đã xuất '+rows.length+' hạng mục ra Excel (CSV)');
+}
+function khhmPrint(ma){
+  const rows=khhmGet(ma); if(!rows.length) return toast('Chưa có hạng mục để in', true);
+  const d=(S.duan||[]).find(x=>x['Mã DA']===ma)||{}; const cols=khhmCols();
+  let h1='<tr><th rowspan="2">#</th>'+KHHM_GROUPS.map(g=>'<th colspan="'+g.cols.length+'">'+esc(g.ten)+'</th>').join('')+'</tr>';
+  let h2='<tr>'+KHHM_GROUPS.map(g=>g.cols.map(c=>'<th>'+esc(c.leaf)+'</th>').join('')).join('')+'</tr>';
+  let body='';
+  rows.forEach((r,i)=>{ body+='<tr><td>'+(i+1)+'</td>'+cols.map(c=>{ let v=(r[c.key]==null)?'':r[c.key]; if(c.t==='date'&&v)v=fmtDMY(v); if(c.key==='pct'&&v!=='')v=v+'%'; return '<td'+(c.cls==='ks-name'?' class="l"':'')+'>'+esc(v)+'</td>'; }).join('')+'</tr>'; });
+  const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại', true); return; }
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Kế hoạch hạng mục — '+esc(d['Tên dự án']||ma)+'</title>'
+    + '<style>@page{size:A2 landscape;margin:8mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:8.5px;color:#222;margin:0}'
+    + 'h2{margin:0 0 2px;color:#7A5A2E;font-size:15px} .sub{color:#666;font-size:10px;margin-bottom:6px}'
+    + 'table{border-collapse:collapse;width:100%} th,td{border:1px solid #9a9a9a;padding:2px 3px;text-align:center;vertical-align:middle;white-space:nowrap}'
+    + 'thead th{background:#F0E9DB;color:#5A4A2E} td.l{text-align:left} tbody tr:nth-child(even){background:#FAF7F1}</style></head><body>'
+    + '<h2>KẾ HOẠCH HẠNG MỤC — '+esc(d['Tên dự án']||ma)+'</h2>'
+    + '<div class="sub">Mã DA: '+esc(ma)+' · Ngày in: '+fmtDMY(today())+' · '+rows.length+' hạng mục</div>'
+    + '<table><thead>'+h1+h2+'</thead><tbody>'+body+'</tbody></table></body></html>');
+  w.document.close(); w.focus(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 400);
+  toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF"');
 }
 function khcEdit(ma, key, el){
   khcSet(ma, key, el.value);
