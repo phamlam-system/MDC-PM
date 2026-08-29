@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <!-- MDC-PM v2.0 — Bổ sung: Khách hàng, Hiện trường, Mua sắm, Phát sinh HĐ, Tài chính, Hồ sơ & Tài liệu, An toàn & Chất lượng, Sự không phù hợp, Rủi ro. Sidebar phân nhóm như iSolutions. -->
+<!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
+<!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
+<!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận (Phòng Thiết kế → Thi công Xây dựng → Sản xuất & Lắp đặt → Nghiệm thu & Bàn giao). Từ mốc bắt đầu/hoàn thành dự án + đầu việc theo giai đoạn, hệ tự suy cửa sổ thời gian, %tiến độ, kết quả (Đạt/Đang/Trễ) mỗi bộ phận + mini-Gantt dòng chảy. Có Xuất Excel (CSV), Xuất PDF (bản in ngang), Nhập Excel (tạo/cập nhật dự án). Số hợp đồng lưu localStorage. -->
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -143,6 +146,29 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 .t-ok{background:var(--ok-bg);color:var(--ok)} .t-warn{background:var(--warn-bg);color:var(--warn)}
 .t-bad{background:var(--bad-bg);color:var(--bad)} .t-info{background:var(--info-bg);color:var(--info)}
 .t-pause{background:var(--pause-bg);color:var(--pause)} .t-brass{background:var(--brass-soft);color:var(--brass-deep)}
+/* ★ v4.4 — Kế hoạch chung các dự án */
+.ks-kpi{background:var(--card);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:7px 15px;min-width:88px;text-align:center}
+.ks-kpi b{display:block;font-size:19px;color:var(--brass-deep);line-height:1.15}
+.ks-kpi span{font-size:11px;color:var(--ink-soft)}
+.ks-kpi.bad b{color:var(--bad)}
+.ks-legend{display:flex;gap:15px;flex-wrap:wrap;align-items:center;margin-bottom:11px;font-size:11.5px;color:var(--ink-soft)}
+.ks-legend>span{display:inline-flex;align-items:center;gap:5px}
+.ks-legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.ks-lg-today{width:2px!important;height:13px!important;border-radius:0!important;background:#B23A2E}
+.ks-table{font-size:12px;min-width:1420px}
+.ks-table th{padding:6px 7px;text-transform:none;font-size:10.5px;letter-spacing:.2px;text-align:center;border-right:1px solid var(--line);white-space:nowrap}
+.ks-table td{padding:7px;border-right:1px solid var(--line);text-align:center}
+.ks-table th.ks-grp{background:#FBF6EC;color:var(--brass-deep);font-weight:700}
+.ks-table .ks-name{text-align:left;min-width:158px}
+.ks-table .ks-stt{width:28px;color:var(--ink-faint)}
+.ks-table td.ks-c{white-space:nowrap;font-variant-numeric:tabular-nums}
+.ks-table td.ks-na{color:var(--ink-faint);font-size:11px;background:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(0,0,0,.02) 5px,rgba(0,0,0,.02) 10px)}
+.ks-late{color:var(--bad);font-weight:700} .ks-soon{color:var(--warn);font-weight:700}
+.ks-flowh{min-width:196px} td.ks-flowc{min-width:196px;padding:6px 9px!important}
+.ks-flow{position:relative;width:180px;display:flex;flex-direction:column;gap:2px;margin:0 auto}
+.ks-track{position:relative;height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+.ks-seg{position:absolute;top:0;height:7px;border-radius:4px}
+.ks-today{position:absolute;top:-2px;bottom:-2px;width:2px;background:#B23A2E;z-index:2}
 .bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;min-width:70px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass),var(--brass-deep));border-radius:4px}
 .bar.green i{background:var(--ok)} .bar.red i{background:var(--bad)}
@@ -889,7 +915,14 @@ const OBSOLETE_APIS = [
   'https://script.google.com/macros/s/AKfycbxM4zH__z_qF5NxFxlv5RfqrHeXJSVgLjKXUblfKeN3-dvlfJMwMMmklVW2kCoydB_FEw/exec'
 ];
 
-const GIAI_DOAN = ['Tiếp nhận & Báo giá','Thiết kế concept','Thiết kế kỹ thuật','Sản xuất tại xưởng','Thi công lắp đặt','Nghiệm thu','Bàn giao & Bảo hành'];
+/* ★ v4.2 — Vòng đời TOÀN DIỆN cho cả XÂY DỰNG & NỘI THẤT.
+   Giữ nguyên tên 7 giai đoạn cũ (dữ liệu cũ không vỡ); chèn 6 giai đoạn
+   xây dựng/hoàn thiện giữa "Thiết kế kỹ thuật" và "Sản xuất tại xưởng".
+   Dự án nội thất / xây dựng chỉ hiện các giai đoạn liên quan (giai đoạn
+   rỗng tự ẩn ở mọi bảng nhóm & Gantt). */
+const GIAI_DOAN = ['Tiếp nhận & Báo giá','Thiết kế concept','Thiết kế kỹ thuật','Thiết kế kiến trúc & kết cấu',
+  'Chuẩn bị & Khởi công','Phần ngầm & Móng','Kết cấu phần thô','Xây tô & Hoàn thiện thô','Cơ điện (M&E)','Hoàn thiện xây dựng',
+  'Sản xuất tại xưởng','Thi công lắp đặt','Nghiệm thu','Bàn giao & Bảo hành'];
 const TT_DUAN   = ['Đang triển khai','Tạm dừng','Hoàn thành','Hủy'];
 const TT_CV     = ['Chưa bắt đầu','Đang làm','Đang vướng','Chờ duyệt','Đã phê duyệt','Từ chối','Hoàn thành','Tạm dừng'];
 
@@ -911,7 +944,19 @@ function kbColOf(tt){
 /* Lọc bỏ đầu việc đã xóa mềm */
 function tvSong(arr){ return (arr||[]).filter(x=>String(x['Đã xóa']||'')!=='1'); }
 const UU_TIEN   = ['Cao','Trung bình','Thấp'];
-const LOAI_HINH = ['Thiết kế','Thi công','Thiết kế & Thi công'];
+const LOAI_HINH = ['Thiết kế','Thi công','Thiết kế & Thi công','Xây dựng','Xây dựng & Nội thất (Tổng thầu)'];
+/* ★ v4.2 — Nhóm ngành nghề áp dụng cho từng Loại hình dự án (lọc thư viện & bộ việc mẫu).
+   TK=thiết kế · TC=nội thất(SX xưởng+lắp đặt, tên cũ) · XD=xây dựng/hoàn thiện · CH=chung mọi loại.
+   Giữ NGUYÊN kết quả lọc cho 3 loại hình cũ; chỉ mở rộng cho loại hình xây dựng. */
+function nhomTheoLoaiHinh(loaiHinh){
+  const n = vnorm(loaiHinh||'');
+  if(n === 'thiet ke')                       return ['TK','TX','CH'];          // đơn vị thiết kế: nội thất + kiến trúc/kết cấu
+  if(n === 'thi cong')                       return ['TC','CH'];
+  if(n.indexOf('xay dung') > -1 && n.indexOf('noi that') > -1) return ['TK','TX','XD','TC','CH']; // Tổng thầu
+  if(n.indexOf('xay dung') > -1)             return ['TX','XD','CH'];          // xây dựng: kèm thiết kế kiến trúc/kết cấu
+  return ['TK','TC','CH']; // 'Thiết kế & Thi công' (nội thất) và mặc định — GIỮ NGUYÊN phạm vi cũ
+}
+function laLoaiXayDung(loaiHinh){ return vnorm(loaiHinh||'').indexOf('xay dung') > -1; }
 // Bộ việc mẫu để xem trước trong form chuyển lead — [tên, giai đoạn, nhóm TK/TC]
 // PHẢI khớp với SEED_TASKS ở apps_script.gs
 const SEED_PREVIEW = [
@@ -931,6 +976,15 @@ const SEED_PREVIEW = [
 ];
 // Lọc việc mẫu theo loại hình + render HTML xem trước
 function seedPreviewHtml(loai){
+  // ★ v4.2 — Loại hình Xây dựng: bộ việc xây dựng rất chi tiết → hướng sang thư viện kế hoạch
+  // (backend auto-seed chỉ giữ bộ nội thất; tránh tạo nhầm việc). Nút seed sẽ tự bỏ tick.
+  if(laLoaiXayDung(loai)){
+    return '<div style="font-size:12.5px;color:var(--ink-soft);line-height:1.7">'
+      + '<b style="color:var(--brass-deep)">Loại hình Xây dựng</b> có bộ đầu việc rất chi tiết theo giai đoạn '
+      + '(chuẩn bị & khởi công, móng, kết cấu thô, xây tô, cơ điện M&E, hoàn thiện…).<br>'
+      + 'Sau khi tạo dự án, mở dự án → tab <b>Kế hoạch</b> → bấm <b>“⚡ Lập kế hoạch từ thư viện”</b> '
+      + 'để chọn đúng các hạng mục & đầu việc xây dựng cần làm (tự xếp lịch theo ngày bắt đầu).</div>';
+  }
   const n = (loai||'').toLowerCase();
   const onlyTK = n === 'thiết kế'.toLowerCase();
   const onlyTC = n === 'thi công'.toLowerCase();
@@ -1566,6 +1620,7 @@ const NAV_GROUPS = [
     {id:'congviec',  name:'Công việc',       icon:'✓'},
     {id:'khachhang', name:'Khách hàng',      icon:'◎'},
     {id:'duan',      name:'Dự án',           icon:'▤'},
+    {id:'kehoachChung', name:'Kế hoạch chung', icon:'🗂'},
     {id:'hientruong',name:'Hiện trường',     icon:'📍'},
     {id:'bienban',   name:'Biên bản nghiệm thu', icon:'📝'},
     {id:'thaubo',    name:'Thầu phụ',        icon:'◈'},
@@ -1746,7 +1801,7 @@ function onAddClick(){
 function render(){
   const root = document.getElementById('viewRoot');
   const fn = {
-    dashboard:vDashboard, duan:vProjects, congviec:vTasks, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, congKH:vPortalMgr,
+    dashboard:vDashboard, duan:vProjects, congviec:vTasks, kehoachChung:vMasterSchedule, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, congKH:vPortalMgr,
     chiphi:vExpenses, lichhen:vAppointments, thaubo:vSubcontractors,
     nhansu:vStaff, caidat:vSettings, kiemtra:vDataHealth,
     // v2.0 mới
@@ -1766,6 +1821,7 @@ function napBangDienThoai_(){
   if(window.innerWidth > 860) return;
   document.querySelectorAll('#viewRoot table').forEach(function(tb){
     if(tb.classList.contains('gantt')) return;      // Gantt giữ nguyên cuộn ngang
+    if(tb.classList.contains('no-mb')) return;       // bảng phức tạp (Kế hoạch chung) giữ nguyên, cuộn ngang
     var ths = tb.querySelectorAll('thead th');
     if(!ths.length) return;
     var labels = Array.prototype.map.call(ths, function(th){ return th.textContent.trim(); });
@@ -1779,6 +1835,333 @@ function napBangDienThoai_(){
 }
 // Chạy lại khi xoay/đổi kích thước màn hình
 window.addEventListener('resize', function(){ try{ napBangDienThoai_(); }catch(e){} });
+
+/* ================================================================
+   ★ v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN (dòng chảy công việc qua các bộ phận)
+   Mỗi dự án 1 dòng; từ mốc BẮT ĐẦU → HOÀN THÀNH của dự án, hệ thống suy ra
+   cửa sổ thời gian & tiến độ của từng BỘ PHẬN (lane) dựa trên các đầu việc
+   theo giai đoạn. Bám bố cục sheet "KẾ HOẠCH CHUNG CÁC DỰ ÁN".
+================================================================ */
+const KS_LANES = [
+  {key:'tk', ten:'Phòng Thiết kế',        mau:'#2F6DB5', gd:['Tiếp nhận & Báo giá','Thiết kế concept','Thiết kế kỹ thuật','Thiết kế kiến trúc & kết cấu']},
+  {key:'xd', ten:'Thi công Xây dựng',     mau:'#B9772E', gd:['Chuẩn bị & Khởi công','Phần ngầm & Móng','Kết cấu phần thô','Xây tô & Hoàn thiện thô','Cơ điện (M&E)','Hoàn thiện xây dựng']},
+  {key:'sx', ten:'Sản xuất & Lắp đặt',    mau:'#7A5AA6', gd:['Sản xuất tại xưởng','Thi công lắp đặt']},
+  {key:'nt', ten:'Nghiệm thu & Bàn giao', mau:'#4E9A51', gd:['Nghiệm thu','Bàn giao & Bảo hành']}
+];
+function ksDiff(a,b){ if(!a||!b) return null; return Math.round((new Date(b)-new Date(a))/86400000); }
+/* Số hợp đồng lưu localStorage theo Mã DA (backend chưa có cột này → giữ bền qua đồng bộ) */
+function ksSoHDStore(){ try{ return JSON.parse(localStorage.getItem('mdc_pm_sohd')||'{}'); }catch(e){ return {}; } }
+function ksSoHD(maDA){ const d=(S.duan||[]).find(x=>x['Mã DA']===maDA); return (d&&(d['Số hợp đồng']||d['Số HĐ'])) || ksSoHDStore()[maDA] || ''; }
+function ksSetSoHD(maDA, v){ if(!maDA) return; const s=ksSoHDStore(); if(v) s[maDA]=String(v); else delete s[maDA]; try{ localStorage.setItem('mdc_pm_sohd', JSON.stringify(s)); }catch(e){} }
+// Suy cửa sổ thời gian + tiến độ 1 lane cho 1 dự án từ các đầu việc theo giai đoạn
+function ksLaneInfo(daCode, gdSet){
+  const ts = tvSong(S.congviec).filter(c=>c['Mã DA']===daCode && gdSet.includes(c['Giai đoạn']));
+  if(!ts.length) return null;
+  let min=null, max=null, done=0;
+  ts.forEach(c=>{
+    const b=c['Ngày bắt đầu'], h=c['Hạn hoàn thành'];
+    if(b && (!min||b<min)) min=b;
+    if(h && (!max||h>max)) max=h;
+    if(c['Trạng thái']==='Hoàn thành' || c['Trạng thái']==='Đã phê duyệt') done++;
+  });
+  const total=ts.length, pct=Math.round(done/total*100);
+  const overdue = ts.some(c=>c['Trạng thái']!=='Hoàn thành' && c['Trạng thái']!=='Đã phê duyệt' && c['Hạn hoàn thành'] && daysLeft(c['Hạn hoàn thành'])<0);
+  const kq = pct===100 ? 'Đạt' : overdue ? 'Trễ' : done>0 ? 'Đang' : 'Chờ';
+  const songay = (min&&max) ? Math.max(1, ksDiff(min,max)+1) : '';
+  return {min, max, total, done, pct, kq, songay};
+}
+function ksTag(kq){
+  const m={'Đạt':'t-ok','Đang':'t-info','Trễ':'t-bad','Chờ':'t-pause','—':'t-pause'};
+  return '<span class="tag '+(m[kq]||'t-pause')+'" style="font-size:10px">'+esc(kq)+'</span>';
+}
+// Thanh "dòng chảy" — mini Gantt 4 lane trong 1 ô
+function ksFlowBar(d, lanes){
+  const dates=[];
+  if(d['Ngày bắt đầu']) dates.push(d['Ngày bắt đầu']);
+  if(d['Ngày kết thúc DK']) dates.push(d['Ngày kết thúc DK']);
+  lanes.forEach(l=>{ if(l.info){ if(l.info.min)dates.push(l.info.min); if(l.info.max)dates.push(l.info.max); } });
+  if(dates.length<2) return '<span class="muted" style="font-size:11px">—</span>';
+  dates.sort();
+  const min=dates[0], max=dates[dates.length-1];
+  const span=(new Date(max)-new Date(min))||1;
+  const pos=x=>Math.max(0,Math.min(100,(new Date(x)-new Date(min))/span*100));
+  let bars='';
+  lanes.forEach(l=>{
+    const info=l.info;
+    let seg='';
+    if(info && info.min && info.max){
+      const L=pos(info.min), R=pos(info.max), W=Math.max(2.5,R-L);
+      seg='<div class="ks-seg" style="left:'+L.toFixed(1)+'%;width:'+W.toFixed(1)+'%;background:'+l.mau+'" title="'+esc(l.ten)+': '+fmtDMY(info.min)+' → '+fmtDMY(info.max)+' · '+info.pct+'%"></div>';
+    }
+    bars+='<div class="ks-track">'+seg+'</div>';
+  });
+  const t=today();
+  const todayLine=(t>=min && t<=max) ? '<div class="ks-today" style="left:'+pos(t).toFixed(1)+'%"></div>' : '';
+  return '<div class="ks-flow">'+bars+todayLine+'</div>';
+}
+function ksList(){
+  const onlyActive = window._ksActive !== false; // mặc định chỉ dự án đang chạy
+  let list = visibleProjects().slice();
+  if(onlyActive) list = list.filter(d=>d['Trạng thái']==='Đang triển khai');
+  list.sort((a,b)=>String(a['Ngày kết thúc DK']||'9999').localeCompare(String(b['Ngày kết thúc DK']||'9999')));
+  return list;
+}
+// Giá trị đã tính của 1 dòng — dùng chung cho render, xuất Excel & in PDF
+function ksRowVals(d){
+  const bd=d['Ngày bắt đầu'], kt=d['Ngày kết thúc DK'];
+  const conLai = kt ? daysLeft(kt) : null;
+  const chung = {
+    ten:d['Tên dự án']||d['Mã DA'], ma:d['Mã DA'], soHD:ksSoHD(d['Mã DA']),
+    loai:d['Loại hình']||'', ngayKy:d['Ngày ký']||bd||'',
+    tienDo:(bd&&kt)?Math.max(0,ksDiff(bd,kt)):'', htHD:kt||'', conLai,
+    kq:(d['Trạng thái']==='Hoàn thành')?'Đạt':(conLai!=null&&conLai<0)?'Trễ':'Đang'
+  };
+  const lanes = KS_LANES.map(l=>({...l, info:ksLaneInfo(d['Mã DA'], l.gd)}));
+  return {chung, lanes};
+}
+function vMasterSchedule(){
+  const onlyActive = window._ksActive !== false;
+  const list = ksList();
+
+  const tong = visibleProjects().length;
+  const dangChay = visibleProjects().filter(d=>d['Trạng thái']==='Đang triển khai').length;
+  const treHan = visibleProjects().filter(d=>d['Trạng thái']==='Đang triển khai' && d['Ngày kết thúc DK'] && daysLeft(d['Ngày kết thúc DK'])<0).length;
+
+  let html = '<div class="cv-head"><div><h2 style="margin:0">Kế hoạch chung các dự án</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Dòng chảy công việc qua các bộ phận — suy từ mốc bắt đầu · hoàn thành của mỗi dự án</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    + '<button class="cv-pill'+(onlyActive?' on':'')+'" onclick="window._ksActive='+(!onlyActive)+';render()">'+(onlyActive?'◉ Chỉ dự án đang chạy':'◯ Tất cả dự án')+'</button>'
+    + '<button class="btn btn-ghost" style="padding:7px 12px;font-size:12.5px" onclick="ksExportCsv()">⬇ Xuất Excel</button>'
+    + '<button class="btn btn-ghost" style="padding:7px 12px;font-size:12.5px" onclick="ksPrint()">🖨 Xuất PDF</button>'
+    + (can('edit')?'<button class="btn btn-brass" style="padding:7px 12px;font-size:12.5px" onclick="ksImportOpen()">⬆ Nhập Excel</button>':'')
+    + '</div></div>';
+
+  // KPI nhỏ
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<div class="ks-kpi"><b>'+tong+'</b><span>dự án</span></div>'
+    + '<div class="ks-kpi"><b>'+dangChay+'</b><span>đang chạy</span></div>'
+    + '<div class="ks-kpi'+(treHan?' bad':'')+'"><b>'+treHan+'</b><span>trễ hạn HĐ</span></div>'
+    + '</div>';
+
+  // Chú thích lane
+  html += '<div class="ks-legend">'+KS_LANES.map(l=>'<span><i style="background:'+l.mau+'"></i>'+esc(l.ten)+'</span>').join('')
+    + '<span style="margin-left:auto"><i class="ks-lg-today"></i>Hôm nay</span></div>';
+
+  if(!list.length){
+    html += '<div class="empty"><b>Chưa có dự án nào để hiển thị</b>'+(onlyActive?'Bấm "Tất cả dự án" để xem cả dự án đã hoàn thành/tạm dừng.':'Tạo dự án ở mục Dự án.')+'</div>';
+    return html;
+  }
+
+  // Header 2 tầng
+  let head1='<tr><th rowspan="2" class="ks-stt">#</th><th rowspan="2" class="ks-name">Dự án</th>'
+    + '<th rowspan="2">Loại hình</th>'
+    + '<th colspan="5" class="ks-grp">Hợp đồng</th>'
+    + '<th rowspan="2" class="ks-flowh">Dòng chảy qua các bộ phận</th>';
+  KS_LANES.forEach(l=>{ head1+='<th colspan="4" class="ks-grp" style="border-bottom:2px solid '+l.mau+'">'+esc(l.ten)+'</th>'; });
+  head1+='</tr>';
+  let head2='<tr><th>Ngày ký</th><th>Tiến độ (ngày)</th><th>Hoàn thành HĐ</th><th>Còn lại</th><th>Kết quả</th>';
+  KS_LANES.forEach(()=>{ head2+='<th>Dự kiến (ngày)</th><th>Bắt đầu</th><th>Hoàn thành</th><th>Kết quả</th>'; });
+  head2+='</tr>';
+
+  let rows='';
+  list.forEach((d,i)=>{
+    const code=d['Mã DA'];
+    const bd=d['Ngày bắt đầu'], kt=d['Ngày kết thúc DK'];
+    const ngayKy=d['Ngày ký']||bd;
+    const tienDoHD=(bd&&kt)?Math.max(0,ksDiff(bd,kt)):'';
+    const conLai=kt?daysLeft(kt):null;
+    const soHD=d['Số hợp đồng']||d['Số HĐ']||'';
+    const done = d['Trạng thái']==='Hoàn thành';
+    const kqChung = done?'Đạt':(conLai!=null&&conLai<0)?'Trễ':'Đang';
+    const lanes=KS_LANES.map(l=>({...l, info:ksLaneInfo(code, l.gd)}));
+
+    let r='<tr class="row-click" onclick="openProject(\''+code+'\')">'
+      + '<td class="ks-stt">'+(i+1)+'</td>'
+      + '<td class="ks-name"><b>'+esc(d['Tên dự án']||code)+'</b><div class="muted" style="font-size:11px">'+esc(code)+(soHD?' · '+esc(soHD):'')+'</div></td>'
+      + '<td style="font-size:11.5px">'+esc(d['Loại hình']||'—')+'</td>'
+      + '<td class="ks-c">'+(ngayKy?fmtDMY(ngayKy):'—')+'</td>'
+      + '<td class="ks-c">'+(tienDoHD!==''?tienDoHD:'—')+'</td>'
+      + '<td class="ks-c">'+(kt?fmtDMY(kt):'—')+'</td>'
+      + '<td class="ks-c">'+(conLai==null?'—':'<span class="'+(conLai<0?'ks-late':conLai<=7?'ks-soon':'')+'">'+(conLai<0?('trễ '+Math.abs(conLai)):conLai)+'</span>')+'</td>'
+      + '<td class="ks-c">'+ksTag(kqChung)+'</td>'
+      + '<td class="ks-flowc">'+ksFlowBar(d,lanes)+'</td>';
+    lanes.forEach(l=>{
+      const info=l.info;
+      if(!info){ r+='<td colspan="4" class="ks-na">Không áp dụng</td>'; return; }
+      r+='<td class="ks-c">'+(info.songay||'—')+'</td>'
+        + '<td class="ks-c">'+(info.min?fmtDMY(info.min):'—')+'</td>'
+        + '<td class="ks-c">'+(info.max?fmtDMY(info.max):'—')+'</td>'
+        + '<td class="ks-c">'+ksTag(info.kq)+'<div class="muted" style="font-size:10px">'+info.pct+'%</div></td>';
+    });
+    r+='</tr>';
+    rows+=r;
+  });
+
+  html += '<div class="tbl-wrap" style="overflow-x:auto"><table class="tbl no-mb ks-table"><thead>'+head1+head2+'</thead><tbody>'+rows+'</tbody></table></div>'
+    + '<p class="muted" style="font-size:12px;margin-top:10px">Cửa sổ thời gian & tiến độ mỗi bộ phận được suy từ các <b>đầu việc theo giai đoạn</b> của dự án (lập ở tab Kế hoạch → “⚡ Lập kế hoạch từ thư viện”). Bấm một dòng để mở dự án.</p>';
+  return html;
+}
+
+/* ===== Xuất Excel (CSV) — Kế hoạch chung ===== */
+function ksExportCsv(){
+  const list = ksList();
+  if(!list.length) return toast('Không có dự án để xuất', true);
+  const head = ['STT','Tên dự án','Mã DA','Số hợp đồng','Loại hình','Ngày ký','Tiến độ HĐ (ngày)','Ngày hoàn thành HĐ','Số ngày còn lại','Kết quả HĐ'];
+  KS_LANES.forEach(l=>{ head.push(l.ten+' — Dự kiến (ngày)', l.ten+' — Bắt đầu', l.ten+' — Hoàn thành', l.ten+' — %HT', l.ten+' — Kết quả'); });
+  const rows=[head];
+  list.forEach((d,i)=>{
+    const v=ksRowVals(d);
+    const r=[i+1, v.chung.ten, v.chung.ma, v.chung.soHD, v.chung.loai, fmtDMY(v.chung.ngayKy),
+      v.chung.tienDo, fmtDMY(v.chung.htHD), (v.chung.conLai==null?'':v.chung.conLai), v.chung.kq];
+    v.lanes.forEach(l=>{ const info=l.info;
+      if(!info){ r.push('','','','','Không áp dụng'); }
+      else r.push(info.songay||'', fmtDMY(info.min), fmtDMY(info.max), info.pct+'%', info.kq);
+    });
+    rows.push(r);
+  });
+  dlCsv(rows, 'MDC_KeHoachChung_'+today()+'.csv');
+  toast('✓ Đã xuất '+list.length+' dự án ra Excel (CSV)');
+}
+/* ===== Xuất PDF — mở bản in ngang, chọn "Lưu thành PDF" ===== */
+function ksPrint(){
+  const list = ksList();
+  if(!list.length) return toast('Không có dự án để in', true);
+  let th1='<tr><th rowspan="2">#</th><th rowspan="2">Dự án</th><th rowspan="2">Loại hình</th><th colspan="5">HỢP ĐỒNG</th>'
+    + KS_LANES.map(l=>'<th colspan="3">'+esc(l.ten)+'</th>').join('')+'</tr>';
+  let th2='<tr><th>Ngày ký</th><th>Tiến độ (ngày)</th><th>Hoàn thành</th><th>Còn lại</th><th>Kết quả</th>'
+    + KS_LANES.map(()=>'<th>Dự kiến</th><th>Bắt đầu → Hoàn thành</th><th>Kết quả</th>').join('')+'</tr>';
+  let body='';
+  list.forEach((d,i)=>{
+    const v=ksRowVals(d);
+    body+='<tr><td>'+(i+1)+'</td><td class="l"><b>'+esc(v.chung.ten)+'</b><br><small>'+esc(v.chung.ma)+(v.chung.soHD?' · '+esc(v.chung.soHD):'')+'</small></td><td>'+esc(v.chung.loai)+'</td>'
+      + '<td>'+(v.chung.ngayKy?fmtDMY(v.chung.ngayKy):'')+'</td><td>'+v.chung.tienDo+'</td><td>'+(v.chung.htHD?fmtDMY(v.chung.htHD):'')+'</td><td>'+(v.chung.conLai==null?'':v.chung.conLai)+'</td><td>'+v.chung.kq+'</td>';
+    v.lanes.forEach(l=>{ const info=l.info;
+      if(!info){ body+='<td colspan="3" class="na">Không áp dụng</td>'; return; }
+      body+='<td>'+(info.songay||'')+'</td><td>'+(info.min?fmtDMY(info.min):'')+' → '+(info.max?fmtDMY(info.max):'')+'</td><td>'+info.kq+' ('+info.pct+'%)</td>';
+    });
+    body+='</tr>';
+  });
+  const w=window.open('','_blank');
+  if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại', true); return; }
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Kế hoạch chung các dự án — MDC</title>'
+    + '<style>@page{size:A3 landscape;margin:9mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#222;margin:0}'
+    + 'h2{margin:0 0 2px;color:#7A5A2E} .sub{color:#666;font-size:11px;margin-bottom:8px}'
+    + 'table{border-collapse:collapse;width:100%} th,td{border:1px solid #9a9a9a;padding:3px 4px;text-align:center;vertical-align:middle}'
+    + 'thead th{background:#F0E9DB;color:#5A4A2E} td.l{text-align:left} td.na{color:#999} tbody tr:nth-child(even){background:#FAF7F1}</style></head><body>'
+    + '<h2>KẾ HOẠCH CHUNG CÁC DỰ ÁN — MDC (Mộc Đông Châu)</h2>'
+    + '<div class="sub">Ngày in: '+fmtDMY(today())+' · '+list.length+' dự án · Dòng chảy công việc qua các bộ phận</div>'
+    + '<table><thead>'+th1+th2+'</thead><tbody>'+body+'</tbody></table></body></html>');
+  w.document.close(); w.focus();
+  setTimeout(()=>{ try{ w.print(); }catch(e){} }, 350);
+  toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF" để xuất PDF');
+}
+/* ===== Nhập Excel (CSV) — tạo / cập nhật dự án cho Kế hoạch chung ===== */
+function ksImportTemplate(){
+  dlCsv([
+    ['Mã DA','Tên dự án','Số hợp đồng','Loại hình','Ngày ký / bắt đầu','Tiến độ HĐ (ngày)','Ngày hoàn thành HĐ','Phụ trách','Trạng thái'],
+    ['','VD: Biệt thự anh Nam','01092026-HDKT/NAM','Xây dựng & Nội thất (Tổng thầu)','01/09/2026','120','','Nguyễn Văn A','Đang triển khai'],
+    ['DA-001','(để trống Mã DA = tạo mới; điền Mã DA có sẵn = cập nhật)','','Nội thất','15/09/2026','','31/12/2026','','Đang triển khai']
+  ], 'MDC_Mau_KeHoachChung.csv');
+  toast('✓ Đã tải file mẫu — mở bằng Excel, điền rồi Lưu dạng "CSV UTF-8"');
+}
+function ksImportOpen(){
+  if(!can('edit')) return toast('Bạn không có quyền tạo/sửa dự án', true);
+  window.__ksImp = null;
+  const body = '<div class="muted" style="margin-bottom:10px;line-height:1.55">Nhập/cập nhật nhiều dự án cùng lúc để hiện lên Kế hoạch chung. '
+    + 'Mỗi dòng một dự án. <b>Để trống Mã DA</b> = tạo mới; <b>điền Mã DA có sẵn</b> = cập nhật mốc thời gian. '
+    + 'Cần <b>Ngày ký/bắt đầu</b> + (<b>Tiến độ HĐ (ngày)</b> hoặc <b>Ngày hoàn thành HĐ</b>) để tính khung thời gian. '
+    + 'Đầu việc chi tiết theo giai đoạn lập ở tab Kế hoạch → "⚡ Lập kế hoạch từ thư viện".</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<button type="button" class="btn btn-ghost" onclick="ksImportTemplate()">⬇ Tải file mẫu CSV</button>'
+    + '<label class="btn btn-ghost" style="cursor:pointer">📂 Chọn file CSV<input type="file" accept=".csv,text/csv" style="display:none" onchange="ksImportParse(this)"></label>'
+    + '</div><div id="ksImpPreview"></div>';
+  openModal('Nhập Excel — Kế hoạch chung', body, ksImportConfirm);
+  document.getElementById('modalSave').classList.add('hide');
+}
+function ksImportParse(inputEl){
+  const file = inputEl.files && inputEl.files[0]; if(!file) return;
+  const pv = document.getElementById('ksImpPreview');
+  const rd = new FileReader();
+  rd.onload = () => {
+    let rows; try{ rows=parseCSV(rd.result); }catch(e){ pv.innerHTML='<span class="tag t-bad">Không đọc được file</span>'; return; }
+    if(rows.length<2){ pv.innerHTML='<span class="tag t-bad">File rỗng hoặc thiếu dòng dữ liệu</span>'; return; }
+    const head = rows[0].map(h=>String(h).trim().toLowerCase());
+    const find = names => head.findIndex(h => names.some(n=>h.includes(n)));
+    const iMa=find(['mã da','ma da','mã dự án','ma du an']);
+    const iTen=find(['tên dự án','ten du an','tên da','ten da']);
+    const iHD=find(['số hợp đồng','so hop dong','số hđ']);
+    const iLoai=find(['loại hình','loai hinh']);
+    const iKy=find(['ngày ký','ngay ky','bắt đầu','bat dau']);
+    const iTd=find(['tiến độ','tien do','số ngày','so ngay']);
+    const iHT=find(['hoàn thành hđ','hoan thanh','ngày kết thúc','ket thuc']);
+    const iPT=find(['phụ trách','phu trach']);
+    const iTT=find(['trạng thái','trang thai']);
+    if(iTen<0){ pv.innerHTML='<span class="tag t-bad">Không tìm thấy cột "Tên dự án"</span>'; return; }
+    const g=(row,k)=> k>-1 ? String(row[k]||'').trim() : '';
+    const drafts=[]; let okN=0;
+    for(let r=1;r<rows.length;r++){
+      const row=rows[r]; const ten=g(row,iTen); if(!ten) continue;
+      const ky=iKy>-1?impDate(g(row,iKy)):'';
+      let ht=iHT>-1?impDate(g(row,iHT)):'';
+      const td=Number(String(g(row,iTd)).replace(/[^\d]/g,''))||0;
+      const errs=[];
+      if(ky===null) errs.push('Ngày ký sai (dd/mm/yyyy)');
+      if(ht===null) errs.push('Ngày hoàn thành sai (dd/mm/yyyy)');
+      // Suy ngày hoàn thành từ tiến độ nếu thiếu
+      if((!ht||ht==='') && ky && td>0){ ht = new Date(new Date(ky).getTime()+td*86400000).toISOString().slice(0,10); }
+      if(ky && (ht==='' || ht==null) && !td) errs.push('Thiếu Tiến độ HĐ (ngày) hoặc Ngày hoàn thành');
+      const loai=g(row,iLoai);
+      const loaiOk = !loai || LOAI_HINH.includes(loai);
+      if(loai && !loaiOk) errs.push('Loại hình không hợp lệ');
+      const maIn=g(row,iMa);
+      const existed = maIn && (S.duan||[]).some(x=>x['Mã DA']===maIn);
+      drafts.push({ ma:maIn, ten, soHD:g(row,iHD), loai:loaiOk?loai:'', ky:ky||'', ht:ht||'',
+        td, pt:g(row,iPT), tt:g(row,iTT)||'Đang triển khai', existed:!!existed, errs });
+      if(!errs.length) okN++;
+    }
+    window.__ksImp = drafts;
+    let h='<div style="margin:6px 0 8px;font-size:13px"><b>'+drafts.length+'</b> dòng · <span style="color:#2E6B3E"><b>'+okN+'</b> hợp lệ</span>'+((drafts.length-okN)?' · <span style="color:#B23A2E"><b>'+(drafts.length-okN)+'</b> lỗi</span>':'')+'</div>';
+    h+='<div class="tbl-wrap" style="max-height:320px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên dự án</th><th>Mã DA</th><th>Loại hình</th><th>Ngày ký</th><th>Hoàn thành</th><th>Thao tác</th><th>Kiểm tra</th></tr></thead><tbody>';
+    drafts.forEach((d,i)=>{ h+='<tr'+(d.errs.length?' style="background:#FDEEEC"':'')+'><td class="muted">'+(i+1)+'</td><td><b>'+esc(d.ten)+'</b>'+(d.soHD?'<div class="muted" style="font-size:11px">'+esc(d.soHD)+'</div>':'')+'</td><td>'+esc(d.ma||'(mới)')+'</td><td>'+esc(d.loai||'—')+'</td><td>'+esc(fmtDMY(d.ky)||'—')+'</td><td>'+esc(fmtDMY(d.ht)||'—')+'</td><td>'+(d.existed?'<span class="tag t-info">cập nhật</span>':'<span class="tag t-ok">tạo mới</span>')+'</td><td>'+(d.errs.length?'<span class="tag t-bad">'+esc(d.errs.join('; '))+'</span>':'<span class="tag t-ok">OK</span>')+'</td></tr>'; });
+    h+='</tbody></table></div>';
+    if(okN) h+='<div class="muted" style="margin-top:8px">Bấm <b>Lưu</b> để nhập <b>'+okN+'</b> dự án hợp lệ. Dòng lỗi được bỏ qua.</div>';
+    pv.innerHTML=h;
+    document.getElementById('modalSave').classList.toggle('hide', okN===0);
+  };
+  rd.readAsText(file,'UTF-8');
+}
+function ksImportConfirm(){
+  const drafts=(window.__ksImp||[]).filter(d=>!d.errs.length);
+  if(!drafts.length){ toast('Không có dòng hợp lệ để nhập', true); return; }
+  let nNew=0, nUpd=0;
+  drafts.forEach(d=>{
+    if(d.existed){
+      const rec={'Mã DA':d.ma, 'Tên dự án':d.ten};
+      if(d.soHD) rec['Số hợp đồng']=d.soHD;
+      if(d.loai) rec['Loại hình']=d.loai;
+      if(d.ky){ rec['Ngày ký']=d.ky; rec['Ngày bắt đầu']=d.ky; }
+      if(d.ht) rec['Ngày kết thúc DK']=d.ht;
+      if(d.pt) rec['Phụ trách']=d.pt;
+      if(d.tt) rec['Trạng thái']=d.tt;
+      const cur=(S.duan||[]).find(x=>x['Mã DA']===d.ma); if(cur) Object.assign(cur, rec);
+      if(d.soHD) ksSetSoHD(d.ma, d.soHD);
+      pushOp('saveProject', rec); nUpd++;
+    } else {
+      const rec={
+        'Mã DA': d.ma || tempCode('DA', S.duan, 'Mã DA'),
+        'Tên dự án': d.ten, 'Số hợp đồng': d.soHD, 'Loại hình': d.loai||'Thiết kế & Thi công',
+        'Giai đoạn': GIAI_DOAN[0], 'Ngày ký': d.ky, 'Ngày bắt đầu': d.ky, 'Ngày kết thúc DK': d.ht,
+        'Phụ trách': d.pt, 'Trạng thái': d.tt||'Đang triển khai', 'Tiến độ (%)':0,
+        'Ghi chú': 'Nhập từ Excel — Kế hoạch chung'
+      };
+      if(d.soHD) ksSetSoHD(rec['Mã DA'], d.soHD);
+      S.duan.push(rec); pushOp('saveProject', rec); nNew++;
+    }
+  });
+  window.__ksImp=null; closeModal();
+  toast('✓ Đã nhập '+ (nNew?nNew+' dự án mới':'') + (nNew&&nUpd?' · ':'') + (nUpd?nUpd+' cập nhật':''));
+  render();
+}
 
 /* ---------- Trang Tổng quan ---------- */
 /* ================================================================
@@ -4141,6 +4524,8 @@ function expenseApproveHtml(c, isNew){
 function __updateSeedPreview(){
   const lh = document.getElementById('cvLH'); const box = document.getElementById('cvSeedPreview');
   if(lh && box) box.innerHTML = seedPreviewHtml(lh.value);
+  const seed = document.getElementById('cvSeed');
+  if(lh && seed){ const xd = laLoaiXayDung(lh.value); seed.disabled = xd; if(xd) seed.checked = false; }
 }
 function formConvertLead(code){
   const l = (S.leads||[]).find(x => x.code === code);
@@ -4229,6 +4614,8 @@ function V(id){ const el = document.getElementById(id); return el ? el.value.tri
 function __updateProjSeedPreview(){
   const lh = document.getElementById('pLH'); const box = document.getElementById('pSeedPreview');
   if(lh && box) box.innerHTML = seedPreviewHtml(lh.value);
+  const seed = document.getElementById('pSeed');
+  if(lh && seed){ const xd = laLoaiXayDung(lh.value); seed.disabled = xd; if(xd) seed.checked = false; }
 }
 function formProject(code){
   const d = code ? S.duan.find(x=>x['Mã DA']===code) : null;
@@ -7697,6 +8084,158 @@ const TV_KH = [
   ]]
 ]],
 
+/* ══ GĐ (TX) — THIẾT KẾ KIẾN TRÚC & KẾT CẤU (cho công trình xây dựng) ══ */
+['Thiết kế kiến trúc & kết cấu','TX',[
+  ['Thiết kế kiến trúc','Bắt buộc',[
+    ['Phương án kiến trúc & bố trí mặt bằng tổng thể',3,'Cao','Kiến trúc sư',''],
+    ['Hồ sơ kiến trúc: mặt bằng, mặt đứng, mặt cắt các tầng',5,'Cao','Kiến trúc sư',''],
+    ['Phối cảnh ngoại thất công trình (3D)',3,'Cao','Kiến trúc sư',''],
+    ['Chi tiết cấu tạo kiến trúc (cầu thang, vệ sinh, mái, cửa)',3,'Trung bình','Kiến trúc sư',''],
+    ['Trình BLĐ / khách duyệt phương án kiến trúc',1,'Cao','Chủ trì thiết kế','ap']
+  ]],
+  ['Thiết kế kết cấu','Bắt buộc',[
+    ['Khảo sát địa chất & đánh giá nền móng',3,'Cao','Kỹ sư kết cấu',''],
+    ['Tính toán & thiết kế kết cấu móng',3,'Cao','Kỹ sư kết cấu',''],
+    ['Thiết kế kết cấu thân: cột, dầm, sàn, cầu thang',5,'Cao','Kỹ sư kết cấu',''],
+    ['Thiết kế kết cấu mái',2,'Trung bình','Kỹ sư kết cấu',''],
+    ['Thống kê thép & bản vẽ kết cấu chi tiết',3,'Cao','Kỹ sư kết cấu',''],
+    ['Thẩm tra thiết kế kết cấu (nếu công trình yêu cầu)',2,'Trung bình','Chủ trì thiết kế','qc']
+  ]],
+  ['Thiết kế M&E (điện – nước – ĐHKK)','Bắt buộc',[
+    ['Thiết kế hệ thống điện & chiếu sáng',3,'Cao','Kỹ sư M&E',''],
+    ['Thiết kế cấp thoát nước',2,'Cao','Kỹ sư M&E',''],
+    ['Thiết kế điều hòa, thông gió & PCCC (nếu có)',3,'Trung bình','Kỹ sư M&E',''],
+    ['Bản vẽ phối hợp M&E với kiến trúc – kết cấu',2,'Cao','Chủ trì thiết kế','qc']
+  ]],
+  ['Dự toán & Xin phép xây dựng','Bắt buộc',[
+    ['Bóc tách khối lượng & lập dự toán công trình',3,'Cao','Kỹ thuật thi công',''],
+    ['Trình BLĐ duyệt dự toán & biên lợi nhuận',1,'Cao','Quản lý dự án','ap'],
+    ['Lập hồ sơ xin phép xây dựng & thủ tục pháp lý',5,'Cao','Quản lý dự án',''],
+    ['Ký hợp đồng thi công & thu tạm ứng',1,'Cao','Kinh doanh','kh']
+  ]]
+]],
+
+/* ══ GĐ (XD) — CHUẨN BỊ & KHỞI CÔNG ══ */
+['Chuẩn bị & Khởi công','XD',[
+  ['Pháp lý & Tiếp nhận mặt bằng','Bắt buộc',[
+    ['Tiếp nhận & bàn giao mặt bằng, mốc giới, ranh lộ giới',2,'Cao','Quản lý dự án','qc'],
+    ['Kiểm tra hồ sơ pháp lý, giấy phép xây dựng',2,'Cao','Quản lý dự án',''],
+    ['Định vị tim trục, cao độ chuẩn ±0.00 công trình',1,'Cao','Kỹ thuật thi công','qc'],
+    ['Khảo sát, chụp hiện trạng công trình lân cận',2,'Trung bình','Giám sát','']
+  ]],
+  ['Huy động công trường','Bắt buộc',[
+    ['Lập biện pháp thi công tổng thể & tiến độ chi tiết',3,'Cao','Chỉ huy trưởng',''],
+    ['Trình BLĐ duyệt biện pháp thi công & ngân sách',1,'Cao','Quản lý dự án','ap'],
+    ['Làm lán trại, kho bãi, hàng rào tôn, biển báo',3,'Trung bình','Đội thi công','tp'],
+    ['Đấu nối điện, nước phục vụ thi công tạm',2,'Trung bình','Kỹ thuật thi công',''],
+    ['Lập kế hoạch an toàn lao động & vệ sinh môi trường',2,'Cao','An toàn',''],
+    ['Tập kết máy móc, thiết bị & nhân lực khởi công',2,'Cao','Chỉ huy trưởng','']
+  ]]
+]],
+
+/* ══ GĐ (XD) — PHẦN NGẦM & MÓNG ══ */
+['Phần ngầm & Móng','XD',[
+  ['Nền, Cọc & Đào đất','Bắt buộc',[
+    ['Đào đất hố móng / tầng hầm',4,'Cao','Đội thi công','tp'],
+    ['Ép cọc / khoan cọc nhồi',5,'Cao','Đội thi công','tp'],
+    ['Thí nghiệm nén tĩnh & nghiệm thu cọc',2,'Cao','Kỹ thuật thi công','qc'],
+    ['Đổ bê tông lót móng',1,'Trung bình','Đội thi công','']
+  ]],
+  ['Đài, Giằng & Bê tông móng','Bắt buộc',[
+    ['Gia công lắp dựng cốt thép đài, giằng móng',3,'Cao','Đội thi công',''],
+    ['Lắp dựng cốp pha móng, giằng, cổ cột',2,'Cao','Đội thi công',''],
+    ['Nghiệm thu cốt thép – cốp pha móng (điểm dừng)',1,'Cao','Giám sát','qc'],
+    ['Đổ bê tông móng, đài, giằng',2,'Cao','Đội thi công',''],
+    ['Bảo dưỡng bê tông & tháo dỡ cốp pha móng',3,'Trung bình','Đội thi công','']
+  ]],
+  ['Hạ tầng ngầm & Chống thấm','Tùy chọn',[
+    ['Xây bể tự hoại, hố ga, bể nước ngầm',4,'Trung bình','Đội thi công','tp'],
+    ['Lắp đặt hệ thoát nước ngầm, ống chờ kỹ thuật',2,'Trung bình','Kỹ thuật thi công',''],
+    ['Chống thấm tầng hầm / cổ móng',3,'Cao','Đội thi công','tp'],
+    ['Lấp đất hố móng & đầm chặt nền',2,'Trung bình','Đội thi công','']
+  ]]
+]],
+
+/* ══ GĐ (XD) — KẾT CẤU PHẦN THÔ ══ */
+['Kết cấu phần thô','XD',[
+  ['Cột – Vách','Bắt buộc',[
+    ['Gia công lắp dựng cốt thép cột, vách',3,'Cao','Đội thi công',''],
+    ['Lắp dựng cốp pha cột, vách',2,'Cao','Đội thi công',''],
+    ['Nghiệm thu cốt thép – cốp pha cột (điểm dừng)',1,'Cao','Giám sát','qc'],
+    ['Đổ bê tông cột, vách',1,'Cao','Đội thi công','']
+  ]],
+  ['Dầm – Sàn','Bắt buộc',[
+    ['Lắp dựng cốp pha, cây chống dầm sàn',3,'Cao','Đội thi công',''],
+    ['Gia công lắp cốt thép dầm, sàn',3,'Cao','Đội thi công',''],
+    ['Đặt ống chờ M&E, hộp kỹ thuật trong sàn',1,'Cao','Kỹ thuật thi công',''],
+    ['Nghiệm thu cốt thép – cốp pha sàn (điểm dừng)',1,'Cao','Giám sát','qc'],
+    ['Đổ bê tông dầm, sàn',1,'Cao','Đội thi công',''],
+    ['Bảo dưỡng bê tông & tháo dỡ cốp pha sàn',4,'Trung bình','Đội thi công','']
+  ]],
+  ['Cầu thang – Mái','Bắt buộc',[
+    ['Thi công kết cấu cầu thang bộ',3,'Trung bình','Đội thi công',''],
+    ['Thi công kết cấu & chống thấm mái',4,'Cao','Đội thi công','tp'],
+    ['Nghiệm thu kết cấu phần thô từng tầng',1,'Cao','Giám sát','qc']
+  ]]
+]],
+
+/* ══ GĐ (XD) — XÂY TÔ & HOÀN THIỆN THÔ ══ */
+['Xây tô & Hoàn thiện thô','XD',[
+  ['Xây tường','Bắt buộc',[
+    ['Xây tường bao che, tường ngăn',6,'Cao','Đội thi công','tp'],
+    ['Lắp dựng lanh tô, khuôn cửa chờ',2,'Trung bình','Đội thi công',''],
+    ['Xây ô kỹ thuật, bậc tam cấp, bồn hoa',2,'Trung bình','Đội thi công','']
+  ]],
+  ['Trát – Cán nền – Chống thấm','Bắt buộc',[
+    ['Tô trát tường trong',5,'Cao','Đội thi công','tp'],
+    ['Tô trát tường ngoài, mặt tiền',4,'Cao','Đội thi công','tp'],
+    ['Cán nền, tạo dốc sàn vệ sinh & ban công',3,'Trung bình','Đội thi công',''],
+    ['Chống thấm sàn vệ sinh, ban công, sân thượng',3,'Cao','Đội thi công','tp'],
+    ['Nghiệm thu xây – tô – chống thấm',1,'Cao','Giám sát','qc']
+  ]]
+]],
+
+/* ══ GĐ (XD) — CƠ ĐIỆN (M&E) ══ */
+['Cơ điện (M&E)','XD',[
+  ['Điện & Dòng nhẹ','Bắt buộc',[
+    ['Đi ống luồn dây điện âm tường, âm sàn',4,'Cao','Kỹ thuật thi công','tp'],
+    ['Lắp đặt hệ mạng, camera, âm thanh, chuông cửa',3,'Trung bình','Kỹ thuật thi công','tp'],
+    ['Kéo dây, lắp tủ điện tổng & aptomat',3,'Cao','Kỹ thuật thi công','tp']
+  ]],
+  ['Cấp thoát nước & Điều hòa','Bắt buộc',[
+    ['Lắp đặt hệ cấp thoát nước âm tường',4,'Cao','Kỹ thuật thi công','tp'],
+    ['Lắp đặt ống đồng, ống gió điều hòa (HVAC)',3,'Trung bình','Kỹ thuật thi công','tp'],
+    ['Lắp đặt hệ thống PCCC (nếu có)',3,'Trung bình','Kỹ thuật thi công','tp']
+  ]],
+  ['Kiểm tra & Nghiệm thu M&E','Bắt buộc',[
+    ['Thử áp lực đường ống cấp nước',1,'Cao','Kỹ thuật thi công','qc'],
+    ['Nghiệm thu hệ M&E âm trước khi hoàn thiện',1,'Cao','Giám sát','qc']
+  ]]
+]],
+
+/* ══ GĐ (XD) — HOÀN THIỆN XÂY DỰNG ══ */
+['Hoàn thiện xây dựng','XD',[
+  ['Ốp lát & Sơn bả','Bắt buộc',[
+    ['Ốp lát gạch nền, gạch tường vệ sinh',6,'Cao','Đội thi công','tp'],
+    ['Ốp đá bậc thang, mặt bếp, sảnh',3,'Trung bình','Đội thi công','tp'],
+    ['Bả matit tường, trần',4,'Cao','Đội thi công','tp'],
+    ['Sơn nước hoàn thiện trong & ngoài',5,'Cao','Đội thi công','tp']
+  ]],
+  ['Trần – Cửa – Thiết bị','Bắt buộc',[
+    ['Đóng trần thạch cao / trần nhôm',4,'Cao','Đội thi công','tp'],
+    ['Lắp đặt cửa đi, cửa sổ, vách kính',3,'Cao','Đội thi công','tp'],
+    ['Lắp lan can, tay vịn cầu thang',2,'Trung bình','Đội thi công','tp'],
+    ['Lắp thiết bị vệ sinh, sen vòi',2,'Cao','Kỹ thuật thi công',''],
+    ['Lắp thiết bị điện: đèn, ổ cắm, công tắc',2,'Cao','Kỹ thuật thi công','']
+  ]],
+  ['Mặt ngoài & Nghiệm thu','Tùy chọn',[
+    ['Thi công mặt tiền: ốp đá / alu / lam trang trí',4,'Trung bình','Đội thi công','tp'],
+    ['Thi công sân vườn, cổng, tường rào',4,'Thấp','Đội thi công','tp'],
+    ['Vệ sinh công nghiệp sau hoàn thiện',2,'Cao','Đội thi công','tp'],
+    ['Nghiệm thu hoàn thiện phần xây dựng',1,'Cao','Giám sát','qc']
+  ]]
+]],
+
 /* ══ GĐ4 — SẢN XUẤT TẠI XƯỞNG ══ */
 ['Sản xuất tại xưởng','TC',[
   ['Chuẩn bị sản xuất','Bắt buộc',[
@@ -7801,12 +8340,10 @@ const TV_KH = [
 ];
 
 /* ---------- Tiện ích thư viện ---------- */
-// Lọc thư viện theo Loại hình dự án
+// Lọc thư viện theo Loại hình dự án — theo nhóm ngành (v4.2)
 function tvFilter(loaiHinh){
-  const n = vnorm(loaiHinh||'');
-  const onlyTK = n === 'thiet ke';
-  const onlyTC = n === 'thi cong';
-  return TV_KH.filter(g => !(onlyTK && g[1]==='TC') && !(onlyTC && g[1]==='TK'));
+  const nh = nhomTheoLoaiHinh(loaiHinh);
+  return TV_KH.filter(g => nh.includes(g[1]));
 }
 // Danh sách phẳng đầu việc — dùng cho ô chọn nhanh trong form công việc
 function tvFlat(loaiHinh){
