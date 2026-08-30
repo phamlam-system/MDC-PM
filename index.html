@@ -3,6 +3,7 @@
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
+<!-- MDC-PM v5.6 — P0 NỀN TẢNG DỮ LIỆU: đưa các kho kế hoạch (khc/khhm/nlsx/nltk/holidays/sohd) vào S.pmkv → tự lưu localStorage (mdcpm_state) VÀ đồng bộ Backend (getAll trả pmkv + action savePMKV, ghi write-through debounce 900ms, fallback pending khi mất mạng). pmkvMigrate() chuyển dữ liệu localStorage cũ vào S.pmkv 1 lần. Accessor khc/khhm/hol/sohd/nlsx/nltk đọc-ghi qua pmkvGet/pmkvSet. CHẠY TỐT trước khi deploy .gs (giữ local, BE trả pmkv rỗng thì không sao). P0(2): khhmEdit tự suy sx_bd/sx_ht (tóm tắt) = min/max của Mộc/Sơn/Lắp đặt → 1 nguồn dữ liệu. CẦN DEPLOY MDC_HopNhat_Backend v6.4 (thêm sheet PM_KeHoach + savePMKV_ + getPMKV_). -->
 <!-- MDC-PM v5.5 — NĂNG LỰC & KHẢ THI THIẾT KẾ (module Thiết kế): nút chuyển "✏ Điều hành & Kế hoạch TK ↔ 📊 Năng lực & Khả thi". Đơn vị = số hạng mục (bộ hồ sơ). 3 nhóm: Concept/Ý tưởng · Triển khai kỹ thuật (shop) · Kết cấu/M&E; mỗi hạng mục qua CẢ 3 nhóm; xếp tuần theo cửa sổ Hồ sơ (hs_bd..hs_ht, fallback project). Cấu hình localStorage mdc_pm_nltk (res:{cc,tk,kc:{nangSuat[hạng mục/người/tuần],soNguoi}}). Bảng tải theo tuần + kiểm tra khả thi so với năng lực CÒN TRỐNG. Dùng chung helper nlsxWeeks/nlsxWkLabel/fmtNum. -->
 <!-- MDC-PM v5.4 — NĂNG LỰC theo GIÁ TRỊ (đồng): thêm nút chuyển "₫ Theo giá trị (đồng) ↔ ▦ Theo m²" trong màn Năng lực & Khả thi. Chế độ giá trị: công suất mỗi tổ = đồng/người/tháng × số người ÷ 4,33 tuần; nhu cầu mỗi hạng mục = Thành tiền (cột tt). Bảng SX thêm cột "Thành tiền"; import HĐ tự lấy Thành tiền (cột 11 / tiêu đề "Thành tiền"). nlsxUnit/nlsxQty/nlsxFmt; nlsxCapWeek(o,id,unit); res thêm khóa dongThang. Mặc định chế độ giá trị. -->
 <!-- MDC-PM v5.3 — NĂNG LỰC & KHẢ THI SẢN XUẤT (module Nhà máy): nút chuyển "🏭 Điều hành & Kế hoạch SX" ↔ "📊 Năng lực & Khả thi". Khai báo định mức năng suất (m²/người/ngày) + số người cho 6 nguồn lực (Kỹ thuật/CNC · 3 tổ SX: ván CN / TN liền tường / TN đồ rời · Sơn · Lắp đặt) → Năng lực/tuần. Bảng tải theo tuần (đơn đang triển khai, tô màu theo % tải) + Kiểm tra khả thi 1 đơn so với NĂNG LỰC CÒN TRỐNG (đã trừ đơn đang chạy) → báo Đạt/Thiếu m²/tuần từng tổ. Bảng SX v5.2 thêm cột "Nhóm tổ SX" (định tuyến) + "m² quy đổi". Cấu hình localStorage mdc_pm_nlsx; hạng mục lấy từ phân bổ Nhà máy (kho mdc_pm_khhm). -->
@@ -1227,7 +1228,9 @@ let S = {
   // ★ v5.0 — HÀNH TRÌNH KHÁCH HÀNG do CRM tạo (PM chỉ đọc)
   baogia:[], khaosat:[], lichsulv:[], hopdongKH:[],
   // ★ v6.2 — Mua sắm sâu (yêu cầu mua, kho) + Nhân sự & Lương (chấm công, bảng lương)
-  yeucaumua:[], kho:[], chamcong:[], bangluong:[]
+  yeucaumua:[], kho:[], chamcong:[], bangluong:[],
+  // ★ v5.6 — KHO KẾ HOẠCH key-value (đồng bộ Backend): khc/khhm/nlsx/nltk/holidays/sohd
+  pmkv:{}
 };
 let user = null, currentView = 'dashboard', filterProj = '';
 
@@ -1379,6 +1382,32 @@ const store = {
   set session(v){ v ? localStorage.setItem('mdcpm_session', JSON.stringify(v)) : localStorage.removeItem('mdcpm_session'); }
 };
 
+/* ★ v5.6 — KHO KẾ HOẠCH key-value (S.pmkv): lưu localStorage qua store.saveState() + đồng bộ Backend (savePMKV/getAll). Chạy tốt cả khi Backend chưa có action (giữ local). */
+function pmkvGet(key){ return (S && S.pmkv && S.pmkv[key]!==undefined) ? S.pmkv[key] : undefined; }
+var __pmkvT = {};
+function pmkvSet(key, val){
+  S.pmkv = S.pmkv || {}; S.pmkv[key] = val;
+  try{ store.saveState(); }catch(e){}
+  if(!store.api) return;                                  // chưa kết nối → chỉ lưu local
+  clearTimeout(__pmkvT[key]);
+  __pmkvT[key] = setTimeout(function(){
+    var v = (S.pmkv && S.pmkv[key]);
+    var payload = { key:key, value: JSON.stringify(v==null?null:v) };
+    apiPost('savePMKV', payload).catch(function(){
+      var p = store.pending; p.push({action:'savePMKV', data:payload}); store.pending = p;
+    });
+  }, 900);
+}
+function pmkvMigrate(){
+  S.pmkv = S.pmkv || {};
+  var map = {khc:'mdc_pm_khc', khhm:'mdc_pm_khhm', nlsx:'mdc_pm_nlsx', nltk:'mdc_pm_nltk', holidays:'mdc_pm_holidays', sohd:'mdc_pm_sohd'};
+  var changed = false;
+  Object.keys(map).forEach(function(k){
+    if(S.pmkv[k]===undefined){ try{ var raw=localStorage.getItem(map[k]); if(raw!=null){ S.pmkv[k]=JSON.parse(raw); changed=true; } }catch(e){} }
+  });
+  if(changed){ try{ store.saveState(); }catch(e){} }
+}
+
 /* ---------- Gọi API ---------- */
 async function apiGet(action){
   const url = store.api;
@@ -1479,6 +1508,13 @@ async function syncAll(manual){
       S.kho        = j.kho       ||S.kho       ||[];
       S.chamcong   = j.chamcong  ||S.chamcong  ||[];
       S.bangluong  = j.bangluong ||S.bangluong ||[];
+      // ★ v5.6 — kho kế hoạch từ Backend (nếu có); chưa deploy thì giữ bản local
+      if(j.pmkv && typeof j.pmkv==='object'){
+        var localKV = S.pmkv || {};
+        S.pmkv = Object.assign({}, localKV, j.pmkv);   // server là nguồn cho key trùng
+        // Di cư lần đầu sau deploy: đẩy lên server các kho local có mà server CHƯA có
+        Object.keys(localKV).forEach(function(k){ if(j.pmkv[k]===undefined && localKV[k]!=null) pmkvSet(k, localKV[k]); });
+      } else { S.pmkv = S.pmkv || {}; }
       store.saveState();
       setSync('ok','Đồng bộ ' + new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}));
       if(user) render();
@@ -1902,16 +1938,16 @@ window.addEventListener('resize', function(){ try{ napBangDienThoai_(); }catch(e
    Có "Gợi ý từ công việc" tự điền mốc từ đầu việc theo giai đoạn.
 ================================================================ */
 // ---- Kho lưu dữ liệu Kế hoạch chung theo Mã DA (localStorage) ----
-function khcStore(){ try{ return JSON.parse(localStorage.getItem('mdc_pm_khc')||'{}'); }catch(e){ return {}; } }
-function khcSaveStore(o){ try{ localStorage.setItem('mdc_pm_khc', JSON.stringify(o)); }catch(e){} }
+function khcStore(){ return pmkvGet('khc')||{}; }
+function khcSaveStore(o){ pmkvSet('khc', o||{}); }
 function khcGet(ma){ return khcStore()[ma] || {}; }
 function khcSet(ma, key, val){ const s=khcStore(); (s[ma]=s[ma]||{})[key]= (val==null?'':String(val)); khcSaveStore(s); }
 function khcRaw(ma, key){ const s=khcGet(ma); return (key in s) ? s[key] : undefined; }
 // ---- Helper dùng chung ----
 function ksDiff(a,b){ if(!a||!b) return null; return Math.round((new Date(b)-new Date(a))/86400000); }
-function ksSoHDStore(){ try{ return JSON.parse(localStorage.getItem('mdc_pm_sohd')||'{}'); }catch(e){ return {}; } }
+function ksSoHDStore(){ return pmkvGet('sohd')||{}; }
 function ksSoHD(maDA){ const d=(S.duan||[]).find(x=>x['Mã DA']===maDA); return (d&&(d['Số hợp đồng']||d['Số HĐ'])) || ksSoHDStore()[maDA] || ''; }
-function ksSetSoHD(maDA,v){ if(!maDA) return; const s=ksSoHDStore(); if(v) s[maDA]=String(v); else delete s[maDA]; try{ localStorage.setItem('mdc_pm_sohd', JSON.stringify(s)); }catch(e){} }
+function ksSetSoHD(maDA,v){ if(!maDA) return; const s=ksSoHDStore(); if(v) s[maDA]=String(v); else delete s[maDA]; pmkvSet('sohd', s); }
 
 // ---- Cách tính ngày theo tính chất hợp đồng + Danh mục ngày lễ (v4.8) ----
 const KHC_MODES = ['Lịch (cả CN, lễ)','Trừ Chủ nhật','Trừ CN & ngày lễ'];
@@ -1924,9 +1960,9 @@ const HOL_DEFAULT = [
   '2026-09-01','2026-09-02',                                          // Quốc khánh
   '2027-01-01','2027-04-30','2027-05-01','2027-09-02'
 ];
-function holStore(){ try{ const v=localStorage.getItem('mdc_pm_holidays'); return v?JSON.parse(v):null; }catch(e){ return null; } }
-function holList(){ let h=holStore(); if(!Array.isArray(h)){ h=HOL_DEFAULT.slice(); try{ localStorage.setItem('mdc_pm_holidays', JSON.stringify(h)); }catch(e){} } return h; }
-function holSave(arr){ arr=[...new Set(arr.filter(Boolean))].sort(); try{ localStorage.setItem('mdc_pm_holidays', JSON.stringify(arr)); }catch(e){} return arr; }
+function holStore(){ const h=pmkvGet('holidays'); return Array.isArray(h)?h:null; }
+function holList(){ let h=holStore(); if(!Array.isArray(h)){ h=HOL_DEFAULT.slice(); pmkvSet('holidays', h); } return h; }
+function holSave(arr){ arr=[...new Set(arr.filter(Boolean))].sort(); pmkvSet('holidays', arr); return arr; }
 // Cộng "n ngày làm việc" vào ngày bắt đầu theo cách tính → trả ISO ngày hoàn thành
 function khcAddDays(startISO, n, mode){
   n=Number(n)||0; if(!/^\d{4}-\d{2}-\d{2}$/.test(String(startISO||'')) || n<=0) return '';
@@ -2180,8 +2216,8 @@ const KHHM_GROUPS = [
   ]},
 ];
 function khhmCols(){ const a=[]; KHHM_GROUPS.forEach(g=>g.cols.forEach(c=>a.push(c))); return a; }
-function khhmStore(){ try{ return JSON.parse(localStorage.getItem('mdc_pm_khhm')||'{}'); }catch(e){ return {}; } }
-function khhmSaveStore(o){ try{ localStorage.setItem('mdc_pm_khhm', JSON.stringify(o)); }catch(e){} }
+function khhmStore(){ return pmkvGet('khhm')||{}; }
+function khhmSaveStore(o){ pmkvSet('khhm', o||{}); }
 function khhmGet(ma){ const a=khhmStore()[ma]; return Array.isArray(a)?a:[]; }
 function khhmSetRows(ma, arr){ const s=khhmStore(); s[ma]=arr; khhmSaveStore(s); }
 function khhmNewId(){ return 'h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -2190,7 +2226,15 @@ function khhmPbCls(v){ return v==='Nhà máy'?'pb-nm':v==='Thương mại'?'pb-t
 function khhmAdd(ma){ if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true); const rows=khhmGet(ma); rows.push({id:khhmNewId()}); khhmSetRows(ma,rows); render(); }
 function khhmDel(ma,id){ if(!khhmCanEd(ma)) return; const row=khhmGet(ma).find(r=>r.id===id); const nm=(row&&row.ten)?('“'+row.ten+'”'):'hạng mục này';
   openModal('Xóa hạng mục', '<div style="line-height:1.6">Xóa '+esc(nm)+' khỏi kế hoạch?</div>', ()=>{ khhmSetRows(ma, khhmGet(ma).filter(r=>r.id!==id)); closeModal(); render(); }); }
-function khhmEdit(ma,id,key,el){ const rows=khhmGet(ma); const row=rows.find(r=>r.id===id); if(!row) return; row[key]=el.value; khhmSetRows(ma,rows);
+function khhmEdit(ma,id,key,el){ const rows=khhmGet(ma); const row=rows.find(r=>r.id===id); if(!row) return; row[key]=el.value;
+  // ★ v5.6 — tự suy mốc Sản xuất tóm tắt (sx_bd/sx_ht) từ chi tiết Mộc/Sơn/Lắp đặt (1 nguồn dữ liệu)
+  if(['moc_bd','son_bd','ld_bd','moc_ht','son_ht','ld_ht'].indexOf(key)>-1){
+    const bds=[row.moc_bd,row.son_bd,row.ld_bd].filter(Boolean).sort();
+    const hts=[row.moc_ht,row.son_ht,row.ld_ht].filter(Boolean).sort();
+    if(bds.length) row.sx_bd=bds[0];
+    if(hts.length) row.sx_ht=hts[hts.length-1];
+  }
+  khhmSetRows(ma,rows);
   if(key==='phanBo') el.className='khhm-in khhm-pb '+khhmPbCls(el.value);
   khhmUpdSummary(ma); }
 function khhmCell(ma,r,c,canEd){
@@ -2573,11 +2617,11 @@ const NLSX_RES=[
 ];
 const NLSX_WPM = 52/12;   // số tuần / tháng (~4.33)
 function nlsxUnit(){ return window._nlsxUnit==='m2' ? 'm2' : 'gt'; }   // mặc định: theo giá trị (đồng)
-function nlsxCfg(){ let s={}; try{ s=JSON.parse(localStorage.getItem('mdc_pm_nlsx')||'{}'); }catch(e){}
+function nlsxCfg(){ let s=pmkvGet('nlsx')||{};
   const o={ngayCongTuan:(s.ngayCongTuan!=null?s.ngayCongTuan:6), res:{}};
   NLSX_RES.forEach(r=>{ const v=(s.res&&s.res[r.id])||{}; o.res[r.id]={nangSuat:v.nangSuat||'', soNguoi:v.soNguoi||'', dongThang:v.dongThang||''}; });
   return o; }
-function nlsxSaveCfg(o){ try{ localStorage.setItem('mdc_pm_nlsx', JSON.stringify(o)); }catch(e){} }
+function nlsxSaveCfg(o){ pmkvSet('nlsx', o); }
 function nlsxEditGen(key,el){ const o=nlsxCfg(); o[key]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
 function nlsxEditRes(id,key,el){ const o=nlsxCfg(); (o.res[id]=o.res[id]||{})[key]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
 function nlsxCapWeek(o,id,unit){ const r=o.res[id]||{}; const sn=parseFloat(r.soNguoi)||0;
@@ -2695,9 +2739,9 @@ const NLTK_RES=[
   {id:'tk',ten:'Triển khai kỹ thuật (shop)'},
   {id:'kc',ten:'Kết cấu / M&E'},
 ];
-function nltkCfg(){ let s={}; try{ s=JSON.parse(localStorage.getItem('mdc_pm_nltk')||'{}'); }catch(e){}
+function nltkCfg(){ let s=pmkvGet('nltk')||{};
   const o={res:{}}; NLTK_RES.forEach(r=>{ const v=(s.res&&s.res[r.id])||{}; o.res[r.id]={nangSuat:v.nangSuat||'', soNguoi:v.soNguoi||''}; }); return o; }
-function nltkSaveCfg(o){ try{ localStorage.setItem('mdc_pm_nltk', JSON.stringify(o)); }catch(e){} }
+function nltkSaveCfg(o){ pmkvSet('nltk', o); }
 function nltkEditRes(id,key,el){ const o=nltkCfg(); (o.res[id]=o.res[id]||{})[key]=el.value; nltkSaveCfg(o); nltkRefresh(); }
 function nltkCapWeek(o,id){ const r=o.res[id]||{}; return (parseFloat(r.nangSuat)||0)*(parseFloat(r.soNguoi)||0); }   // hạng mục/tuần
 function nltkWin(r,d){ let s=r.hs_bd||'', e=r.hs_ht||'';
@@ -9022,6 +9066,7 @@ function tempCode(prefix, arr, field){
 ================================================================ */
 (function init(){
   store.loadState();
+  pmkvMigrate();   // ★ v5.6 — chuyển dữ liệu kế hoạch cũ (localStorage) vào S.pmkv một lần
   // Phiên đăng nhập cũ
   const ses = store.session;
   if(ses && S.nhansu.length){
