@@ -3,6 +3,8 @@
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
+<!-- MDC-PM v5.1 — KẾ HOẠCH THIẾT KẾ theo hạng mục: module Thiết kế thêm card "Kế hoạch thiết kế theo hạng mục" — hiện MỌI hạng mục (mọi phân bổ NM/TM/TP, vì thiết kế/hồ sơ làm cho tất cả), nhóm mốc KẾ HOẠCH HỒ SƠ (Chốt Spec · HS Bắt đầu · HS Hoàn thành · Chuyển hồ sơ · Duyệt mẫu) + có cột Phân bổ để biết ai thực hiện. khhmDeptRows(pb='' → mọi phân bổ); khhmDeptPlanHtml roCols thêm Phân bổ khi pb rỗng. Cùng kho mdc_pm_khhm → đồng bộ 2 chiều với bảng hạng mục của dự án. -->
+<!-- MDC-PM v5.0 — KẾ HOẠCH THEO HẠNG MỤC LAN TỎA SANG CÁC PHÒNG (chung kho mdc_pm_khhm): từ Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục, các hạng mục tự chảy về đúng phòng theo cột Phân bổ. Module Nhà máy: card "Kế hoạch sản xuất theo hạng mục" (Hồ sơ + Sản xuất & lắp đặt). Module Thương mại: card "Kế hoạch đặt hàng theo hạng mục" (Đặt hàng). Module Thầu phụ: thêm tab "Kế hoạch thi công" (Thi công thầu phụ). Sửa mốc ở phòng ↔ đồng bộ tức thì với bảng hạng mục của dự án. khhmDeptPlanHtml(pb,groups,da) + khhmDeptRows. -->
 <!-- MDC-PM v4.7 — 3 MODULE THEO PHÒNG BAN (nav riêng): Thiết kế · Nhà máy · Thương mại. Bước 1 (chạy ngay, không cần deploy BE): mỗi module = bảng điều hành phòng — gom công việc theo giai đoạn của phòng xuyên suốt mọi dự án + KPI + việc quá hạn + mốc từ Kế hoạch chi tiết (kho mdc_pm_khc) + (Thương mại) bảng Mua sắm/Đặt hàng. Chừa khung "Nghiệp vụ chuyên sâu (bước 2)". Lọc theo dự án. -->
 <!-- MDC-PM v4.9 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC (bám ĐÚNG mẫu sheet "Kế hoạch HĐ Tuấn Anh"): trong tab "Kế hoạch chi tiết" thêm nút chuyển "🏢 Theo bộ phận ↔ 📦 Theo hạng mục". Nhóm cột: PHÂN BỐ HẠNG MỤC (Hạng mục · Phân loại · Phân bổ NM/TM/TP · ĐVT · Số lượng) · KẾ HOẠCH HỒ SƠ (Chốt Spec · HS Bắt đầu · HS Hoàn thành · Chuyển hồ sơ · Duyệt mẫu) · KẾ HOẠCH SẢN XUẤT & LẮP ĐẶT (Tình trạng · Bắt đầu · Hoàn thành) · KẾ HOẠCH ĐẶT HÀNG-TM (Tình trạng · Ngày đặt · Ngày nhận) · KẾ HOẠCH THI CÔNG-Thầu phụ (Tình trạng · Ngày TC · Hoàn thành) · TIẾN ĐỘ (% HT · Ghi chú). Nhập tay (＋ Thêm hạng mục) hoặc "⬆ Nhập từ hợp đồng": chọn THẲNG file Excel .xlsx (nhúng SheetJS mini, chọn được sheet) hoặc dán từ Excel/Sheet/CSV — tự map cột & bỏ dòng tiêu đề/nhóm/tổng. Xuất Excel/PDF. Kho localStorage mdc_pm_khhm (không cần deploy BE). -->
 <!-- MDC-PM v4.8 — QUY RA THỜI GIAN theo tính chất HĐ (tab Kế hoạch chi tiết): thêm ô "Cách tính ngày" (Lịch cả CN&lễ / Trừ Chủ nhật / Trừ CN & ngày lễ). "Hoàn thành HĐ (tính)" TỰ tính = Ngày ký + Tiến độ (số ngày) theo cách tính, và tự áp vào Ngày kết thúc DK của dự án (Số ngày còn lại/Gantt ăn theo). Nút "🗓 Ngày lễ" quản lý danh mục ngày lễ (localStorage mdc_pm_holidays; nạp sẵn lễ 2026-2027, sửa được). khcAddDays() cộng ngày làm việc; áp cho cả lưới Kế hoạch chung + Xuất Excel/PDF + Nhập Excel. -->
@@ -2391,6 +2393,47 @@ function khhmPrint(ma){
   w.document.close(); w.focus(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 400);
   toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF"');
 }
+/* v5.0 — Kế hoạch theo hạng mục cho các phòng (Nhà máy/Thương mại/Thầu phụ) — CHUNG kho mdc_pm_khhm */
+function khhmDeptRows(pb, da){
+  const store=khhmStore(); const out=[];
+  visibleProjects().forEach(d=>{ if(da && d['Mã DA']!==da) return; const arr=store[d['Mã DA']];
+    if(Array.isArray(arr)) arr.forEach(r=>{ if(!pb || r.phanBo===pb) out.push({d,r}); }); });   // pb='' → mọi phân bổ (dùng cho Thiết kế)
+  return out;
+}
+function khhmDeptPlanHtml(pb, groupTitles, da){
+  const list=khhmDeptRows(pb, da);
+  const canEd=can('edit');
+  const pcts=list.map(x=>parseFloat(x.r.pct)).filter(v=>!isNaN(v));
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  const nProj=new Set(list.map(x=>x.d['Mã DA'])).size;
+  let h='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+    +'<div class="ks-kpi"><b>'+list.length+'</b><span>hạng mục</span></div>'
+    +'<div class="ks-kpi"><b>'+nProj+'</b><span>dự án</span></div>'
+    +'<div class="ks-kpi"><b>'+avg+'%</b><span>tiến độ TB</span></div></div>';
+  if(!list.length) return h+'<div class="empty"><b>Chưa có hạng mục'+(pb?(' phân bổ '+esc(pb)):'')+'</b>Lập ở <b>Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục</b>'+(pb?(', đặt cột Phân bổ = '+esc(pb)):'')+'.</div>';
+  const roCols= pb
+    ? [{key:'ten',leaf:'Hạng mục',w:190},{key:'phanLoai',leaf:'Phân loại',w:92},{key:'dvt',leaf:'ĐVT',w:52},{key:'sl',leaf:'Số lượng',w:64}]
+    : [{key:'ten',leaf:'Hạng mục',w:190},{key:'phanLoai',leaf:'Phân loại',w:92},{key:'phanBo',leaf:'Phân bổ',w:88},{key:'dvt',leaf:'ĐVT',w:52},{key:'sl',leaf:'Số lượng',w:64}];
+  const edCols=[]; KHHM_GROUPS.filter(g=>groupTitles.includes(g.ten)).forEach(g=>g.cols.forEach(c=>edCols.push(c)));
+  const tail=[{key:'pct',leaf:'% HT',t:'num',w:56},{key:'ghichu',leaf:'Ghi chú',t:'text',w:140}];
+  h+='<div class="tbl-wrap"><table class="tbl ks-table khhm-table"><thead><tr>'
+    +'<th class="ks-stt">#</th><th class="ks-name" style="min-width:150px">Dự án</th>'
+    + roCols.map(c=>'<th style="min-width:'+c.w+'px">'+esc(c.leaf)+'</th>').join('')
+    + edCols.map(c=>'<th style="min-width:'+(c.w||90)+'px">'+esc(c.leaf)+'</th>').join('')
+    + tail.map(c=>'<th style="min-width:'+c.w+'px">'+esc(c.leaf)+'</th>').join('')
+    + '</tr></thead><tbody>';
+  list.forEach((x,i)=>{ const ma=x.d['Mã DA'], r=x.r;
+    h+='<tr><td class="ks-stt">'+(i+1)+'</td>'
+      +'<td class="ks-name"><b class="ks-link" onclick="window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';window._khctView=\'hm\';go(\'duanDetail\')">'+esc(x.d['Tên dự án']||ma)+'</b><div class="muted" style="font-size:11px">'+esc(ma)+'</div></td>'
+      + roCols.map(c=>'<td'+(c.key==='ten'?' class="ks-name"':'')+'>'+esc(r[c.key]||'—')+'</td>').join('')
+      + edCols.map(c=>'<td>'+khhmCell(ma,r,c,canEd)+'</td>').join('')
+      + tail.map(c=>'<td>'+khhmCell(ma,r,c,canEd)+'</td>').join('')
+      + '</tr>';
+  });
+  h+='</tbody></table></div>'
+    +'<p class="muted" style="font-size:12px;margin-top:8px">Sửa mốc tại đây tự đồng bộ với <b>Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục</b> (chung kho <code>mdc_pm_khhm</code>).</p>';
+  return h;
+}
 function khcEdit(ma, key, el){
   khcSet(ma, key, el.value);
   if(key==='soHD') ksSetSoHD(ma, el.value);
@@ -3367,6 +3410,18 @@ function vDeptDash(key){
   });
   html+='</tbody></table></div></div></div>';
 
+  // v5.0/v5.1 — Kế hoạch theo hạng mục lan tỏa sang phòng (bóc từ hợp đồng · kho mdc_pm_khhm)
+  const KHHM_DEPTVIEW={
+    mThietKe:  {pb:'',           gt:['KẾ HOẠCH HỒ SƠ'],                                     tt:'Kế hoạch thiết kế theo hạng mục', sub:'— hồ sơ · SPEC · duyệt mẫu cho MỌI hạng mục'},
+    mNhaMay:   {pb:'Nhà máy',    gt:['KẾ HOẠCH HỒ SƠ','KẾ HOẠCH SẢN XUẤT & LẮP ĐẶT'],       tt:'Kế hoạch sản xuất theo hạng mục', sub:'— bóc từ hợp đồng · phân bổ Nhà máy'},
+    mThuongMai:{pb:'Thương mại', gt:['KẾ HOẠCH ĐẶT HÀNG (TM)'],                             tt:'Kế hoạch đặt hàng theo hạng mục', sub:'— bóc từ hợp đồng · phân bổ Thương mại'}
+  };
+  if(KHHM_DEPTVIEW[key]){
+    const dv=KHHM_DEPTVIEW[key];
+    html+='<div class="card"><div class="ct">'+dv.tt+' <span class="muted" style="font-weight:400">'+dv.sub+'</span></div>'
+      + '<div class="card-body">'+khhmDeptPlanHtml(dv.pb, dv.gt, da)+'</div></div>';
+  }
+
   // Riêng Thương mại: bảng Mua sắm / Đặt hàng
   if(cfg.muaSam){
     const ms=(S.muasam||[]).filter(x=>!da||x['Mã DA']===da);
@@ -4105,15 +4160,27 @@ function tpDanhGiaMoiNhat(ten){
 
 /* ================= VIEW CHÍNH ================= */
 function vSubcontractors(){
-  const tabs = [['tongquan','Tổng quan'],['danhsach','Danh sách nhà thầu'],
+  const tabs = [['tongquan','Tổng quan'],['kehoach','Kế hoạch thi công'],['danhsach','Danh sách nhà thầu'],
                 ['hopdong','Hợp đồng & nghiệm thu'],['danhgia','Đánh giá nhà thầu']];
   const cur = window._tpTab || 'tongquan';
   let html = '<div class="fin-hd"><h2>Thầu phụ</h2>'
     + '<div class="sub">Danh sách nhà thầu · hợp đồng &amp; nghiệm thu · đánh giá xét chọn</div></div>';
   html += '<div class="fin-tabs">' + tabs.map(t=>
     '<button class="'+(cur===t[0]?'on':'')+'" onclick="window._tpTab=\''+t[0]+'\';render()">'+t[1]+'</button>').join('') + '</div>';
-  html += ({tongquan:tpTongQuan, danhsach:tpDanhSach, hopdong:tpHopDong, danhgia:tpDanhGia}[cur] || tpTongQuan)();
+  html += ({tongquan:tpTongQuan, kehoach:tpKeHoach, danhsach:tpDanhSach, hopdong:tpHopDong, danhgia:tpDanhGia}[cur] || tpTongQuan)();
   return html;
+}
+/* v5.0 — Tab "Kế hoạch thi công" của Thầu phụ: hạng mục phân bổ Thầu phụ (chung kho mdc_pm_khhm) */
+function tpKeHoach(){
+  const da=window._tpKhDA||'';
+  const projs=visibleProjects();
+  let h='<div class="cv-head"><div><h2 style="margin:0">🧩 Kế hoạch thi công thầu phụ</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Các hạng mục phân bổ Thầu phụ — bóc từ Dự án → Kế hoạch chi tiết theo hạng mục</div></div>'
+    + '<div><select onchange="window._tpKhDA=this.value;render()"><option value="">Tất cả dự án</option>'
+    + projs.map(d=>'<option value="'+esc(d['Mã DA'])+'"'+(da===d['Mã DA']?' selected':'')+'>'+esc(d['Tên dự án'])+'</option>').join('')
+    + '</select></div></div>';
+  h+='<div class="card"><div class="card-body">'+khhmDeptPlanHtml('Thầu phụ',['KẾ HOẠCH THI CÔNG (Thầu phụ)'], da)+'</div></div>';
+  return h;
 }
 
 /* ================= TAB 1 · TỔNG QUAN ================= */
