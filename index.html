@@ -3,6 +3,9 @@
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
+<!-- MDC-PM v5.5 — NĂNG LỰC & KHẢ THI THIẾT KẾ (module Thiết kế): nút chuyển "✏ Điều hành & Kế hoạch TK ↔ 📊 Năng lực & Khả thi". Đơn vị = số hạng mục (bộ hồ sơ). 3 nhóm: Concept/Ý tưởng · Triển khai kỹ thuật (shop) · Kết cấu/M&E; mỗi hạng mục qua CẢ 3 nhóm; xếp tuần theo cửa sổ Hồ sơ (hs_bd..hs_ht, fallback project). Cấu hình localStorage mdc_pm_nltk (res:{cc,tk,kc:{nangSuat[hạng mục/người/tuần],soNguoi}}). Bảng tải theo tuần + kiểm tra khả thi so với năng lực CÒN TRỐNG. Dùng chung helper nlsxWeeks/nlsxWkLabel/fmtNum. -->
+<!-- MDC-PM v5.4 — NĂNG LỰC theo GIÁ TRỊ (đồng): thêm nút chuyển "₫ Theo giá trị (đồng) ↔ ▦ Theo m²" trong màn Năng lực & Khả thi. Chế độ giá trị: công suất mỗi tổ = đồng/người/tháng × số người ÷ 4,33 tuần; nhu cầu mỗi hạng mục = Thành tiền (cột tt). Bảng SX thêm cột "Thành tiền"; import HĐ tự lấy Thành tiền (cột 11 / tiêu đề "Thành tiền"). nlsxUnit/nlsxQty/nlsxFmt; nlsxCapWeek(o,id,unit); res thêm khóa dongThang. Mặc định chế độ giá trị. -->
+<!-- MDC-PM v5.3 — NĂNG LỰC & KHẢ THI SẢN XUẤT (module Nhà máy): nút chuyển "🏭 Điều hành & Kế hoạch SX" ↔ "📊 Năng lực & Khả thi". Khai báo định mức năng suất (m²/người/ngày) + số người cho 6 nguồn lực (Kỹ thuật/CNC · 3 tổ SX: ván CN / TN liền tường / TN đồ rời · Sơn · Lắp đặt) → Năng lực/tuần. Bảng tải theo tuần (đơn đang triển khai, tô màu theo % tải) + Kiểm tra khả thi 1 đơn so với NĂNG LỰC CÒN TRỐNG (đã trừ đơn đang chạy) → báo Đạt/Thiếu m²/tuần từng tổ. Bảng SX v5.2 thêm cột "Nhóm tổ SX" (định tuyến) + "m² quy đổi". Cấu hình localStorage mdc_pm_nlsx; hạng mục lấy từ phân bổ Nhà máy (kho mdc_pm_khhm). -->
 <!-- MDC-PM v5.2 — KẾ HOẠCH SẢN XUẤT (module Nhà máy) theo biểu mẫu "PHÂN BỔ & KẾ HOẠCH SẢN XUẤT" (file anh Lâm gửi): bảng đầy đủ nhóm cột — PHÂN BỐ HẠNG MỤC (Hạng mục·Phân loại·Phân bố SX·Tổ SX/Đối tác·Ưu tiên·ĐVT·Khối lượng·Số lượng) · ĐỊNH BIÊN NHÂN SỰ (NC Mộc/Sơn/Lắp đặt) · KẾ HOẠCH HỒ SƠ (SPEC·HS đã ký) · FILE KỸ THUẬT CNC (Ngày HT·Ghi chú) · KH NHẬP VẬT LIỆU (Ngày đặt·Ngày nhận) · SẢN XUẤT & LẮP ĐẶT (Mộc BĐ/HT·Sơn BĐ/HT·Lắp đặt BĐ/HT) · NGHIỆM THU & BÀN GIAO (BĐ/Bàn giao) · TIẾN ĐỘ (DK khả thi·%·Ghi chú). KHSX_GROUPS + khsxPlanHtml/khsxCell + Xuất Excel/PDF (A1 landscape). Lưu chung kho mdc_pm_khhm (khóa sx_pb/sx_to/sx_ut/kl/nc_*/sx_spec/sx_hsky/cnc_*/vl_*/moc_*/son_*/ld_*/nt_*/sx_kt). Hạng mục lấy từ phân bổ Nhà máy. -->
 <!-- MDC-PM v5.1 — KẾ HOẠCH THIẾT KẾ theo hạng mục: module Thiết kế thêm card "Kế hoạch thiết kế theo hạng mục" — hiện MỌI hạng mục (mọi phân bổ NM/TM/TP, vì thiết kế/hồ sơ làm cho tất cả), nhóm mốc KẾ HOẠCH HỒ SƠ (Chốt Spec · HS Bắt đầu · HS Hoàn thành · Chuyển hồ sơ · Duyệt mẫu) + có cột Phân bổ để biết ai thực hiện. khhmDeptRows(pb='' → mọi phân bổ); khhmDeptPlanHtml roCols thêm Phân bổ khi pb rỗng. Cùng kho mdc_pm_khhm → đồng bộ 2 chiều với bảng hạng mục của dự án. -->
 <!-- MDC-PM v5.0 — KẾ HOẠCH THEO HẠNG MỤC LAN TỎA SANG CÁC PHÒNG (chung kho mdc_pm_khhm): từ Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục, các hạng mục tự chảy về đúng phòng theo cột Phân bổ. Module Nhà máy: card "Kế hoạch sản xuất theo hạng mục" (Hồ sơ + Sản xuất & lắp đặt). Module Thương mại: card "Kế hoạch đặt hàng theo hạng mục" (Đặt hàng). Module Thầu phụ: thêm tab "Kế hoạch thi công" (Thi công thầu phụ). Sửa mốc ở phòng ↔ đồng bộ tức thì với bảng hạng mục của dự án. khhmDeptPlanHtml(pb,groups,da) + khhmDeptRows. -->
@@ -2335,10 +2338,11 @@ function khhmImpParse(){
     idx.nm     =findCol('nha may','mdc');
     idx.tm     =findCol('thuong mai');
     idx.tp     =findCol('thau phu');
+    idx.tt     =findCol('thanh tien');
     if(idx.chiTiet<0 && idx.ma<0) hdr=-1;             // không thấy cột tên → chuyển sang positional
   }
   const posMode = hdr<0;
-  const P={chiTiet:1, ma:2, dvt:7, kl:8, sl:9, dg:10, phanLoai:12, nm:13, tm:14, tp:15};
+  const P={chiTiet:1, ma:2, dvt:7, kl:8, sl:9, dg:10, tt:11, phanLoai:12, nm:13, tm:14, tp:15};
   const get=(row,key)=>{ let ci=posMode?P[key]:idx[key]; if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
   const start=posMode?0:hdr+1; const drafts=[];
   for(let r=start;r<rows.length;r++){
@@ -2347,9 +2351,9 @@ function khhmImpParse(){
     const dvt=get(row,'dvt'), kl=get(row,'kl'), sl=get(row,'sl');
     if(!dvt && !sl && !kl) continue;                 // bỏ dòng nhóm/tổng (không có ĐVT/SL/KL)
     if(/^[\d.,\s\-]+$/.test(ten)) continue;          // bỏ dòng chỉ toàn số
-    const phanLoai=get(row,'phanLoai');
+    const phanLoai=get(row,'phanLoai'); const tt=get(row,'tt');
     let phanBo=''; if(get(row,'nm')) phanBo='Nhà máy'; else if(get(row,'tm')) phanBo='Thương mại'; else if(get(row,'tp')) phanBo='Thầu phụ';
-    drafts.push({ten, phanLoai, phanBo, dvt, sl:sl||kl});
+    drafts.push({ten, phanLoai, phanBo, dvt, sl:sl||kl, kl, tt});
   }
   window.__khhmImp=drafts;
   if(!drafts.length){ pv.innerHTML='<span class="tag t-bad">Không nhận diện được hạng mục nào — kiểm tra lại các cột.</span>'; if(saveBtn) saveBtn.classList.add('hide'); return; }
@@ -2363,7 +2367,7 @@ function khhmImpConfirm(){
   const ma=window.__khhmImpMa; const drafts=window.__khhmImp||[];
   if(!ma||!drafts.length){ toast('Không có hạng mục để nhập', true); return; }
   const rows=khhmGet(ma);
-  drafts.forEach(d=>rows.push({id:khhmNewId(), ten:d.ten, phanLoai:d.phanLoai, phanBo:d.phanBo, dvt:d.dvt, sl:d.sl}));
+  drafts.forEach(d=>rows.push({id:khhmNewId(), ten:d.ten, phanLoai:d.phanLoai, phanBo:d.phanBo, dvt:d.dvt, sl:d.sl, kl:d.kl||'', tt:d.tt||''}));
   khhmSetRows(ma,rows); window.__khhmImp=null; closeModal();
   toast('✓ Đã nhập '+drafts.length+' hạng mục vào kế hoạch'); render();
 }
@@ -2437,16 +2441,20 @@ function khhmDeptPlanHtml(pb, groupTitles, da){
 }
 /* ===== v5.2 — KẾ HOẠCH SẢN XUẤT (module Nhà máy) — bám ĐÚNG biểu mẫu "PHÂN BỔ & KẾ HOẠCH SẢN XUẤT". Lưu chung kho mdc_pm_khhm (thêm các khóa sx_, nc_, vl_, moc_, son_, ld_, nt_, cnc_). ===== */
 const KHSX_PBSX = ['','Sản xuất','Đối tác'];
+const KHSX_NHOM = ['','Ván công nghiệp','TN liền tường','TN đồ rời'];   // nhóm tổ SX → định tuyến năng lực
 const KHSX_GROUPS = [
   {ten:'PHÂN BỐ HẠNG MỤC', mau:'#7A5A2E', cols:[
     {key:'ten',     leaf:'Hạng mục',       t:'ro',  w:200, cls:'ks-name'},
     {key:'phanLoai',leaf:'Phân loại',      t:'ro',  w:92},
     {key:'sx_pb',   leaf:'Phân bố SX',     t:'sel', opts:KHSX_PBSX, w:100},
+    {key:'to_nhom', leaf:'Nhóm tổ SX',     t:'sel', opts:KHSX_NHOM, w:140},
     {key:'sx_to',   leaf:'Tổ SX / Đối tác',t:'text',w:120},
     {key:'sx_ut',   leaf:'Ưu tiên',        t:'num', w:64},
     {key:'dvt',     leaf:'ĐVT',            t:'ro',  w:50},
     {key:'kl',      leaf:'Khối lượng',     t:'text',w:80},
+    {key:'m2',      leaf:'m² quy đổi',     t:'text',w:82},
     {key:'sl',      leaf:'Số lượng',       t:'ro',  w:64},
+    {key:'tt',      leaf:'Thành tiền',     t:'text',w:110},
   ]},
   {ten:'ĐỊNH BIÊN NHÂN SỰ', mau:'#5A6E8E', cols:[
     {key:'nc_btp',  leaf:'NC Mộc (BTP)',   t:'num', w:92},
@@ -2553,6 +2561,209 @@ function khsxPrint(da){
     + '<table><thead>'+h1+h2+'</thead><tbody>'+body+'</tbody></table></body></html>');
   w.document.close(); w.focus(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 400);
   toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF"');
+}
+/* ===== v5.3 — NĂNG LỰC & KHẢ THI SẢN XUẤT (module Nhà máy). Định mức m2/người/ngày + số người theo 6 nguồn lực (Kỹ thuật/CNC, 3 tổ SX, Sơn, Lắp đặt). Bảng tải theo tuần + kiểm tra khả thi đơn mới so với NĂNG LỰC CÒN TRỐNG. Cấu hình localStorage mdc_pm_nlsx. ===== */
+const NLSX_RES=[
+  {id:'kt', ten:'Kỹ thuật / CNC'},
+  {id:'vcn',ten:'Tổ SX ván công nghiệp'},
+  {id:'tlt',ten:'Tổ SX tự nhiên liền tường'},
+  {id:'tdr',ten:'Tổ SX tự nhiên đồ rời'},
+  {id:'son',ten:'Bộ phận Sơn'},
+  {id:'ld', ten:'Bộ phận Lắp đặt'},
+];
+const NLSX_WPM = 52/12;   // số tuần / tháng (~4.33)
+function nlsxUnit(){ return window._nlsxUnit==='m2' ? 'm2' : 'gt'; }   // mặc định: theo giá trị (đồng)
+function nlsxCfg(){ let s={}; try{ s=JSON.parse(localStorage.getItem('mdc_pm_nlsx')||'{}'); }catch(e){}
+  const o={ngayCongTuan:(s.ngayCongTuan!=null?s.ngayCongTuan:6), res:{}};
+  NLSX_RES.forEach(r=>{ const v=(s.res&&s.res[r.id])||{}; o.res[r.id]={nangSuat:v.nangSuat||'', soNguoi:v.soNguoi||'', dongThang:v.dongThang||''}; });
+  return o; }
+function nlsxSaveCfg(o){ try{ localStorage.setItem('mdc_pm_nlsx', JSON.stringify(o)); }catch(e){} }
+function nlsxEditGen(key,el){ const o=nlsxCfg(); o[key]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
+function nlsxEditRes(id,key,el){ const o=nlsxCfg(); (o.res[id]=o.res[id]||{})[key]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
+function nlsxCapWeek(o,id,unit){ const r=o.res[id]||{}; const sn=parseFloat(r.soNguoi)||0;
+  if((unit||nlsxUnit())==='gt') return (parseFloat(r.dongThang)||0)*sn/NLSX_WPM;      // đồng/tuần
+  return (parseFloat(r.nangSuat)||0)*sn*(parseFloat(o.ngayCongTuan)||0); }             // m²/tuần
+function fmtNum(n){ n=Math.round((Number(n)||0)*10)/10; return (n%1===0)?String(n):n.toFixed(1); }
+function nlsxNum(x){ const v=String(x==null?'':x).trim().replace(/\s/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.'); const n=parseFloat(v); return isNaN(n)?0:n; }
+function nlsxM2(r){ let n=nlsxNum(r.m2); if(n<=0) n=nlsxNum(r.kl); return n; }
+function nlsxQty(r,unit){ return (unit||nlsxUnit())==='gt' ? nlsxNum(r.tt) : nlsxM2(r); }
+function nlsxFmt(v,unit){ return (unit||nlsxUnit())==='gt' ? (fmtNum((Number(v)||0)/1e6)+' tr') : fmtNum(v); }
+function nlsxUnitLbl(unit){ return (unit||nlsxUnit())==='gt' ? 'giá trị' : 'm²'; }
+function nlsxToRes(r){ let n=r.to_nhom||'';
+  if(!n){ const pl=vnorm(r.phanLoai||''); if(pl.indexOf('dr')>=0||pl.indexOf('do roi')>=0) n='TN đồ rời'; else if(pl.indexOf('lt')>=0||pl.indexOf('lien tuong')>=0) n='TN liền tường'; else n='Ván công nghiệp'; }
+  return n==='TN liền tường'?'tlt':n==='TN đồ rời'?'tdr':'vcn'; }
+function nlsxMon(iso){ const p=String(iso).split('-'); if(p.length!==3) return ''; const dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])); if(isNaN(dt)) return ''; let dow=dt.getUTCDay(); if(dow===0)dow=7; dt.setUTCDate(dt.getUTCDate()-(dow-1)); return dt.toISOString().slice(0,10); }
+function nlsxAddD(iso,n){ const p=iso.split('-'); const dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])); dt.setUTCDate(dt.getUTCDate()+n); return dt.toISOString().slice(0,10); }
+function nlsxWeeks(s,e){ if(!s||!e) return []; if(e<s){ const t=s;s=e;e=t; } let w=nlsxMon(s); const end=nlsxMon(e); if(!w||!end) return []; const out=[]; let g=0; while(w<=end && g++<520){ out.push(w); w=nlsxAddD(w,7); } return out; }
+function nlsxWkLabel(w){ const p=w.split('-'); return p[2]+'/'+p[1]; }
+function nlsxWin(resId,r,d){ let s='',e='';
+  if(resId==='kt'){ s=r.sx_hsky||r.hs_bd||''; e=r.cnc_ht||r.moc_bd||''; }
+  else if(resId==='vcn'||resId==='tlt'||resId==='tdr'){ s=r.moc_bd||''; e=r.moc_ht||''; }
+  else if(resId==='son'){ s=r.son_bd||''; e=r.son_ht||''; }
+  else if(resId==='ld'){ s=r.ld_bd||''; e=r.ld_ht||''; }
+  if(!s||!e){ const fs=r.moc_bd||r.son_bd||r.ld_bd||''; const fe=r.ld_ht||r.son_ht||r.moc_ht||'';
+    s=s||fs||d['Ngày bắt đầu']||d['Ngày ký']||''; e=e||fe||d['Ngày kết thúc DK']||''; }
+  return (s&&e)?[s,e]:null; }
+function nlsxDemand(items,unit){ unit=unit||nlsxUnit(); const dem={},uns={}; NLSX_RES.forEach(x=>{dem[x.id]={};uns[x.id]=0;});
+  items.forEach(({d,r})=>{ const q=nlsxQty(r,unit); if(q<=0) return;
+    ['kt', nlsxToRes(r), 'son','ld'].forEach(resId=>{ const w=nlsxWin(resId,r,d);
+      const wks=w?nlsxWeeks(w[0],w[1]):[]; if(!wks.length){ uns[resId]+=q; return; }
+      const per=q/wks.length; wks.forEach(k=>{ dem[resId][k]=(dem[resId][k]||0)+per; }); }); });
+  return {dem,uns}; }
+function nlsxActiveItems(excludeMa){ const store=khhmStore(); const out=[];
+  visibleProjects().filter(d=>d['Trạng thái']==='Đang triển khai' && d['Mã DA']!==excludeMa).forEach(d=>{ const arr=store[d['Mã DA']]; if(Array.isArray(arr)) arr.forEach(r=>{ if(r.phanBo==='Nhà máy') out.push({d,r}); }); }); return out; }
+function nlsxItemsOf(ma){ const store=khhmStore(); const arr=store[ma]; const d=(S.duan||[]).find(x=>x['Mã DA']===ma)||{'Mã DA':ma}; const out=[]; if(Array.isArray(arr)) arr.forEach(r=>{ if(r.phanBo==='Nhà máy') out.push({d,r}); }); return out; }
+function nlsxRefresh(){ const o=nlsxCfg(); const unit=nlsxUnit(); NLSX_RES.forEach(rs=>{ const el=document.getElementById('nlsxCap_'+rs.id); if(el) el.textContent=nlsxFmt(nlsxCapWeek(o,rs.id,unit),unit); }); const out=document.getElementById('nlsxOut'); if(out) out.innerHTML=nlsxOutHtml(); }
+function nlsxView(){
+  const o=nlsxCfg(); const canEd=can('edit'); const unit=nlsxUnit();
+  let h='<div class="cv-head"><div><h2 style="margin:0">📊 Năng lực & Khả thi sản xuất</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Khai báo định mức + nhân sự → hệ tính tải theo tuần & kiểm tra khả thi khi nhận đơn (so với năng lực còn trống)</div></div></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(unit==='gt'?' on':'')+'" onclick="window._nlsxUnit=\'gt\';render()">₫ Theo giá trị (đồng)</button>'
+    + '<button class="cv-pill'+(unit==='m2'?' on':'')+'" onclick="window._nlsxUnit=\'m2\';render()">▦ Theo m²</button>'
+    + '</div>';
+  const capUnitLbl = unit==='gt' ? 'Năng lực/tuần (giá trị)' : 'Năng lực/tuần (m²)';
+  const susLbl = unit==='gt' ? 'Đồng / người / tháng' : 'Năng suất (m²/người/ngày)';
+  const susKey = unit==='gt' ? 'dongThang' : 'nangSuat';
+  const susStep = unit==='gt' ? '1000000' : '0.1';
+  const susW = unit==='gt' ? '140' : '96';
+  h+='<div class="card"><div class="ct">Định mức & Năng lực từng bộ phận / tổ <span class="ct-r">'+(unit==='gt'?'công suất giá trị = đồng/người/tháng × số người':'năng suất = m²/người/ngày')+'</span></div><div class="card-body">';
+  if(unit==='m2') h+='<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label style="font-size:12.5px;color:var(--ink-soft)">Ngày công / tuần:</label>'
+    + (canEd?'<input type="number" min="1" max="7" class="khhm-in" style="width:70px" value="'+esc(o.ngayCongTuan)+'" onchange="nlsxEditGen(\'ngayCongTuan\',this)">':'<b>'+esc(o.ngayCongTuan)+'</b>')
+    + '<span class="muted" style="font-size:12px">NL/tuần = năng suất × số người × ngày công/tuần</span></div>';
+  else h+='<div class="muted" style="font-size:12px;margin-bottom:10px">NL/tuần = (đồng/người/tháng × số người) ÷ 4,33 tuần. Nhập giá trị theo <b>đồng</b> (vd 60000000 = 60 triệu).</div>';
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Bộ phận / Tổ</th><th class="num">'+susLbl+'</th><th class="num">Số người</th><th class="num">'+capUnitLbl+'</th></tr></thead><tbody>';
+  NLSX_RES.forEach(rs=>{ const rc=o.res[rs.id];
+    h+='<tr><td><b>'+esc(rs.ten)+'</b></td>'
+      + '<td class="num">'+(canEd?'<input type="number" min="0" step="'+susStep+'" class="khhm-in" style="width:'+susW+'px;text-align:right" value="'+esc(rc[susKey])+'" onchange="nlsxEditRes(\''+rs.id+'\',\''+susKey+'\',this)">':esc(rc[susKey]||'—'))+'</td>'
+      + '<td class="num">'+(canEd?'<input type="number" min="0" class="khhm-in" style="width:72px;text-align:right" value="'+esc(rc.soNguoi)+'" onchange="nlsxEditRes(\''+rs.id+'\',\'soNguoi\',this)">':esc(rc.soNguoi||'—'))+'</td>'
+      + '<td class="num"><b id="nlsxCap_'+rs.id+'">'+nlsxFmt(nlsxCapWeek(o,rs.id,unit),unit)+'</b></td></tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+  const da=window._nlsxDA||'';
+  h+='<div class="card"><div class="ct">Kiểm tra khả thi & Bảng tải<span class="ct-r"><label style="font-size:12px;color:var(--ink-soft)">Đơn đang xét: </label>'
+    + '<select onchange="window._nlsxDA=this.value;render()"><option value="">— Không (chỉ xem tải hiện tại) —</option>'
+    + visibleProjects().map(d=>'<option value="'+esc(d['Mã DA'])+'"'+(da===d['Mã DA']?' selected':'')+'>'+esc(d['Tên dự án'])+'</option>').join('')+'</select></span></div>'
+    + '<div class="card-body"><div id="nlsxOut">'+nlsxOutHtml()+'</div></div></div>';
+  return h;
+}
+function nlsxOutHtml(){
+  const o=nlsxCfg(); const da=window._nlsxDA||''; const unit=nlsxUnit(); const U=nlsxUnitLbl(unit);
+  let h='';
+  if(da){
+    const demO=nlsxDemand(nlsxActiveItems(da),unit).dem;
+    const rx=nlsxDemand(nlsxItemsOf(da),unit);
+    h+='<div style="font-weight:700;margin-bottom:8px">Kết quả khả thi — '+esc(projName(da))+' <span class="muted" style="font-weight:400">(nhu cầu đơn này so với năng lực CÒN TRỐNG sau khi trừ đơn đang chạy · đơn vị: '+U+')</span></div>';
+    h+='<div class="tbl-wrap" style="margin-bottom:8px"><table class="tbl"><thead><tr><th>Bộ phận / Tổ</th><th class="num">NL/tuần</th><th class="num">Đỉnh tải đơn khác</th><th class="num">Đỉnh cần đơn này</th><th class="num">Còn trống lúc cao điểm</th><th>Kết luận</th></tr></thead><tbody>';
+    let allOk=true, anyData=false;
+    NLSX_RES.forEach(rs=>{ const cap=nlsxCapWeek(o,rs.id,unit); const wk=Object.keys(rx.dem[rs.id]);
+      if(!wk.length){ const totX=rx.uns[rs.id]||0;
+        h+='<tr><td>'+esc(rs.ten)+'</td><td class="num">'+nlsxFmt(cap,unit)+'</td><td class="num">—</td><td class="num">'+(totX?('Σ '+nlsxFmt(totX,unit)):'—')+'</td><td class="num">—</td><td>'+(totX?'<span class="tag t-warn">cần nhập mốc ngày</span>':'<span class="muted">—</span>')+'</td></tr>'; return; }
+      anyData=true; let worst=0,peakX=0,peakO=0,ctAt=cap;
+      wk.forEach(k=>{ const x=rx.dem[rs.id][k]||0; const ot=demO[rs.id][k]||0; const ct=cap-ot; const th=x-ct; if(x>peakX)peakX=x; if(th>worst){worst=th;peakO=ot;ctAt=ct;} });
+      const ok=cap>0 && worst<=0.001; if(cap>0 && !ok) allOk=false;
+      h+='<tr'+(ok?'':' style="background:#FDEEEC"')+'><td><b>'+esc(rs.ten)+'</b></td><td class="num">'+nlsxFmt(cap,unit)+'</td><td class="num">'+nlsxFmt(peakO,unit)+'</td><td class="num">'+nlsxFmt(peakX,unit)+'</td><td class="num">'+nlsxFmt(ctAt,unit)+'</td>'
+        + '<td>'+(cap<=0?'<span class="tag t-warn">chưa khai năng lực</span>':ok?'<span class="tag t-ok">Đạt</span>':'<span class="tag t-bad">Thiếu '+nlsxFmt(worst,unit)+'/tuần</span>')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="margin-bottom:16px">'+(!anyData?'<span class="tag t-warn">Đơn này chưa có mốc ngày sản xuất để xếp tuần — hãy nhập ở bảng Kế hoạch sản xuất</span>':allOk?'<span class="tag t-ok">✓ Đơn khả thi với năng lực còn trống</span>':'<span class="tag t-bad">⚠ Có bộ phận quá tải — cần thêm người / giãn tiến độ / chuyển bớt sang đối tác</span>')+'</div>';
+  }
+  const {dem,uns}=nlsxDemand(nlsxActiveItems(''),unit);
+  const wkSet=new Set(); NLSX_RES.forEach(rs=>Object.keys(dem[rs.id]).forEach(k=>wkSet.add(k)));
+  const weeks=[...wkSet].sort();
+  h+='<div style="font-weight:700;margin:4px 0 8px">Bảng tải theo tuần <span class="muted" style="font-weight:400">(đơn đang triển khai · đơn vị: '+U+')</span></div>';
+  if(!weeks.length){ h+='<div class="muted">Chưa có mốc ngày sản xuất để xếp tuần. Nhập mốc (Mộc/Sơn/Lắp đặt…) ở bảng Kế hoạch sản xuất.</div>'; }
+  else{
+    h+='<div class="tbl-wrap"><table class="tbl ks-table" style="min-width:'+(200+weeks.length*66)+'px"><thead><tr><th class="ks-name">Bộ phận / Tổ · (NL/tuần)</th>'
+      + weeks.map(w=>'<th style="min-width:60px">'+nlsxWkLabel(w)+'</th>').join('')+'</tr></thead><tbody>';
+    NLSX_RES.forEach(rs=>{ const cap=nlsxCapWeek(o,rs.id,unit);
+      h+='<tr><td class="ks-name"><b>'+esc(rs.ten)+'</b> <span class="muted">('+nlsxFmt(cap,unit)+')</span></td>'
+        + weeks.map(w=>{ const v=dem[rs.id][w]||0; if(v<=0.001) return '<td class="ks-c" style="color:var(--ink-faint)">·</td>';
+            const load=cap>0?v/cap:2; const bg=load>1?'#FDEEEC':load>0.85?'#FBF3E3':'#EAF3EC'; const tc=load>1?'#B23A2E':'#2E5A3E';
+            return '<td class="ks-c" style="background:'+bg+';color:'+tc+'" title="'+nlsxFmt(v,unit)+' / '+nlsxFmt(cap,unit)+'">'+nlsxFmt(v,unit)+(cap>0?'<div style="font-size:9px">'+Math.round(load*100)+'%</div>':'')+'</td>'; }).join('')
+        + '</tr>';
+    });
+    h+='</tbody></table></div><div class="ks-legend" style="margin-top:8px"><span><i style="background:#EAF3EC"></i>≤85%</span><span><i style="background:#FBF3E3"></i>85–100%</span><span><i style="background:#FDEEEC"></i>&gt;100% quá tải</span></div>';
+  }
+  const unsAny=NLSX_RES.some(rs=>uns[rs.id]>0.001);
+  if(unsAny) h+='<div class="muted" style="margin-top:8px;font-size:12px">Chưa xếp tuần (thiếu mốc ngày): '+NLSX_RES.filter(rs=>uns[rs.id]>0.001).map(rs=>esc(rs.ten)+' '+nlsxFmt(uns[rs.id],unit)).join(' · ')+'</div>';
+  return h;
+}
+/* ===== v5.5 — NĂNG LỰC & KHẢ THI THIẾT KẾ (module Thiết kế). Đơn vị: số hạng mục (bộ hồ sơ). 3 nhóm Concept/Triển khai/Kết cấu-M&E; mỗi hạng mục qua CẢ 3 nhóm; xếp tuần theo cửa sổ Hồ sơ (hs_bd..hs_ht). Cấu hình localStorage mdc_pm_nltk. ===== */
+const NLTK_RES=[
+  {id:'cc',ten:'Concept / Ý tưởng'},
+  {id:'tk',ten:'Triển khai kỹ thuật (shop)'},
+  {id:'kc',ten:'Kết cấu / M&E'},
+];
+function nltkCfg(){ let s={}; try{ s=JSON.parse(localStorage.getItem('mdc_pm_nltk')||'{}'); }catch(e){}
+  const o={res:{}}; NLTK_RES.forEach(r=>{ const v=(s.res&&s.res[r.id])||{}; o.res[r.id]={nangSuat:v.nangSuat||'', soNguoi:v.soNguoi||''}; }); return o; }
+function nltkSaveCfg(o){ try{ localStorage.setItem('mdc_pm_nltk', JSON.stringify(o)); }catch(e){} }
+function nltkEditRes(id,key,el){ const o=nltkCfg(); (o.res[id]=o.res[id]||{})[key]=el.value; nltkSaveCfg(o); nltkRefresh(); }
+function nltkCapWeek(o,id){ const r=o.res[id]||{}; return (parseFloat(r.nangSuat)||0)*(parseFloat(r.soNguoi)||0); }   // hạng mục/tuần
+function nltkWin(r,d){ let s=r.hs_bd||'', e=r.hs_ht||'';
+  if(!s||!e){ s=s|| d['Ngày bắt đầu']||d['Ngày ký']||''; e=e|| r.moc_bd || d['Ngày kết thúc DK']||''; }
+  return (s&&e)?[s,e]:null; }
+function nltkItems(excludeMa){ const store=khhmStore(); const out=[];
+  visibleProjects().filter(d=>d['Trạng thái']==='Đang triển khai' && d['Mã DA']!==excludeMa).forEach(d=>{ const arr=store[d['Mã DA']]; if(Array.isArray(arr)) arr.forEach(r=>{ if(r.ten&&String(r.ten).trim()) out.push({d,r}); }); }); return out; }
+function nltkItemsOf(ma){ const store=khhmStore(); const arr=store[ma]; const d=(S.duan||[]).find(x=>x['Mã DA']===ma)||{'Mã DA':ma}; const out=[]; if(Array.isArray(arr)) arr.forEach(r=>{ if(r.ten&&String(r.ten).trim()) out.push({d,r}); }); return out; }
+function nltkDemand(items){ const dem={},uns={}; NLTK_RES.forEach(x=>{dem[x.id]={};uns[x.id]=0;});
+  items.forEach(({d,r})=>{ const w=nltkWin(r,d); const wks=w?nlsxWeeks(w[0],w[1]):[];
+    NLTK_RES.forEach(rs=>{ if(!wks.length){ uns[rs.id]+=1; return; } const per=1/wks.length; wks.forEach(k=>{ dem[rs.id][k]=(dem[rs.id][k]||0)+per; }); }); });
+  return {dem,uns}; }
+function nltkRefresh(){ const o=nltkCfg(); NLTK_RES.forEach(rs=>{ const el=document.getElementById('nltkCap_'+rs.id); if(el) el.textContent=fmtNum(nltkCapWeek(o,rs.id)); }); const out=document.getElementById('nltkOut'); if(out) out.innerHTML=nltkOutHtml(); }
+function nltkView(){
+  const o=nltkCfg(); const canEd=can('edit');
+  let h='<div class="cv-head"><div><h2 style="margin:0">📊 Năng lực & Khả thi thiết kế</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Đơn vị: số hạng mục (bộ hồ sơ). Mỗi hạng mục đi qua Concept → Triển khai kỹ thuật → Kết cấu/M&E, xếp theo cửa sổ Hồ sơ (HS bắt đầu → HS hoàn thành).</div></div></div>';
+  h+='<div class="card"><div class="ct">Định mức & Năng lực nhóm thiết kế <span class="ct-r">năng suất = số hạng mục/người/tuần</span></div><div class="card-body">';
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nhóm</th><th class="num">Năng suất (hạng mục/người/tuần)</th><th class="num">Số người</th><th class="num">Năng lực/tuần (hạng mục)</th></tr></thead><tbody>';
+  NLTK_RES.forEach(rs=>{ const rc=o.res[rs.id];
+    h+='<tr><td><b>'+esc(rs.ten)+'</b></td>'
+      + '<td class="num">'+(canEd?'<input type="number" min="0" step="0.5" class="khhm-in" style="width:120px;text-align:right" value="'+esc(rc.nangSuat)+'" onchange="nltkEditRes(\''+rs.id+'\',\'nangSuat\',this)">':esc(rc.nangSuat||'—'))+'</td>'
+      + '<td class="num">'+(canEd?'<input type="number" min="0" class="khhm-in" style="width:72px;text-align:right" value="'+esc(rc.soNguoi)+'" onchange="nltkEditRes(\''+rs.id+'\',\'soNguoi\',this)">':esc(rc.soNguoi||'—'))+'</td>'
+      + '<td class="num"><b id="nltkCap_'+rs.id+'">'+fmtNum(nltkCapWeek(o,rs.id))+'</b></td></tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+  const da=window._nltkDA||'';
+  h+='<div class="card"><div class="ct">Kiểm tra khả thi & Bảng tải<span class="ct-r"><label style="font-size:12px;color:var(--ink-soft)">Đơn đang xét: </label>'
+    + '<select onchange="window._nltkDA=this.value;render()"><option value="">— Không (chỉ xem tải hiện tại) —</option>'
+    + visibleProjects().map(d=>'<option value="'+esc(d['Mã DA'])+'"'+(da===d['Mã DA']?' selected':'')+'>'+esc(d['Tên dự án'])+'</option>').join('')+'</select></span></div>'
+    + '<div class="card-body"><div id="nltkOut">'+nltkOutHtml()+'</div></div></div>';
+  return h;
+}
+function nltkOutHtml(){
+  const o=nltkCfg(); const da=window._nltkDA||''; let h='';
+  if(da){
+    const demO=nltkDemand(nltkItems(da)).dem; const rx=nltkDemand(nltkItemsOf(da));
+    h+='<div style="font-weight:700;margin-bottom:8px">Kết quả khả thi — '+esc(projName(da))+' <span class="muted" style="font-weight:400">(số bộ hồ sơ/tuần so với năng lực CÒN TRỐNG sau khi trừ đơn đang chạy)</span></div>';
+    h+='<div class="tbl-wrap" style="margin-bottom:8px"><table class="tbl"><thead><tr><th>Nhóm</th><th class="num">NL/tuần</th><th class="num">Đỉnh tải đơn khác</th><th class="num">Đỉnh cần đơn này</th><th class="num">Còn trống cao điểm</th><th>Kết luận</th></tr></thead><tbody>';
+    let allOk=true, anyData=false;
+    NLTK_RES.forEach(rs=>{ const cap=nltkCapWeek(o,rs.id); const wk=Object.keys(rx.dem[rs.id]);
+      if(!wk.length){ const totX=rx.uns[rs.id]||0; h+='<tr><td>'+esc(rs.ten)+'</td><td class="num">'+fmtNum(cap)+'</td><td class="num">—</td><td class="num">'+(totX?('Σ '+fmtNum(totX)):'—')+'</td><td class="num">—</td><td>'+(totX?'<span class="tag t-warn">cần nhập mốc hồ sơ</span>':'<span class="muted">—</span>')+'</td></tr>'; return; }
+      anyData=true; let worst=0,peakX=0,peakO=0,ctAt=cap;
+      wk.forEach(k=>{ const x=rx.dem[rs.id][k]||0; const ot=demO[rs.id][k]||0; const ct=cap-ot; const th=x-ct; if(x>peakX)peakX=x; if(th>worst){worst=th;peakO=ot;ctAt=ct;} });
+      const ok=cap>0 && worst<=0.001; if(cap>0&&!ok) allOk=false;
+      h+='<tr'+(ok?'':' style="background:#FDEEEC"')+'><td><b>'+esc(rs.ten)+'</b></td><td class="num">'+fmtNum(cap)+'</td><td class="num">'+fmtNum(peakO)+'</td><td class="num">'+fmtNum(peakX)+'</td><td class="num">'+fmtNum(ctAt)+'</td><td>'+(cap<=0?'<span class="tag t-warn">chưa khai năng lực</span>':ok?'<span class="tag t-ok">Đạt</span>':'<span class="tag t-bad">Thiếu '+fmtNum(worst)+' bộ HS/tuần</span>')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="margin-bottom:16px">'+(!anyData?'<span class="tag t-warn">Đơn này chưa có mốc hồ sơ để xếp tuần — nhập HS bắt đầu/HT</span>':allOk?'<span class="tag t-ok">✓ Đơn khả thi với năng lực thiết kế còn trống</span>':'<span class="tag t-bad">⚠ Nhóm thiết kế quá tải — thêm người / giãn mốc hồ sơ / thuê ngoài bản vẽ</span>')+'</div>';
+  }
+  const {dem,uns}=nltkDemand(nltkItems(''));
+  const wkSet=new Set(); NLTK_RES.forEach(rs=>Object.keys(dem[rs.id]).forEach(k=>wkSet.add(k))); const weeks=[...wkSet].sort();
+  h+='<div style="font-weight:700;margin:4px 0 8px">Bảng tải theo tuần <span class="muted" style="font-weight:400">(đơn đang triển khai · số bộ hồ sơ)</span></div>';
+  if(!weeks.length){ h+='<div class="muted">Chưa có mốc hồ sơ (HS bắt đầu/HT) để xếp tuần. Nhập ở Kế hoạch thiết kế theo hạng mục.</div>'; }
+  else{
+    h+='<div class="tbl-wrap"><table class="tbl ks-table" style="min-width:'+(200+weeks.length*66)+'px"><thead><tr><th class="ks-name">Nhóm · (NL/tuần)</th>'+weeks.map(w=>'<th style="min-width:60px">'+nlsxWkLabel(w)+'</th>').join('')+'</tr></thead><tbody>';
+    NLTK_RES.forEach(rs=>{ const cap=nltkCapWeek(o,rs.id);
+      h+='<tr><td class="ks-name"><b>'+esc(rs.ten)+'</b> <span class="muted">('+fmtNum(cap)+')</span></td>'
+        + weeks.map(w=>{ const v=dem[rs.id][w]||0; if(v<=0.001) return '<td class="ks-c" style="color:var(--ink-faint)">·</td>'; const load=cap>0?v/cap:2; const bg=load>1?'#FDEEEC':load>0.85?'#FBF3E3':'#EAF3EC'; const tc=load>1?'#B23A2E':'#2E5A3E'; return '<td class="ks-c" style="background:'+bg+';color:'+tc+'" title="'+fmtNum(v)+' / '+fmtNum(cap)+'">'+fmtNum(v)+(cap>0?'<div style="font-size:9px">'+Math.round(load*100)+'%</div>':'')+'</td>'; }).join('')
+        + '</tr>';
+    });
+    h+='</tbody></table></div><div class="ks-legend" style="margin-top:8px"><span><i style="background:#EAF3EC"></i>≤85%</span><span><i style="background:#FBF3E3"></i>85–100%</span><span><i style="background:#FDEEEC"></i>&gt;100% quá tải</span></div>';
+  }
+  const unsAny=NLTK_RES.some(rs=>uns[rs.id]>0.001);
+  if(unsAny) h+='<div class="muted" style="margin-top:8px;font-size:12px">Chưa xếp tuần (thiếu mốc hồ sơ): '+NLTK_RES.filter(rs=>uns[rs.id]>0.001).map(rs=>esc(rs.ten)+' '+fmtNum(uns[rs.id])).join(' · ')+'</div>';
+  return h;
 }
 function khcEdit(ma, key, el){
   khcSet(ma, key, el.value);
@@ -3566,8 +3777,22 @@ function vDeptDash(key){
     + cfg.buoc2.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div></div>';
   return html;
 }
-function vThietKe(){ return vDeptDash('mThietKe'); }
-function vNhaMay(){ return vDeptDash('mNhaMay'); }
+function vThietKe(){
+  const view=window._tkView||'dh';
+  const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._tkView=\'dh\';render()">✏ Điều hành & Kế hoạch TK</button>'
+    + '<button class="cv-pill'+(view==='nl'?' on':'')+'" onclick="window._tkView=\'nl\';render()">📊 Năng lực & Khả thi</button>'
+    + '</div>';
+  return seg + (view==='nl' ? nltkView() : vDeptDash('mThietKe'));
+}
+function vNhaMay(){
+  const view=window._nmView||'dh';
+  const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._nmView=\'dh\';render()">🏭 Điều hành & Kế hoạch SX</button>'
+    + '<button class="cv-pill'+(view==='nl'?' on':'')+'" onclick="window._nmView=\'nl\';render()">📊 Năng lực & Khả thi</button>'
+    + '</div>';
+  return seg + (view==='nl' ? nlsxView() : vDeptDash('mNhaMay'));
+}
 function vThuongMai(){ return vDeptDash('mThuongMai'); }
 
 /* ---------- Trang Công việc (nhóm theo thứ tự giai đoạn quy trình) ---------- */
