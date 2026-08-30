@@ -3,6 +3,7 @@
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
+<!-- MDC-PM v5.2 — KẾ HOẠCH SẢN XUẤT (module Nhà máy) theo biểu mẫu "PHÂN BỔ & KẾ HOẠCH SẢN XUẤT" (file anh Lâm gửi): bảng đầy đủ nhóm cột — PHÂN BỐ HẠNG MỤC (Hạng mục·Phân loại·Phân bố SX·Tổ SX/Đối tác·Ưu tiên·ĐVT·Khối lượng·Số lượng) · ĐỊNH BIÊN NHÂN SỰ (NC Mộc/Sơn/Lắp đặt) · KẾ HOẠCH HỒ SƠ (SPEC·HS đã ký) · FILE KỸ THUẬT CNC (Ngày HT·Ghi chú) · KH NHẬP VẬT LIỆU (Ngày đặt·Ngày nhận) · SẢN XUẤT & LẮP ĐẶT (Mộc BĐ/HT·Sơn BĐ/HT·Lắp đặt BĐ/HT) · NGHIỆM THU & BÀN GIAO (BĐ/Bàn giao) · TIẾN ĐỘ (DK khả thi·%·Ghi chú). KHSX_GROUPS + khsxPlanHtml/khsxCell + Xuất Excel/PDF (A1 landscape). Lưu chung kho mdc_pm_khhm (khóa sx_pb/sx_to/sx_ut/kl/nc_*/sx_spec/sx_hsky/cnc_*/vl_*/moc_*/son_*/ld_*/nt_*/sx_kt). Hạng mục lấy từ phân bổ Nhà máy. -->
 <!-- MDC-PM v5.1 — KẾ HOẠCH THIẾT KẾ theo hạng mục: module Thiết kế thêm card "Kế hoạch thiết kế theo hạng mục" — hiện MỌI hạng mục (mọi phân bổ NM/TM/TP, vì thiết kế/hồ sơ làm cho tất cả), nhóm mốc KẾ HOẠCH HỒ SƠ (Chốt Spec · HS Bắt đầu · HS Hoàn thành · Chuyển hồ sơ · Duyệt mẫu) + có cột Phân bổ để biết ai thực hiện. khhmDeptRows(pb='' → mọi phân bổ); khhmDeptPlanHtml roCols thêm Phân bổ khi pb rỗng. Cùng kho mdc_pm_khhm → đồng bộ 2 chiều với bảng hạng mục của dự án. -->
 <!-- MDC-PM v5.0 — KẾ HOẠCH THEO HẠNG MỤC LAN TỎA SANG CÁC PHÒNG (chung kho mdc_pm_khhm): từ Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục, các hạng mục tự chảy về đúng phòng theo cột Phân bổ. Module Nhà máy: card "Kế hoạch sản xuất theo hạng mục" (Hồ sơ + Sản xuất & lắp đặt). Module Thương mại: card "Kế hoạch đặt hàng theo hạng mục" (Đặt hàng). Module Thầu phụ: thêm tab "Kế hoạch thi công" (Thi công thầu phụ). Sửa mốc ở phòng ↔ đồng bộ tức thì với bảng hạng mục của dự án. khhmDeptPlanHtml(pb,groups,da) + khhmDeptRows. -->
 <!-- MDC-PM v4.7 — 3 MODULE THEO PHÒNG BAN (nav riêng): Thiết kế · Nhà máy · Thương mại. Bước 1 (chạy ngay, không cần deploy BE): mỗi module = bảng điều hành phòng — gom công việc theo giai đoạn của phòng xuyên suốt mọi dự án + KPI + việc quá hạn + mốc từ Kế hoạch chi tiết (kho mdc_pm_khc) + (Thương mại) bảng Mua sắm/Đặt hàng. Chừa khung "Nghiệp vụ chuyên sâu (bước 2)". Lọc theo dự án. -->
@@ -2434,6 +2435,125 @@ function khhmDeptPlanHtml(pb, groupTitles, da){
     +'<p class="muted" style="font-size:12px;margin-top:8px">Sửa mốc tại đây tự đồng bộ với <b>Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục</b> (chung kho <code>mdc_pm_khhm</code>).</p>';
   return h;
 }
+/* ===== v5.2 — KẾ HOẠCH SẢN XUẤT (module Nhà máy) — bám ĐÚNG biểu mẫu "PHÂN BỔ & KẾ HOẠCH SẢN XUẤT". Lưu chung kho mdc_pm_khhm (thêm các khóa sx_, nc_, vl_, moc_, son_, ld_, nt_, cnc_). ===== */
+const KHSX_PBSX = ['','Sản xuất','Đối tác'];
+const KHSX_GROUPS = [
+  {ten:'PHÂN BỐ HẠNG MỤC', mau:'#7A5A2E', cols:[
+    {key:'ten',     leaf:'Hạng mục',       t:'ro',  w:200, cls:'ks-name'},
+    {key:'phanLoai',leaf:'Phân loại',      t:'ro',  w:92},
+    {key:'sx_pb',   leaf:'Phân bố SX',     t:'sel', opts:KHSX_PBSX, w:100},
+    {key:'sx_to',   leaf:'Tổ SX / Đối tác',t:'text',w:120},
+    {key:'sx_ut',   leaf:'Ưu tiên',        t:'num', w:64},
+    {key:'dvt',     leaf:'ĐVT',            t:'ro',  w:50},
+    {key:'kl',      leaf:'Khối lượng',     t:'text',w:80},
+    {key:'sl',      leaf:'Số lượng',       t:'ro',  w:64},
+  ]},
+  {ten:'ĐỊNH BIÊN NHÂN SỰ', mau:'#5A6E8E', cols:[
+    {key:'nc_btp',  leaf:'NC Mộc (BTP)',   t:'num', w:92},
+    {key:'nc_son',  leaf:'NC Sơn',         t:'num', w:74},
+    {key:'nc_ld',   leaf:'NC Lắp đặt',     t:'num', w:82},
+  ]},
+  {ten:'KẾ HOẠCH HỒ SƠ', mau:'#3E6E8E', cols:[
+    {key:'sx_spec', leaf:'SPEC',           t:'date',w:120},
+    {key:'sx_hsky', leaf:'HS đã ký',       t:'date',w:120},
+  ]},
+  {ten:'FILE KỸ THUẬT CNC', mau:'#6E5E9E', cols:[
+    {key:'cnc_ht',  leaf:'CNC hoàn thành', t:'date',w:120},
+    {key:'cnc_gc',  leaf:'Ghi chú CNC',    t:'text',w:120},
+  ]},
+  {ten:'KH NHẬP VẬT LIỆU', mau:'#8E6E3E', cols:[
+    {key:'vl_dat',  leaf:'Ngày đặt',       t:'date',w:120},
+    {key:'vl_nhan', leaf:'Ngày nhận',      t:'date',w:120},
+  ]},
+  {ten:'SẢN XUẤT & LẮP ĐẶT', mau:'#5E8E3E', cols:[
+    {key:'moc_bd',  leaf:'Mộc · Bắt đầu',  t:'date',w:120},
+    {key:'moc_ht',  leaf:'Mộc · HT',       t:'date',w:120},
+    {key:'son_bd',  leaf:'Sơn · Bắt đầu',  t:'date',w:120},
+    {key:'son_ht',  leaf:'Sơn · HT',       t:'date',w:120},
+    {key:'ld_bd',   leaf:'Lắp đặt · BĐ',   t:'date',w:120},
+    {key:'ld_ht',   leaf:'Lắp đặt · HT',   t:'date',w:120},
+  ]},
+  {ten:'NGHIỆM THU & BÀN GIAO', mau:'#8E5A4A', cols:[
+    {key:'nt_bd',   leaf:'Bắt đầu',        t:'date',w:112},
+    {key:'nt_ht',   leaf:'Bàn giao',       t:'date',w:112},
+  ]},
+  {ten:'TIẾN ĐỘ', mau:'#5A5A5A', cols:[
+    {key:'sx_kt',   leaf:'DK khả thi',     t:'text',w:110},
+    {key:'pct',     leaf:'% HT',           t:'num', w:56},
+    {key:'ghichu',  leaf:'Ghi chú',        t:'text',w:140},
+  ]},
+];
+function khsxCols(){ const a=[]; KHSX_GROUPS.forEach(g=>g.cols.forEach(c=>a.push(c))); return a; }
+function khsxCell(ma,r,c,canEd){
+  const v=(r[c.key]==null)?'':r[c.key];
+  if(c.t==='ro' || !canEd){ if(c.t==='date') return esc(v?fmtDMY(v):'—'); if(c.key==='pct') return v!==''?esc(v)+'%':'—'; return esc(v||'—'); }
+  const oc='onchange="khhmEdit(\''+esc(ma)+'\',\''+r.id+'\',\''+c.key+'\',this)"';
+  const oi='oninput="khhmEdit(\''+esc(ma)+'\',\''+r.id+'\',\''+c.key+'\',this)"';
+  if(c.t==='sel') return '<select class="khhm-in" '+oc+'>'+c.opts.map(o=>'<option value="'+esc(o)+'"'+(o===v?' selected':'')+'>'+(o===''?'—':esc(o))+'</option>').join('')+'</select>';
+  if(c.t==='date') return '<input type="date" class="khhm-in" value="'+esc(v)+'" '+oc+'>';
+  if(c.t==='num')  return '<input type="number" min="0" class="khhm-in" style="width:60px" value="'+esc(v)+'" '+oi+'>';
+  return '<input type="text" class="khhm-in" value="'+esc(v)+'" '+oi+'>';
+}
+function khsxPlanHtml(da){
+  const list=khhmDeptRows('Nhà máy', da);   // hạng mục phân bổ Nhà máy, mọi dự án (hoặc 1 dự án)
+  const canEd=can('edit');
+  const pcts=list.map(x=>parseFloat(x.r.pct)).filter(v=>!isNaN(v));
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  const nProj=new Set(list.map(x=>x.d['Mã DA'])).size;
+  let h='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+    +'<div class="ks-kpi"><b>'+list.length+'</b><span>hạng mục SX</span></div>'
+    +'<div class="ks-kpi"><b>'+nProj+'</b><span>dự án</span></div>'
+    +'<div class="ks-kpi"><b>'+avg+'%</b><span>tiến độ TB</span></div>'
+    +'<div style="margin-left:auto;display:flex;gap:6px;align-items:center">'
+    +'<button class="btn btn-ghost" style="padding:6px 11px;font-size:12px" onclick="khsxExportCsv(\''+esc(da||'')+'\')">⬇ Xuất Excel</button>'
+    +'<button class="btn btn-ghost" style="padding:6px 11px;font-size:12px" onclick="khsxPrint(\''+esc(da||'')+'\')">🖨 Xuất PDF</button></div>'
+    +'</div>';
+  if(!list.length) return h+'<div class="empty"><b>Chưa có hạng mục sản xuất</b>Lập ở <b>Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục</b>, đặt cột Phân bổ = <b>Nhà máy</b>.</div>';
+  h+='<div class="tbl-wrap"><table class="tbl ks-table khhm-table"><thead><tr>'
+    +'<th rowspan="2" class="ks-stt">#</th><th rowspan="2" class="ks-name" style="min-width:150px">Dự án</th>';
+  KHSX_GROUPS.forEach(g=>{ h+='<th colspan="'+g.cols.length+'" class="ks-grp" style="border-bottom:2px solid '+g.mau+'">'+esc(g.ten)+'</th>'; });
+  h+='</tr><tr>';
+  KHSX_GROUPS.forEach(g=>g.cols.forEach(c=>{ h+='<th style="min-width:'+(c.w||90)+'px">'+esc(c.leaf)+'</th>'; }));
+  h+='</tr></thead><tbody>';
+  list.forEach((x,i)=>{ const ma=x.d['Mã DA'], r=x.r;
+    h+='<tr><td class="ks-stt">'+(i+1)+'</td>'
+      +'<td class="ks-name"><b class="ks-link" onclick="window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';window._khctView=\'hm\';go(\'duanDetail\')">'+esc(x.d['Tên dự án']||ma)+'</b><div class="muted" style="font-size:11px">'+esc(ma)+'</div></td>'
+      + khsxCols().map(c=>'<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+khsxCell(ma,r,c,canEd)+'</td>').join('')
+      + '</tr>';
+  });
+  h+='</tbody></table></div>'
+    +'<p class="muted" style="font-size:12px;margin-top:8px">Biểu mẫu <b>PHÂN BỔ &amp; KẾ HOẠCH SẢN XUẤT</b>. Hạng mục & ĐVT/SL lấy từ hợp đồng (Dự án → Kế hoạch chi tiết → Theo hạng mục); các mốc SX nhập tại đây, lưu chung kho <code>mdc_pm_khhm</code>.</p>';
+  return h;
+}
+function khsxExportCsv(da){
+  const list=khhmDeptRows('Nhà máy', da||''); if(!list.length) return toast('Chưa có hạng mục sản xuất để xuất', true);
+  const cols=khsxCols(); const head=['STT','Dự án']; cols.forEach(c=>head.push(c.leaf));
+  const out=[head];
+  list.forEach((x,i)=>{ const r=x.r; const line=[i+1, x.d['Tên dự án']||x.d['Mã DA']];
+    cols.forEach(c=>{ let v=(r[c.key]==null)?'':r[c.key]; if(c.t==='date'&&v) v=fmtDMY(v); line.push(v); }); out.push(line); });
+  dlCsv(out, 'MDC_KeHoachSanXuat_'+(da||'tatca')+'_'+today()+'.csv');
+  toast('✓ Đã xuất '+list.length+' hạng mục sản xuất ra Excel (CSV)');
+}
+function khsxPrint(da){
+  const list=khhmDeptRows('Nhà máy', da||''); if(!list.length) return toast('Chưa có hạng mục sản xuất để in', true);
+  const cols=khsxCols();
+  let h1='<tr><th rowspan="2">#</th><th rowspan="2">Dự án</th>'+KHSX_GROUPS.map(g=>'<th colspan="'+g.cols.length+'">'+esc(g.ten)+'</th>').join('')+'</tr>';
+  let h2='<tr>'+KHSX_GROUPS.map(g=>g.cols.map(c=>'<th>'+esc(c.leaf)+'</th>').join('')).join('')+'</tr>';
+  let body='';
+  list.forEach((x,i)=>{ const r=x.r; body+='<tr><td>'+(i+1)+'</td><td class="l">'+esc(x.d['Tên dự án']||x.d['Mã DA'])+'</td>'
+    + cols.map(c=>{ let v=(r[c.key]==null)?'':r[c.key]; if(c.t==='date'&&v)v=fmtDMY(v); if(c.key==='pct'&&v!=='')v=v+'%'; return '<td'+(c.cls==='ks-name'?' class="l"':'')+'>'+esc(v)+'</td>'; }).join('')+'</tr>'; });
+  const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại', true); return; }
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Phân bổ & Kế hoạch sản xuất — MDC</title>'
+    + '<style>@page{size:A1 landscape;margin:7mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:8px;color:#222;margin:0}'
+    + 'h2{margin:0 0 2px;color:#7A5A2E;font-size:15px} .sub{color:#666;font-size:10px;margin-bottom:6px}'
+    + 'table{border-collapse:collapse;width:100%} th,td{border:1px solid #9a9a9a;padding:2px 3px;text-align:center;vertical-align:middle;white-space:nowrap}'
+    + 'thead th{background:#F0E9DB;color:#5A4A2E} td.l{text-align:left} tbody tr:nth-child(even){background:#FAF7F1}</style></head><body>'
+    + '<h2>PHÂN BỔ & KẾ HOẠCH SẢN XUẤT — MDC (Mộc Đông Châu)</h2>'
+    + '<div class="sub">'+(da?('Dự án: '+esc(projName(da))+' · '):'')+'Ngày in: '+fmtDMY(today())+' · '+list.length+' hạng mục</div>'
+    + '<table><thead>'+h1+h2+'</thead><tbody>'+body+'</tbody></table></body></html>');
+  w.document.close(); w.focus(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 400);
+  toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF"');
+}
 function khcEdit(ma, key, el){
   khcSet(ma, key, el.value);
   if(key==='soHD') ksSetSoHD(ma, el.value);
@@ -3411,15 +3531,20 @@ function vDeptDash(key){
   html+='</tbody></table></div></div></div>';
 
   // v5.0/v5.1 — Kế hoạch theo hạng mục lan tỏa sang phòng (bóc từ hợp đồng · kho mdc_pm_khhm)
-  const KHHM_DEPTVIEW={
-    mThietKe:  {pb:'',           gt:['KẾ HOẠCH HỒ SƠ'],                                     tt:'Kế hoạch thiết kế theo hạng mục', sub:'— hồ sơ · SPEC · duyệt mẫu cho MỌI hạng mục'},
-    mNhaMay:   {pb:'Nhà máy',    gt:['KẾ HOẠCH HỒ SƠ','KẾ HOẠCH SẢN XUẤT & LẮP ĐẶT'],       tt:'Kế hoạch sản xuất theo hạng mục', sub:'— bóc từ hợp đồng · phân bổ Nhà máy'},
-    mThuongMai:{pb:'Thương mại', gt:['KẾ HOẠCH ĐẶT HÀNG (TM)'],                             tt:'Kế hoạch đặt hàng theo hạng mục', sub:'— bóc từ hợp đồng · phân bổ Thương mại'}
-  };
-  if(KHHM_DEPTVIEW[key]){
-    const dv=KHHM_DEPTVIEW[key];
-    html+='<div class="card"><div class="ct">'+dv.tt+' <span class="muted" style="font-weight:400">'+dv.sub+'</span></div>'
-      + '<div class="card-body">'+khhmDeptPlanHtml(dv.pb, dv.gt, da)+'</div></div>';
+  if(key==='mNhaMay'){
+    // Nhà máy: bảng KẾ HOẠCH SẢN XUẤT đầy đủ theo biểu mẫu "PHÂN BỔ & KẾ HOẠCH SẢN XUẤT"
+    html+='<div class="card"><div class="ct">🏭 Kế hoạch sản xuất theo hạng mục <span class="muted" style="font-weight:400">— biểu mẫu Phân bổ &amp; Kế hoạch sản xuất · phân bổ Nhà máy</span></div>'
+      + '<div class="card-body">'+khsxPlanHtml(da)+'</div></div>';
+  } else {
+    const KHHM_DEPTVIEW={
+      mThietKe:  {pb:'',           gt:['KẾ HOẠCH HỒ SƠ'],         tt:'Kế hoạch thiết kế theo hạng mục', sub:'— hồ sơ · SPEC · duyệt mẫu cho MỌI hạng mục'},
+      mThuongMai:{pb:'Thương mại', gt:['KẾ HOẠCH ĐẶT HÀNG (TM)'], tt:'Kế hoạch đặt hàng theo hạng mục', sub:'— bóc từ hợp đồng · phân bổ Thương mại'}
+    };
+    if(KHHM_DEPTVIEW[key]){
+      const dv=KHHM_DEPTVIEW[key];
+      html+='<div class="card"><div class="ct">'+dv.tt+' <span class="muted" style="font-weight:400">'+dv.sub+'</span></div>'
+        + '<div class="card-body">'+khhmDeptPlanHtml(dv.pb, dv.gt, da)+'</div></div>';
+    }
   }
 
   // Riêng Thương mại: bảng Mua sắm / Đặt hàng
