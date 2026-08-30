@@ -2307,21 +2307,37 @@ function khhmImpParse(){
   rows=rows.filter(r=>r && r.some(c=>String(c).trim()!==''));
   if(!rows.length){ pv.innerHTML='<span class="tag t-bad">Không có dữ liệu</span>'; window.__khhmImp=null; if(saveBtn) saveBtn.classList.add('hide'); return; }
   const norm=s=>vnorm(s).replace(/[^a-z0-9]+/g,' ').trim();
-  let hdr=-1, idx={};
-  for(let i=0;i<Math.min(rows.length,6);i++){
-    const H=rows[i].map(norm); const has=k=>H.findIndex(h=>h.indexOf(k)>=0);
-    const iTen=Math.max(has('chi tiet don hang'), has('ma san pham'), has('ten san pham'), has('hang muc'));
-    if(iTen>=0){ hdr=i;
-      idx.chiTiet=has('chi tiet don hang'); idx.ma=Math.max(has('ma san pham'),has('ma sp'));
-      idx.phanLoai=Math.max(has('phan loai hang muc'),has('phan loai'));
-      idx.dvt=Math.max(has('don vi tinh'),has('dvt')); idx.kl=has('khoi luong'); idx.sl=has('so luong');
-      idx.nm=Math.max(has('nha may'),has('mdc')); idx.tm=has('thuong mai'); idx.tp=has('thau phu');
-      break; }
+  // Tìm DÒNG TIÊU ĐỀ = dòng có nhiều nhãn cột nhất (tránh nhầm dòng tựa "HẠNG MỤC NỘI THẤT")
+  const HDRKEYS=['chi tiet don hang','ma san pham','phan loai','don vi tinh','dvt','so luong','khoi luong','phan bo','thanh tien','don gia','kich thuoc'];
+  let hdr=-1, best=0;
+  for(let i=0;i<Math.min(rows.length,8);i++){
+    const H=rows[i].map(norm);
+    const score=HDRKEYS.reduce((s,k)=>s+(H.some(h=>h.indexOf(k)>=0)?1:0),0);
+    if(score>best){ best=score; hdr=i; }
   }
+  if(best<2) hdr=-1;                                  // không đủ tin cậy → đọc theo thứ tự cột
   const positional = hdr<0;
+  let idx={};
+  if(!positional){
+    // quét CẢ dòng tiêu đề + dòng tiêu đề phụ (Nhà máy/Thương mại/Thầu phụ, Dài/Rộng/Cao thường ở dòng dưới)
+    const scan=[hdr, hdr+1];
+    const findCol=(...keys)=>{ for(const ri of scan){ const H=(rows[ri]||[]).map(norm);
+        for(let c=0;c<H.length;c++){ if(H[c] && keys.some(k=>H[c].indexOf(k)>=0)) return c; } } return -1; };
+    idx.chiTiet=findCol('chi tiet don hang','chi tiet');
+    idx.ma     =findCol('ma san pham','ma sp');
+    idx.phanLoai=findCol('phan loai hang muc','phan loai');
+    idx.dvt    =findCol('don vi tinh','dvt');
+    idx.kl     =findCol('khoi luong');
+    idx.sl     =findCol('so luong');
+    idx.nm     =findCol('nha may','mdc');
+    idx.tm     =findCol('thuong mai');
+    idx.tp     =findCol('thau phu');
+    if(idx.chiTiet<0 && idx.ma<0) hdr=-1;             // không thấy cột tên → chuyển sang positional
+  }
+  const posMode = hdr<0;
   const P={chiTiet:1, ma:2, dvt:7, kl:8, sl:9, dg:10, phanLoai:12, nm:13, tm:14, tp:15};
-  const get=(row,key)=>{ let ci=positional?P[key]:idx[key]; if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
-  const start=positional?0:hdr+1; const drafts=[];
+  const get=(row,key)=>{ let ci=posMode?P[key]:idx[key]; if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
+  const start=posMode?0:hdr+1; const drafts=[];
   for(let r=start;r<rows.length;r++){
     const row=rows[r]; const maSp=get(row,'ma'), ct=get(row,'chiTiet'); let ten=maSp||ct;
     if(!ten) continue;
@@ -2334,7 +2350,7 @@ function khhmImpParse(){
   }
   window.__khhmImp=drafts;
   if(!drafts.length){ pv.innerHTML='<span class="tag t-bad">Không nhận diện được hạng mục nào — kiểm tra lại các cột.</span>'; if(saveBtn) saveBtn.classList.add('hide'); return; }
-  let h='<div style="margin:2px 0 8px;font-size:13px"><b>'+drafts.length+'</b> hạng mục nhận diện '+(positional?'<span class="muted">(đọc theo thứ tự cột file HĐ)</span>':'<span class="muted">(đọc theo tiêu đề cột)</span>')+'</div>';
+  let h='<div style="margin:2px 0 8px;font-size:13px"><b>'+drafts.length+'</b> hạng mục nhận diện '+(posMode?'<span class="muted">(đọc theo thứ tự cột file HĐ)</span>':'<span class="muted">(đọc theo tiêu đề cột)</span>')+'</div>';
   h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Phân bổ</th><th>ĐVT</th><th>SL/KL</th></tr></thead><tbody>';
   drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.sl)+'</td></tr>'; });
   h+='</tbody></table></div><div class="muted" style="margin-top:8px">Bấm <b>Lưu</b> để thêm '+drafts.length+' hạng mục (nối tiếp danh sách hiện có).</div>';
