@@ -3994,6 +3994,40 @@ function nvTable(key,ma,cols,o){
 function nvKpis(items){ return '<div class="kpis" style="margin-bottom:12px">'+items.map(x=>kpi(x[0],x[1],x[2]||'',x[3]||'')).join('')+'</div>'; }
 function nvHmFactory(r){ return r.phanBo==='Nhà máy'; }
 
+/* ---- Nối theo HẠNG MỤC từ Kế hoạch chi tiết (kho khhm) — dùng cho nghiệp vụ Thiết kế ---- */
+function nvHmList(ma,filter){ return khhmGet(ma).filter(r=>r.ten&&String(r.ten).trim()&&(!filter||filter(r))); }
+function nvAddRowHm(key,ma,hmId){ if(!ma) return; const arr=nvList(key,ma).slice(); arr.push({id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), hmId:hmId}); nvSaveList(key,ma,arr); nvRefresh(); }
+function nvClearOrphan(key,ma){ const ids=new Set(nvHmList(ma).map(r=>r.id)); nvSaveList(key,ma,nvList(key,ma).filter(x=>!x.hmId||ids.has(x.hmId))); toast('Đã dọn dòng thừa'); nvRefresh(); }
+function nvChip(label,val,cls){ return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;background:var(--surface-2,#F4F1EA);border-radius:6px;padding:2px 8px"><span class="muted">'+esc(label)+':</span>'+(cls?'<span class="tag '+cls+'">'+esc(val||'—')+'</span>':'<b>'+esc(val||'—')+'</b>')+'</span>'; }
+function nvOpenKHCT(ma){ return 'window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';window._khctView=\'hm\';go(\'duanDetail\')'; }
+function nvGroupedByHm(key,ma,cols,o){
+  o=o||{}; const canEd=can('edit');
+  if(!ma) return '<div class="empty"><b>Chọn dự án</b>Chọn một dự án ở trên để xem.</div>';
+  const hms=nvHmList(ma,o.hmFilter); const recs=nvList(key,ma);
+  let h=''; if(o.summary) h+=o.summary(recs,hms);
+  h+='<div style="margin-bottom:12px"><button class="btn btn-ghost" onclick="'+nvOpenKHCT(ma)+'">↗ Mở Kế hoạch chi tiết theo hạng mục (Dự án)</button> <span class="muted" style="font-size:12px">— danh sách hạng mục & mốc hồ sơ được lấy tự động từ đây.</span></div>';
+  if(!hms.length){ h+='<div class="empty"><b>Dự án chưa có hạng mục</b>Thêm hạng mục ở <b>Dự án → Kế hoạch chi tiết → Theo hạng mục</b>, dữ liệu sẽ tự nối về đây.</div>'; return h; }
+  hms.forEach(r=>{ const sub=recs.filter(x=>x.hmId===r.id);
+    h+='<div style="border:1px solid var(--line,#E7E2D6);border-radius:10px;padding:12px 14px;margin-bottom:12px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      + '<div style="font-weight:700;font-size:14px">'+esc(r.ten)+(r.phanLoai?' <span class="muted" style="font-weight:400;font-size:12px">· '+esc(r.phanLoai)+'</span>':'')+(r.phanBo?' <span class="tag '+khhmPbCls(r.phanBo)+'" style="font-size:10px;margin-left:4px">'+esc(r.phanBo)+'</span>':'')+'</div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'+(o.baseInfo?o.baseInfo(r).map(x=>nvChip(x[0],x[1],x[2])).join(''):'')+'</div></div>';
+    h+='<div class="tbl-wrap"><table class="tbl" style="min-width:'+(o.minw||760)+'px"><thead><tr>';
+    cols.forEach(c=>{ h+='<th'+((c.t==='num'||c.t==='calc')?' class="num"':'')+(c.w?' style="min-width:'+c.w+'px"':'')+'>'+esc(c.label)+'</th>'; });
+    if(canEd) h+='<th></th>';
+    h+='</tr></thead><tbody>';
+    if(!sub.length){ h+='<tr><td colspan="'+(cols.length+(canEd?1:0))+'"><div class="muted" style="padding:8px 4px;font-size:12px">Chưa có dòng nào.'+(canEd?' Bấm “+ thêm '+esc(o.addWord||'dòng')+'”.':'')+'</div></td></tr>'; }
+    sub.forEach(rec=>{ h+='<tr>'; cols.forEach(c=>{ h+='<td'+((c.t==='num'||c.t==='calc')?' class="num"':'')+'>'+nvCell(key,ma,rec,c,canEd,[])+'</td>'; }); if(canEd) h+='<td><button class="btn btn-ghost" style="padding:2px 8px;color:var(--bad)" title="Xóa dòng" onclick="nvDelRow(\''+key+'\',\''+esc(ma)+'\',\''+rec.id+'\')">✕</button></td>'; h+='</tr>'; });
+    h+='</tbody></table></div>';
+    if(canEd) h+='<div style="margin-top:6px"><button class="btn btn-ghost" style="padding:3px 10px;font-size:12px" onclick="nvAddRowHm(\''+key+'\',\''+esc(ma)+'\',\''+r.id+'\')">+ thêm '+esc(o.addWord||'dòng')+'</button></div>';
+    h+='</div>';
+  });
+  const ids=new Set(hms.map(r=>r.id)); const orphans=recs.filter(x=>x.hmId&&!ids.has(x.hmId));
+  if(orphans.length) h+='<div class="muted" style="font-size:12px;margin-top:6px">'+orphans.length+' dòng thuộc hạng mục đã xoá — <a href="#" onclick="nvClearOrphan(\''+key+'\',\''+esc(ma)+'\');return false">dọn dữ liệu thừa</a></div>';
+  return h;
+}
+function nvHsChip(r){ return [['Chốt Spec', r.hs_spec, r.hs_spec==='Đã chốt'?'t-ok':''],['Mốc HS', (r.hs_bd?fmtDMY(r.hs_bd):'?')+' → '+(r.hs_ht?fmtDMY(r.hs_ht):'?')],['Chuyển HS', r.hs_chuyen, r.hs_chuyen==='Đã chuyển'?'t-ok':''],['Duyệt mẫu', r.hs_duyet, r.hs_duyet==='Đã duyệt'?'t-ok':'']]; }
+
 /* ---- Nhà máy ---- */
 function lsxPct(r){ let n=0; ['cd_moc','cd_son','cd_lap'].forEach(k=>{ if(r[k]==='Xong') n++; }); return Math.round(n/3*100); }
 function lsxHtml(da){
@@ -4060,11 +4094,10 @@ function nvlHtml(da){
   return nvTable('nvl',da,cols,opt);
 }
 
-/* ---- Thiết kế ---- */
+/* ---- Thiết kế (nối theo hạng mục từ Kế hoạch chi tiết — kho khhm) ---- */
 function hsbvHtml(da){
   const cols=[
     {k:'tenBV',label:'Tên bản vẽ / bộ HS',t:'text',w:190},
-    {k:'hm',label:'Hạng mục',t:'hm',w:160},
     {k:'loai',label:'Loại',t:'sel',opts:['Concept','Kỹ thuật','Shop drawing','Kết cấu','M&E'],w:130},
     {k:'rev',label:'Phiên bản',t:'text',w:84,ph:'R0'},
     {k:'trangThai',label:'Trạng thái',t:'sel',opts:['Đang vẽ','Chờ duyệt','Sửa lại','Đã duyệt','Phát hành'],w:120},
@@ -4072,18 +4105,17 @@ function hsbvHtml(da){
     {k:'nguoi',label:'Người vẽ',t:'text',w:120},
     {k:'ghichu',label:'Ghi chú',t:'text',w:140}
   ];
-  const opt={ title:'hồ sơ bản vẽ', minw:1090, summary:(recs)=>{
+  const opt={ addWord:'bản vẽ', minw:960, baseInfo:nvHsChip, summary:(recs,hms)=>{
     const ph=recs.filter(r=>r.trangThai==='Đã duyệt'||r.trangThai==='Phát hành').length;
     const cho=recs.filter(r=>r.trangThai==='Chờ duyệt').length;
     const ve=recs.filter(r=>r.trangThai==='Đang vẽ'||r.trangThai==='Sửa lại').length;
-    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Quản lý bản vẽ theo phiên bản (Concept → Kỹ thuật → Shop drawing → Kết cấu/M&E), số rev, trạng thái duyệt & ngày phát hành.</div>'
-      + nvKpis([['Tổng bản vẽ',recs.length,''],['Đã duyệt / phát hành',ph,''],['Chờ duyệt',cho,cho?'chờ xử lý':'','accent'],['Đang vẽ / sửa',ve,'']]);
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Mỗi hạng mục (lấy từ Kế hoạch chi tiết) quản lý các bản vẽ theo phiên bản: Concept → Kỹ thuật → Shop drawing → Kết cấu/M&E. Thông tin mốc hồ sơ, chốt Spec, chuyển HS, duyệt mẫu hiển thị theo từng hạng mục ở đầu khối.</div>'
+      + nvKpis([['Hạng mục',hms.length,''],['Tổng bản vẽ',recs.length,''],['Đã duyệt / phát hành',ph,''],['Chờ duyệt',cho,cho?'chờ xử lý':'','accent'],['Đang vẽ / sửa',ve,'']]);
   }};
-  return nvTable('hsbv',da,cols,opt);
+  return nvGroupedByHm('hsbv',da,cols,opt);
 }
 function specHtml(da){
   const cols=[
-    {k:'hm',label:'Hạng mục',t:'hm',w:160},
     {k:'vatLieu',label:'Vật liệu / Phụ kiện',t:'text',w:170},
     {k:'chungLoai',label:'Chủng loại',t:'text',w:130},
     {k:'ma',label:'Mã',t:'text',w:100},
@@ -4093,13 +4125,13 @@ function specHtml(da){
     {k:'ngayKy',label:'Ngày ký mẫu',t:'date',w:140},
     {k:'ghichu',label:'Ghi chú',t:'text',w:130}
   ];
-  const opt={ title:'bảng SPEC vật liệu', minw:1180, summary:(recs)=>{
+  const opt={ addWord:'vật liệu', minw:1020, baseInfo:r=>[['Chốt Spec', r.hs_spec, r.hs_spec==='Đã chốt'?'t-ok':''],['Duyệt mẫu (HS)', r.hs_duyet, r.hs_duyet==='Đã duyệt'?'t-ok':''],['Phân loại', r.phanLoai]], summary:(recs,hms)=>{
     const duyet=recs.filter(r=>r.trangThaiMau==='Đã duyệt').length;
     const cho=recs.filter(r=>!r.trangThaiMau||r.trangThaiMau==='Chờ duyệt'||r.trangThaiMau==='Đổi mẫu').length;
-    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Danh mục SPEC vật liệu/phụ kiện theo hạng mục (chủng loại, mã, xuất xứ, màu/vân) và trạng thái duyệt mẫu, ngày ký mẫu.</div>'
-      + nvKpis([['Dòng SPEC',recs.length,''],['Đã duyệt mẫu',duyet,''],['Chờ / đổi mẫu',cho,cho?'cần duyệt':'','accent']]);
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">SPEC vật liệu/phụ kiện theo từng hạng mục (lấy từ Kế hoạch chi tiết): chủng loại, mã, xuất xứ, màu/vân + trạng thái duyệt mẫu, ngày ký mẫu.</div>'
+      + nvKpis([['Hạng mục',hms.length,''],['Dòng SPEC',recs.length,''],['Đã duyệt mẫu',duyet,''],['Chờ / đổi mẫu',cho,cho?'cần duyệt':'','accent']]);
   }};
-  return nvTable('spec',da,cols,opt);
+  return nvGroupedByHm('spec',da,cols,opt);
 }
 function duyethsHtml(da){
   const cols=[
@@ -4111,14 +4143,14 @@ function duyethsHtml(da){
     {k:'chinhSua',label:'Nội dung chỉnh sửa',t:'text',w:210},
     {k:'ghichu',label:'Ghi chú',t:'text',w:130}
   ];
-  const opt={ title:'nhật ký duyệt hồ sơ', minw:1080, summary:(recs)=>{
+  const opt={ addWord:'lượt gửi', minw:960, baseInfo:r=>[['Mốc HS', (r.hs_bd?fmtDMY(r.hs_bd):'?')+' → '+(r.hs_ht?fmtDMY(r.hs_ht):'?')],['Chuyển HS', r.hs_chuyen, r.hs_chuyen==='Đã chuyển'?'t-ok':''],['Duyệt mẫu (HS)', r.hs_duyet, r.hs_duyet==='Đã duyệt'?'t-ok':'']], summary:(recs,hms)=>{
     const duyet=recs.filter(r=>r.ketQua==='Duyệt'||r.ketQua==='Duyệt có điều kiện').length;
     const cho=recs.filter(r=>!r.ketQua||r.ketQua==='Chờ phản hồi').length;
     const sua=recs.filter(r=>r.ketQua==='Yêu cầu sửa'||r.ketQua==='Từ chối').length;
-    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Nhật ký vòng gửi – phản hồi – chỉnh sửa hồ sơ với khách/BLĐ. Ghi lần gửi, người duyệt, kết quả và nội dung yêu cầu chỉnh sửa.</div>'
-      + nvKpis([['Lượt gửi',recs.length,''],['Đã duyệt',duyet,''],['Chờ phản hồi',cho,'','accent'],['Yêu cầu sửa / từ chối',sua,sua?'cần chỉnh':'',sua?'bad':'']]);
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Nhật ký vòng gửi – phản hồi – chỉnh sửa hồ sơ với khách/BLĐ theo từng hạng mục (lấy từ Kế hoạch chi tiết): lần gửi, người duyệt, kết quả, nội dung yêu cầu sửa.</div>'
+      + nvKpis([['Hạng mục',hms.length,''],['Lượt gửi',recs.length,''],['Đã duyệt',duyet,''],['Chờ phản hồi',cho,'','accent'],['Yêu cầu sửa / từ chối',sua,sua?'cần chỉnh':'',sua?'bad':'']]);
   }};
-  return nvTable('duyeths',da,cols,opt);
+  return nvGroupedByHm('duyeths',da,cols,opt);
 }
 
 /* ---- Trang & điều hướng nghiệp vụ ---- */
