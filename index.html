@@ -3,6 +3,7 @@
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
+<!-- MDC-PM v5.7 — BÁO CÁO PHÒNG BAN: nav mới "📈 Báo cáo phòng ban" (baocaoPB→vBaoCaoPB). Chọn Phòng (Tổng công ty / Thiết kế / Nhà máy / Thương mại / Thầu phụ) + Kỳ (Tuần này / Tháng này / Tùy chọn khoảng ngày) → 4 khối: KPI & tiến độ · Việc quá hạn & sắp đến hạn trong kỳ · Tải & năng lực đỉnh (Nhà máy/Thiết kế) · Tài chính phòng (Thương mại mua sắm, Thầu phụ chi). Tổng công ty = bảng tổng hợp 4 phòng + chi tiết từng phòng. Nút Xuất Excel (CSV) + Xuất PDF (A4). Không biểu đồ (số liệu & bảng). Tái dùng rpData/rpCap/rpFin + nlsx/nltk/khhm. -->
 <!-- MDC-PM v5.6 — P0 NỀN TẢNG DỮ LIỆU: đưa các kho kế hoạch (khc/khhm/nlsx/nltk/holidays/sohd) vào S.pmkv → tự lưu localStorage (mdcpm_state) VÀ đồng bộ Backend (getAll trả pmkv + action savePMKV, ghi write-through debounce 900ms, fallback pending khi mất mạng). pmkvMigrate() chuyển dữ liệu localStorage cũ vào S.pmkv 1 lần. Accessor khc/khhm/hol/sohd/nlsx/nltk đọc-ghi qua pmkvGet/pmkvSet. CHẠY TỐT trước khi deploy .gs (giữ local, BE trả pmkv rỗng thì không sao). P0(2): khhmEdit tự suy sx_bd/sx_ht (tóm tắt) = min/max của Mộc/Sơn/Lắp đặt → 1 nguồn dữ liệu. CẦN DEPLOY MDC_HopNhat_Backend v6.4 (thêm sheet PM_KeHoach + savePMKV_ + getPMKV_). -->
 <!-- MDC-PM v5.5 — NĂNG LỰC & KHẢ THI THIẾT KẾ (module Thiết kế): nút chuyển "✏ Điều hành & Kế hoạch TK ↔ 📊 Năng lực & Khả thi". Đơn vị = số hạng mục (bộ hồ sơ). 3 nhóm: Concept/Ý tưởng · Triển khai kỹ thuật (shop) · Kết cấu/M&E; mỗi hạng mục qua CẢ 3 nhóm; xếp tuần theo cửa sổ Hồ sơ (hs_bd..hs_ht, fallback project). Cấu hình localStorage mdc_pm_nltk (res:{cc,tk,kc:{nangSuat[hạng mục/người/tuần],soNguoi}}). Bảng tải theo tuần + kiểm tra khả thi so với năng lực CÒN TRỐNG. Dùng chung helper nlsxWeeks/nlsxWkLabel/fmtNum. -->
 <!-- MDC-PM v5.4 — NĂNG LỰC theo GIÁ TRỊ (đồng): thêm nút chuyển "₫ Theo giá trị (đồng) ↔ ▦ Theo m²" trong màn Năng lực & Khả thi. Chế độ giá trị: công suất mỗi tổ = đồng/người/tháng × số người ÷ 4,33 tuần; nhu cầu mỗi hạng mục = Thành tiền (cột tt). Bảng SX thêm cột "Thành tiền"; import HĐ tự lấy Thành tiền (cột 11 / tiêu đề "Thành tiền"). nlsxUnit/nlsxQty/nlsxFmt; nlsxCapWeek(o,id,unit); res thêm khóa dongThang. Mặc định chế độ giá trị. -->
@@ -1727,6 +1728,8 @@ const NAV_GROUPS = [
     {id:'khongPH',   name:'Sự không phù hợp',icon:'⚠'},
     {id:'ruiro',     name:'Rủi ro',           icon:'◬'},
     {id:'baocaoTC',  name:'Báo cáo tài chính',icon:'📊'},
+    {id:'baocaoPB',  name:'Báo cáo phòng ban',icon:'📈'},
+    {id:'nlCty',     name:'Năng lực công ty', icon:'⚡'},
   ]},
   { label: null, items: [
     {id:'gantt',     name:'Tiến độ Gantt',   icon:'▭'},
@@ -1894,7 +1897,7 @@ function onAddClick(){
 function render(){
   const root = document.getElementById('viewRoot');
   const fn = {
-    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, congKH:vPortalMgr,
+    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, baocaoPB:vBaoCaoPB, nlCty:vCapacityAll, congKH:vPortalMgr,
     chiphi:vExpenses, lichhen:vAppointments, thaubo:vSubcontractors,
     nhansu:vStaff, caidat:vSettings, kiemtra:vDataHealth,
     // v2.0 mới
@@ -2615,22 +2618,35 @@ const NLSX_RES=[
   {id:'son',ten:'Bộ phận Sơn'},
   {id:'ld', ten:'Bộ phận Lắp đặt'},
 ];
+// ★ v5.8 (F5) — Hệ số gia công theo LOẠI hạng mục (tổ SX). % giá trị gia công trên tổng thành tiền, để loại trừ phần vật tư khi tính tải theo giá trị.
+const NLSX_GC=[
+  {id:'vcn',ten:'Ván công nghiệp'},
+  {id:'tlt',ten:'TN liền tường'},
+  {id:'tdr',ten:'TN đồ rời'},
+];
 const NLSX_WPM = 52/12;   // số tuần / tháng (~4.33)
 function nlsxUnit(){ return window._nlsxUnit==='m2' ? 'm2' : 'gt'; }   // mặc định: theo giá trị (đồng)
 function nlsxCfg(){ let s=pmkvGet('nlsx')||{};
-  const o={ngayCongTuan:(s.ngayCongTuan!=null?s.ngayCongTuan:6), res:{}};
+  const o={ngayCongTuan:(s.ngayCongTuan!=null?s.ngayCongTuan:6), res:{}, gc:{}};
   NLSX_RES.forEach(r=>{ const v=(s.res&&s.res[r.id])||{}; o.res[r.id]={nangSuat:v.nangSuat||'', soNguoi:v.soNguoi||'', dongThang:v.dongThang||''}; });
+  NLSX_GC.forEach(g=>{ o.gc[g.id]=(s.gc&&s.gc[g.id]!=null)?s.gc[g.id]:''; });   // '' ⇒ mặc định 100% (không đổi hành vi cũ)
   return o; }
 function nlsxSaveCfg(o){ pmkvSet('nlsx', o); }
 function nlsxEditGen(key,el){ const o=nlsxCfg(); o[key]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
 function nlsxEditRes(id,key,el){ const o=nlsxCfg(); (o.res[id]=o.res[id]||{})[key]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
+function nlsxEditGc(cat,el){ const o=nlsxCfg(); (o.gc=o.gc||{})[cat]=el.value; nlsxSaveCfg(o); nlsxRefresh(); }
+// Hệ số gia công (0..1) của 1 hạng mục: ưu tiên override theo dòng r.gc, rồi theo loại (tổ SX), mặc định 100%.
+function nlsxGiaCong(r,o){ o=o||nlsxCfg();
+  let p=(r&&r.gc!=null&&String(r.gc).trim()!=='')?parseFloat(r.gc):NaN;
+  if(isNaN(p)){ const cat=nlsxToRes(r); const gv=o.gc&&o.gc[cat]; p=(gv!=null&&String(gv).trim()!=='')?parseFloat(gv):100; }
+  if(isNaN(p)||p<0) p=100; return p/100; }
 function nlsxCapWeek(o,id,unit){ const r=o.res[id]||{}; const sn=parseFloat(r.soNguoi)||0;
   if((unit||nlsxUnit())==='gt') return (parseFloat(r.dongThang)||0)*sn/NLSX_WPM;      // đồng/tuần
   return (parseFloat(r.nangSuat)||0)*sn*(parseFloat(o.ngayCongTuan)||0); }             // m²/tuần
 function fmtNum(n){ n=Math.round((Number(n)||0)*10)/10; return (n%1===0)?String(n):n.toFixed(1); }
 function nlsxNum(x){ const v=String(x==null?'':x).trim().replace(/\s/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.'); const n=parseFloat(v); return isNaN(n)?0:n; }
 function nlsxM2(r){ let n=nlsxNum(r.m2); if(n<=0) n=nlsxNum(r.kl); return n; }
-function nlsxQty(r,unit){ return (unit||nlsxUnit())==='gt' ? nlsxNum(r.tt) : nlsxM2(r); }
+function nlsxQty(r,unit){ return (unit||nlsxUnit())==='gt' ? nlsxNum(r.tt)*nlsxGiaCong(r) : nlsxM2(r); }
 function nlsxFmt(v,unit){ return (unit||nlsxUnit())==='gt' ? (fmtNum((Number(v)||0)/1e6)+' tr') : fmtNum(v); }
 function nlsxUnitLbl(unit){ return (unit||nlsxUnit())==='gt' ? 'giá trị' : 'm²'; }
 function nlsxToRes(r){ let n=r.to_nhom||'';
@@ -2684,6 +2700,18 @@ function nlsxView(){
       + '<td class="num"><b id="nlsxCap_'+rs.id+'">'+nlsxFmt(nlsxCapWeek(o,rs.id,unit),unit)+'</b></td></tr>';
   });
   h+='</tbody></table></div></div></div>';
+  // ★ v5.8 (F5) — Hệ số gia công (chỉ khi tính theo giá trị)
+  if(unit==='gt'){
+    h+='<div class="card"><div class="ct">Hệ số gia công theo loại hạng mục <span class="ct-r">% giá trị gia công / tổng thành tiền</span></div><div class="card-body">'
+      + '<div class="muted" style="font-size:12px;margin-bottom:10px">Tải theo giá trị = <b>tổng thành tiền × hệ số gia công</b>. Để trống hoặc 100% = tính trên toàn bộ giá trị (gồm vật tư). Hạ xuống (vd 35–45%) để loại phần vật tư, phản ánh đúng công gia công. Khi đó Năng lực/tuần (đồng/người/tháng) cũng nên khai theo <b>giá trị gia công</b>.</div>'
+      + '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Loại (tổ SX)</th><th class="num">Hệ số gia công (%)</th></tr></thead><tbody>';
+    NLSX_GC.forEach(g=>{ const val=(o.gc&&o.gc[g.id]!=null)?o.gc[g.id]:'';
+      h+='<tr><td><b>'+esc(g.ten)+'</b></td><td class="num">'
+        + (canEd?'<input type="number" min="0" max="100" step="1" class="khhm-in" style="width:96px;text-align:right" value="'+esc(val)+'" placeholder="100" onchange="nlsxEditGc(\''+g.id+'\',this)">':esc((val===''||val==null)?'100':val))
+        + '</td></tr>';
+    });
+    h+='</tbody></table></div></div></div>';
+  }
   const da=window._nlsxDA||'';
   h+='<div class="card"><div class="ct">Kiểm tra khả thi & Bảng tải<span class="ct-r"><label style="font-size:12px;color:var(--ink-soft)">Đơn đang xét: </label>'
     + '<select onchange="window._nlsxDA=this.value;render()"><option value="">— Không (chỉ xem tải hiện tại) —</option>'
@@ -2807,6 +2835,80 @@ function nltkOutHtml(){
   }
   const unsAny=NLTK_RES.some(rs=>uns[rs.id]>0.001);
   if(unsAny) h+='<div class="muted" style="margin-top:8px;font-size:12px">Chưa xếp tuần (thiếu mốc hồ sơ): '+NLTK_RES.filter(rs=>uns[rs.id]>0.001).map(rs=>esc(rs.ten)+' '+fmtNum(uns[rs.id])).join(' · ')+'</div>';
+  return h;
+}
+/* ===== v5.8 — DASHBOARD NĂNG LỰC TOÀN CÔNG TY. Gộp tải theo tuần của Nhà máy (6 nguồn nlsx) + Thiết kế (3 nhóm nltk) từ mọi đơn đang triển khai; cảnh báo tuần/bộ phận quá tải. Tái dùng nlsxDemand/nltkDemand. ===== */
+function capAllRows(){
+  const unit=nlsxUnit();
+  const o=nlsxCfg(); const rNM=nlsxDemand(nlsxActiveItems(''),unit); const demNM=rNM.dem, unsNM=rNM.uns;
+  const to=nltkCfg(); const rTK=nltkDemand(nltkItems('')); const demTK=rTK.dem, unsTK=rTK.uns;
+  const rows=[];
+  NLSX_RES.forEach(rs=>rows.push({grp:'Nhà máy', gc:'nm', name:rs.ten, cap:nlsxCapWeek(o,rs.id,unit), dem:demNM[rs.id]||{}, uns:unsNM[rs.id]||0, fmt:function(v){return nlsxFmt(v,unit);}}));
+  NLTK_RES.forEach(rs=>rows.push({grp:'Thiết kế', gc:'tk', name:rs.ten, cap:nltkCapWeek(to,rs.id), dem:demTK[rs.id]||{}, uns:unsTK[rs.id]||0, fmt:function(v){return fmtNum(v);}}));
+  return {rows, unit};
+}
+function vCapacityAll(){
+  const {rows, unit}=capAllRows();
+  const wkSet=new Set(); rows.forEach(r=>Object.keys(r.dem).forEach(k=>wkSet.add(k))); const weeks=[...wkSet].sort();
+  // Cảnh báo quá tải
+  const alerts=[]; rows.forEach(r=>{ if(!(r.cap>0)) return; const ws=[]; weeks.forEach(w=>{ const v=r.dem[w]||0; if(v>r.cap*1.0001) ws.push({w,load:v/r.cap,v}); }); if(ws.length) alerts.push({r,ws}); });
+  const nKhai=rows.filter(r=>r.cap>0).length;
+  const nQuaTai=alerts.length;
+  // tuần căng nhất = tuần có nhiều bộ phận quá tải nhất
+  const wkOver={}; alerts.forEach(a=>a.ws.forEach(x=>{ wkOver[x.w]=(wkOver[x.w]||0)+1; }));
+  let peakWk='', peakN=0; Object.keys(wkOver).forEach(w=>{ if(wkOver[w]>peakN){peakN=wkOver[w];peakWk=w;} });
+
+  let h='<div class="cv-head"><div><h2 style="margin:0">⚡ Năng lực & Tải toàn công ty</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Gộp tải theo tuần của Nhà máy (6 nguồn) và Thiết kế (3 nhóm) từ mọi đơn đang triển khai — phát hiện bộ phận & tuần quá tải để điều phối nhân sự / giãn tiến độ / chuyển thầu phụ.</div></div></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(unit==='gt'?' on':'')+'" onclick="window._nlsxUnit=\'gt\';render()">₫ Nhà máy theo giá trị</button>'
+    + '<button class="cv-pill'+(unit==='m2'?' on':'')+'" onclick="window._nlsxUnit=\'m2\';render()">▦ Nhà máy theo m²</button>'
+    + '<span class="muted" style="align-self:center;font-size:12px">Thiết kế luôn tính theo số bộ hồ sơ.</span>'
+    + '</div>';
+
+  // Thẻ tóm tắt
+  h+='<div class="stat-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">';
+  const card=(lbl,val,sub,bad)=>'<div class="card" style="margin:0"><div class="card-body" style="padding:12px 14px"><div class="muted" style="font-size:12px">'+lbl+'</div><div style="font-size:22px;font-weight:800;'+(bad?'color:#B23A2E':'')+'">'+val+'</div>'+(sub?'<div class="muted" style="font-size:11px">'+sub+'</div>':'')+'</div></div>';
+  h+=card('Bộ phận đã khai năng lực', nKhai+' / '+rows.length, 'Nhà máy 6 · Thiết kế 3');
+  h+=card('Bộ phận đang quá tải', String(nQuaTai), nQuaTai?'cần xử lý':'ổn định', nQuaTai>0);
+  h+=card('Tuần căng nhất', peakWk?nlsxWkLabel(peakWk):'—', peakWk?(peakN+' bộ phận quá tải'):'không có', peakN>0);
+  h+=card('Số tuần trong tầm nhìn', String(weeks.length), weeks.length?(nlsxWkLabel(weeks[0])+' → '+nlsxWkLabel(weeks[weeks.length-1])):'—');
+  h+='</div>';
+
+  // Cảnh báo quá tải chi tiết
+  h+='<div class="card"><div class="ct">Cảnh báo quá tải</div><div class="card-body">';
+  if(!nQuaTai){ h+='<div class="tag t-ok">✓ Không có bộ phận nào vượt năng lực trong khoảng thời gian đang xét</div>'; }
+  else{
+    h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Khối</th><th>Bộ phận / Nhóm</th><th class="num">NL/tuần</th><th class="num">Số tuần quá tải</th><th>Các tuần (tải cao điểm)</th></tr></thead><tbody>';
+    alerts.sort((a,b)=>{ const pa=Math.max.apply(null,a.ws.map(x=>x.load)); const pb=Math.max.apply(null,b.ws.map(x=>x.load)); return pb-pa; });
+    alerts.forEach(a=>{ const r=a.r; a.ws.sort((x,y)=>y.load-x.load); const top=a.ws.slice(0,6).map(x=>nlsxWkLabel(x.w)+' <b>'+Math.round(x.load*100)+'%</b>').join(' · ')+(a.ws.length>6?' …':'');
+      h+='<tr style="background:#FDEEEC"><td>'+esc(r.grp)+'</td><td><b>'+esc(r.name)+'</b></td><td class="num">'+r.fmt(r.cap)+'</td><td class="num"><b>'+a.ws.length+'</b></td><td style="font-size:12px">'+top+'</td></tr>';
+    });
+    h+='</tbody></table></div><div class="muted" style="font-size:12px;margin-top:8px">Gợi ý: bổ sung người / tăng ca ở bộ phận quá tải, giãn mốc các đơn trùng cao điểm, hoặc chuyển bớt hạng mục sang thầu phụ.</div>';
+  }
+  h+='</div></div>';
+
+  // Bảng tải tổng hợp theo tuần
+  h+='<div class="card"><div class="ct">Bảng tải tổng hợp theo tuần <span class="ct-r">tô màu theo % năng lực từng bộ phận</span></div><div class="card-body">';
+  if(!weeks.length){ h+='<div class="muted">Chưa có mốc ngày (sản xuất / hồ sơ) để xếp tuần. Nhập mốc ở Kế hoạch sản xuất và Kế hoạch thiết kế theo hạng mục.</div>'; }
+  else{
+    let lastGrp='';
+    h+='<div class="tbl-wrap"><table class="tbl ks-table" style="min-width:'+(240+weeks.length*66)+'px"><thead><tr><th class="ks-name">Bộ phận · (NL/tuần)</th>'
+      + weeks.map(w=>'<th style="min-width:60px">'+nlsxWkLabel(w)+'</th>').join('')+'</tr></thead><tbody>';
+    rows.forEach(r=>{
+      if(r.grp!==lastGrp){ lastGrp=r.grp; h+='<tr><td class="ks-name" colspan="'+(weeks.length+1)+'" style="background:var(--surface-2,#F4F1EA);font-weight:700">'+esc(r.grp)+(r.gc==='tk'?' — đơn vị: bộ hồ sơ':' — đơn vị: '+nlsxUnitLbl(unit))+'</td></tr>'; }
+      h+='<tr><td class="ks-name"><b>'+esc(r.name)+'</b> <span class="muted">('+(r.cap>0?r.fmt(r.cap):'chưa khai')+')</span></td>'
+        + weeks.map(w=>{ const v=r.dem[w]||0; if(v<=0.001) return '<td class="ks-c" style="color:var(--ink-faint)">·</td>';
+            const load=r.cap>0?v/r.cap:2; const bg=load>1?'#FDEEEC':load>0.85?'#FBF3E3':'#EAF3EC'; const tc=load>1?'#B23A2E':'#2E5A3E';
+            return '<td class="ks-c" style="background:'+bg+';color:'+tc+'" title="'+r.fmt(v)+' / '+(r.cap>0?r.fmt(r.cap):'—')+'">'+r.fmt(v)+(r.cap>0?'<div style="font-size:9px">'+Math.round(load*100)+'%</div>':'')+'</td>'; }).join('')
+        + '</tr>';
+    });
+    h+='</tbody></table></div><div class="ks-legend" style="margin-top:8px"><span><i style="background:#EAF3EC"></i>≤85%</span><span><i style="background:#FBF3E3"></i>85–100%</span><span><i style="background:#FDEEEC"></i>&gt;100% quá tải</span></div>';
+  }
+  // Chưa xếp tuần
+  const unsList=rows.filter(r=>r.uns>0.001);
+  if(unsList.length) h+='<div class="muted" style="margin-top:8px;font-size:12px">Chưa xếp tuần (thiếu mốc ngày): '+unsList.map(r=>esc(r.name)+' '+r.fmt(r.uns)).join(' · ')+'</div>';
+  h+='</div></div>';
   return h;
 }
 function khcEdit(ma, key, el){
@@ -3815,10 +3917,18 @@ function vDeptDash(key){
       + '</tbody></table></div></div></div>';
   }
 
-  // Khung nghiệp vụ chuyên sâu — bước 2
-  html+='<div class="card" style="border-style:dashed"><div class="ct" style="color:var(--ink-soft)">🧩 Nghiệp vụ chuyên sâu (bước 2 — sẽ bổ sung)</div>'
-    + '<div class="card-body"><div class="muted" style="font-size:12.5px;line-height:1.7">Các biểu mẫu nghiệp vụ riêng của phòng sẽ được gắn vào đây khi triển khai bước 2 (cần thêm backend + deploy):<ul style="margin:6px 0 0 18px">'
-    + cfg.buoc2.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div></div>';
+  // Khung nghiệp vụ chuyên sâu
+  const nvPill=(key==='mThietKe')?'window._tkView=\'nv\'':(key==='mNhaMay')?'window._nmView=\'nv\'':'';
+  if(nvPill){
+    html+='<div class="card" style="border-color:var(--accent)"><div class="ct">🧩 Nghiệp vụ chuyên sâu <span class="tag t-ok" style="margin-left:6px">đã có</span></div>'
+      + '<div class="card-body"><div class="muted" style="font-size:12.5px;line-height:1.7">Các biểu mẫu nghiệp vụ riêng của phòng đã sẵn sàng ở tab <b>🧩 Nghiệp vụ chuyên sâu</b> (đầu trang):<ul style="margin:6px 0 8px 18px">'
+      + cfg.buoc2.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'
+      + '<button class="btn btn-ghost" onclick="'+nvPill+';render()">Mở Nghiệp vụ chuyên sâu →</button></div></div></div>';
+  } else {
+    html+='<div class="card" style="border-style:dashed"><div class="ct" style="color:var(--ink-soft)">🧩 Nghiệp vụ chuyên sâu (bước 2 — sẽ bổ sung)</div>'
+      + '<div class="card-body"><div class="muted" style="font-size:12.5px;line-height:1.7">Các biểu mẫu nghiệp vụ riêng của phòng sẽ được gắn vào đây khi triển khai bước 2:<ul style="margin:6px 0 0 18px">'
+      + cfg.buoc2.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div></div>';
+  }
   return html;
 }
 function vThietKe(){
@@ -3826,18 +3936,223 @@ function vThietKe(){
   const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._tkView=\'dh\';render()">✏ Điều hành & Kế hoạch TK</button>'
     + '<button class="cv-pill'+(view==='nl'?' on':'')+'" onclick="window._tkView=\'nl\';render()">📊 Năng lực & Khả thi</button>'
+    + '<button class="cv-pill'+(view==='nv'?' on':'')+'" onclick="window._tkView=\'nv\';render()">🧩 Nghiệp vụ chuyên sâu</button>'
     + '</div>';
-  return seg + (view==='nl' ? nltkView() : vDeptDash('mThietKe'));
+  return seg + (view==='nl' ? nltkView() : view==='nv' ? vThietKeNV() : vDeptDash('mThietKe'));
 }
 function vNhaMay(){
   const view=window._nmView||'dh';
   const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._nmView=\'dh\';render()">🏭 Điều hành & Kế hoạch SX</button>'
     + '<button class="cv-pill'+(view==='nl'?' on':'')+'" onclick="window._nmView=\'nl\';render()">📊 Năng lực & Khả thi</button>'
+    + '<button class="cv-pill'+(view==='nv'?' on':'')+'" onclick="window._nmView=\'nv\';render()">🧩 Nghiệp vụ chuyên sâu</button>'
     + '</div>';
-  return seg + (view==='nl' ? nlsxView() : vDeptDash('mNhaMay'));
+  return seg + (view==='nl' ? nlsxView() : view==='nv' ? vNhaMayNV() : vDeptDash('mNhaMay'));
 }
 function vThuongMai(){ return vDeptDash('mThuongMai'); }
+/* ===== v5.9 — NGHIỆP VỤ CHUYÊN SÂU (Nhà máy & Thiết kế). Engine chung lưu danh sách bản ghi theo dự án trong pmkv (đồng bộ Backend v6.4). Bảng inline-edit, thêm/xóa dòng. ===== */
+function nvNum(x){ const n=Number(String(x==null?'':x).replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; }
+function nvStore(key){ return pmkvGet(key)||{}; }
+function nvList(key,ma){ const s=nvStore(key); return Array.isArray(s[ma])?s[ma]:[]; }
+function nvSaveList(key,ma,arr){ const s=nvStore(key); s[ma]=arr; pmkvSet(key,s); }
+function nvEdit(key,ma,id,k,el){ const arr=nvList(key,ma).slice(); const r=arr.find(x=>x.id===id); if(!r) return; r[k]=el.value; nvSaveList(key,ma,arr); nvRefresh(); }
+function nvAddRow(key,ma){ if(!ma){ toast('Hãy chọn dự án trước',true); return; } const arr=nvList(key,ma).slice(); arr.push({id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}); nvSaveList(key,ma,arr); nvRefresh(); }
+function nvDelRow(key,ma,id){ nvSaveList(key,ma,nvList(key,ma).filter(x=>x.id!==id)); toast('Đã xóa dòng'); nvRefresh(); }
+function nvHmOptions(ma,filter){ const arr=khhmStore()[ma]; const out=[]; if(Array.isArray(arr)) arr.forEach(r=>{ if(r.ten&&String(r.ten).trim()&&(!filter||filter(r))) out.push(r.ten); }); return out; }
+function nvCell(key,ma,r,c,canEd,hmOpts){
+  const v=r[c.k]==null?'':r[c.k];
+  if(c.t==='calc'){ const o=c.calc(r); return (o&&o.html)?o.html:('<b>'+esc(o==null?'':o)+'</b>'); }
+  if(!canEd) return ((c.t==='sel'||c.t==='hm')&&!v)?'—':esc(v||'—');
+  const oc='onchange="nvEdit(\''+key+'\',\''+esc(ma)+'\',\''+r.id+'\',\''+c.k+'\',this)"';
+  if(c.t==='sel'||c.t==='hm'){
+    const opts=(c.t==='hm')?hmOpts:(c.opts||[]);
+    let s='<select class="khhm-in" style="min-width:'+(c.w||110)+'px" '+oc+'><option value="">—</option>';
+    opts.forEach(op=>{ const val=(op&&typeof op==='object')?op.v:op; const lb=(op&&typeof op==='object')?op.l:op; s+='<option value="'+esc(val)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(lb)+'</option>'; });
+    s+='</select>'; return s;
+  }
+  const type=c.t==='num'?'number':c.t==='date'?'date':'text';
+  return '<input type="'+type+'" class="khhm-in" style="width:'+(c.w||110)+'px'+(c.t==='num'?';text-align:right':'')+'" value="'+esc(v)+'"'+(c.ph?' placeholder="'+esc(c.ph)+'"':'')+' '+oc+'>';
+}
+function nvTable(key,ma,cols,o){
+  o=o||{}; const canEd=can('edit');
+  if(!ma) return '<div class="empty"><b>Chọn dự án</b>Chọn một dự án ở trên để lập '+esc(o.title||'dữ liệu')+'.</div>';
+  const recs=nvList(key,ma); const hmOpts=nvHmOptions(ma,o.hmFilter);
+  let h=''; if(o.summary) h+=o.summary(recs,ma);
+  h+='<div class="tbl-wrap"><table class="tbl" style="min-width:'+(o.minw||760)+'px"><thead><tr>';
+  cols.forEach(c=>{ h+='<th'+((c.t==='num'||c.t==='calc')?' class="num"':'')+(c.w?' style="min-width:'+c.w+'px"':'')+'>'+esc(c.label)+'</th>'; });
+  if(canEd) h+='<th></th>';
+  h+='</tr></thead><tbody>';
+  if(!recs.length){ h+='<tr><td colspan="'+(cols.length+(canEd?1:0))+'"><div class="empty" style="padding:16px"><b>Chưa có dòng nào</b>'+(canEd?'Bấm “+ Thêm dòng” để bắt đầu.':'')+'</div></td></tr>'; }
+  recs.forEach(r=>{ h+='<tr>';
+    cols.forEach(c=>{ h+='<td'+((c.t==='num'||c.t==='calc')?' class="num"':'')+'>'+nvCell(key,ma,r,c,canEd,hmOpts)+'</td>'; });
+    if(canEd) h+='<td><button class="btn btn-ghost" style="padding:2px 8px;color:var(--bad)" title="Xóa dòng" onclick="nvDelRow(\''+key+'\',\''+esc(ma)+'\',\''+r.id+'\')">✕</button></td>';
+    h+='</tr>'; });
+  h+='</tbody></table></div>';
+  if(canEd) h+='<div style="margin-top:8px"><button class="btn btn-ghost" onclick="nvAddRow(\''+key+'\',\''+esc(ma)+'\')">+ Thêm dòng</button></div>';
+  return h;
+}
+function nvKpis(items){ return '<div class="kpis" style="margin-bottom:12px">'+items.map(x=>kpi(x[0],x[1],x[2]||'',x[3]||'')).join('')+'</div>'; }
+function nvHmFactory(r){ return r.phanBo==='Nhà máy'; }
+
+/* ---- Nhà máy ---- */
+function lsxPct(r){ let n=0; ['cd_moc','cd_son','cd_lap'].forEach(k=>{ if(r[k]==='Xong') n++; }); return Math.round(n/3*100); }
+function lsxHtml(da){
+  const cols=[
+    {k:'soLSX',label:'Số LSX',t:'text',w:90,ph:'LSX-01'},
+    {k:'hm',label:'Hạng mục',t:'hm',w:170},
+    {k:'to',label:'Tổ / Chuyền',t:'sel',opts:['Ván công nghiệp','TN liền tường','TN đồ rời','Sơn','Lắp đặt'],w:140},
+    {k:'sl',label:'SL',t:'num',w:60},
+    {k:'ngayGiao',label:'Giao việc',t:'date',w:140},
+    {k:'hanHT',label:'Hạn HT',t:'date',w:140},
+    {k:'cd_moc',label:'Mộc',t:'sel',opts:['Chưa','Đang','Xong'],w:82},
+    {k:'cd_son',label:'Sơn',t:'sel',opts:['Chưa','Đang','Xong'],w:82},
+    {k:'cd_lap',label:'Lắp đặt',t:'sel',opts:['Chưa','Đang','Xong'],w:82},
+    {k:'_pct',label:'Tiến độ',t:'calc',w:74,calc:r=>{ const p=lsxPct(r); return {html:'<div class="bar" style="width:60px;display:inline-block"><i style="width:'+p+'%"></i></div> '+p+'%'}; }},
+    {k:'trangThai',label:'Trạng thái',t:'sel',opts:['Mới','Đang SX','Tạm dừng','Hoàn thành'],w:110},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:150}
+  ];
+  const opt={ title:'lệnh sản xuất', hmFilter:nvHmFactory, minw:1180, summary:(recs)=>{
+    const dSX=recs.filter(r=>r.trangThai==='Đang SX').length;
+    const done=recs.filter(r=>r.trangThai==='Hoàn thành').length;
+    const late=recs.filter(r=>r.trangThai!=='Hoàn thành'&&r.hanHT&&daysLeft(r.hanHT)<0).length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Mỗi lệnh sản xuất gắn 1 hạng mục & tổ/chuyền; theo dõi tiến độ 3 công đoạn Mộc → Sơn → Lắp đặt (tiến độ = số công đoạn “Xong”/3).</div>'
+      + nvKpis([['Tổng LSX',recs.length,''],['Đang SX',dSX,'','accent'],['Hoàn thành',done,''],['Quá hạn',late,late?'cần xử lý':'',late?'bad':'']]);
+  }};
+  return nvTable('lsx',da,cols,opt);
+}
+function qcHtml(da){
+  const cols=[
+    {k:'ngay',label:'Ngày',t:'date',w:140},
+    {k:'hm',label:'Hạng mục',t:'hm',w:170},
+    {k:'congDoan',label:'Công đoạn',t:'sel',opts:['QC Mộc','QC Sơn','QC Xuất xưởng','QC Lắp đặt'],w:140},
+    {k:'ketQua',label:'Kết quả',t:'sel',opts:['Đạt','Lỗi','Sửa lại'],w:100},
+    {k:'loi',label:'Mô tả lỗi',t:'text',w:200},
+    {k:'nguoiKT',label:'Người kiểm',t:'text',w:120},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:140}
+  ];
+  const opt={ title:'phiếu QC', hmFilter:nvHmFactory, minw:1010, summary:(recs)=>{
+    const dat=recs.filter(r=>r.ketQua==='Đạt').length;
+    const loi=recs.filter(r=>r.ketQua==='Lỗi'||r.ketQua==='Sửa lại').length;
+    const tl=recs.length?Math.round(dat/recs.length*100):0;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Phiếu kiểm tra chất lượng theo công đoạn (Mộc/Sơn/Xuất xưởng/Lắp đặt). Ghi kết quả, lỗi, người kiểm để truy vết chất lượng theo hạng mục.</div>'
+      + nvKpis([['Tổng phiếu',recs.length,''],['Đạt',dat,tl+'% đạt'],['Lỗi / Sửa lại',loi,loi?'cần khắc phục':'',loi?'bad':'']]);
+  }};
+  return nvTable('qc',da,cols,opt);
+}
+function nvlHtml(da){
+  const cols=[
+    {k:'vatTu',label:'Vật tư',t:'text',w:170},
+    {k:'dvt',label:'ĐVT',t:'text',w:70},
+    {k:'ncc',label:'NCC',t:'text',w:130},
+    {k:'dinhMuc',label:'Định mức',t:'text',w:90,ph:'vd 1.2/m²'},
+    {k:'slCan',label:'SL cần',t:'num',w:80},
+    {k:'daNhap',label:'Đã nhập',t:'num',w:80},
+    {k:'daXuat',label:'Đã xuất',t:'num',w:80},
+    {k:'_ton',label:'Tồn kho',t:'calc',w:80,calc:r=>fmtNum(nvNum(r.daNhap)-nvNum(r.daXuat))},
+    {k:'_thieu',label:'Cần mua thêm',t:'calc',w:100,calc:r=>{ const t=nvNum(r.slCan)-nvNum(r.daNhap); return t>0?{html:'<span class="tag t-bad">⚠ '+fmtNum(t)+'</span>'}:{html:'<span class="tag t-ok">đủ</span>'}; }},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:130}
+  ];
+  const opt={ title:'tồn NVL & định mức', minw:1120, summary:(recs)=>{
+    const thieu=recs.filter(r=>nvNum(r.slCan)-nvNum(r.daNhap)>0).length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Theo dõi vật tư theo dự án: định mức, số lượng cần, đã nhập/xuất, tồn (= nhập − xuất) và cảnh báo thiếu (cần mua = SL cần − đã nhập).</div>'
+      + nvKpis([['Loại vật tư',recs.length,''],['Đang thiếu (cần mua)',thieu,thieu?'đặt hàng bổ sung':'đủ hàng',thieu?'bad':'']]);
+  }};
+  return nvTable('nvl',da,cols,opt);
+}
+
+/* ---- Thiết kế ---- */
+function hsbvHtml(da){
+  const cols=[
+    {k:'tenBV',label:'Tên bản vẽ / bộ HS',t:'text',w:190},
+    {k:'hm',label:'Hạng mục',t:'hm',w:160},
+    {k:'loai',label:'Loại',t:'sel',opts:['Concept','Kỹ thuật','Shop drawing','Kết cấu','M&E'],w:130},
+    {k:'rev',label:'Phiên bản',t:'text',w:84,ph:'R0'},
+    {k:'trangThai',label:'Trạng thái',t:'sel',opts:['Đang vẽ','Chờ duyệt','Sửa lại','Đã duyệt','Phát hành'],w:120},
+    {k:'ngayPH',label:'Ngày phát hành',t:'date',w:150},
+    {k:'nguoi',label:'Người vẽ',t:'text',w:120},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:140}
+  ];
+  const opt={ title:'hồ sơ bản vẽ', minw:1090, summary:(recs)=>{
+    const ph=recs.filter(r=>r.trangThai==='Đã duyệt'||r.trangThai==='Phát hành').length;
+    const cho=recs.filter(r=>r.trangThai==='Chờ duyệt').length;
+    const ve=recs.filter(r=>r.trangThai==='Đang vẽ'||r.trangThai==='Sửa lại').length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Quản lý bản vẽ theo phiên bản (Concept → Kỹ thuật → Shop drawing → Kết cấu/M&E), số rev, trạng thái duyệt & ngày phát hành.</div>'
+      + nvKpis([['Tổng bản vẽ',recs.length,''],['Đã duyệt / phát hành',ph,''],['Chờ duyệt',cho,cho?'chờ xử lý':'','accent'],['Đang vẽ / sửa',ve,'']]);
+  }};
+  return nvTable('hsbv',da,cols,opt);
+}
+function specHtml(da){
+  const cols=[
+    {k:'hm',label:'Hạng mục',t:'hm',w:160},
+    {k:'vatLieu',label:'Vật liệu / Phụ kiện',t:'text',w:170},
+    {k:'chungLoai',label:'Chủng loại',t:'text',w:130},
+    {k:'ma',label:'Mã',t:'text',w:100},
+    {k:'xuatXu',label:'Xuất xứ',t:'text',w:110},
+    {k:'mauSac',label:'Màu / Vân',t:'text',w:120},
+    {k:'trangThaiMau',label:'Duyệt mẫu',t:'sel',opts:['Chờ duyệt','Đã duyệt','Từ chối','Đổi mẫu'],w:120},
+    {k:'ngayKy',label:'Ngày ký mẫu',t:'date',w:140},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:130}
+  ];
+  const opt={ title:'bảng SPEC vật liệu', minw:1180, summary:(recs)=>{
+    const duyet=recs.filter(r=>r.trangThaiMau==='Đã duyệt').length;
+    const cho=recs.filter(r=>!r.trangThaiMau||r.trangThaiMau==='Chờ duyệt'||r.trangThaiMau==='Đổi mẫu').length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Danh mục SPEC vật liệu/phụ kiện theo hạng mục (chủng loại, mã, xuất xứ, màu/vân) và trạng thái duyệt mẫu, ngày ký mẫu.</div>'
+      + nvKpis([['Dòng SPEC',recs.length,''],['Đã duyệt mẫu',duyet,''],['Chờ / đổi mẫu',cho,cho?'cần duyệt':'','accent']]);
+  }};
+  return nvTable('spec',da,cols,opt);
+}
+function duyethsHtml(da){
+  const cols=[
+    {k:'ngay',label:'Ngày',t:'date',w:140},
+    {k:'hoSo',label:'Hồ sơ gửi',t:'text',w:180},
+    {k:'lanGui',label:'Lần gửi',t:'num',w:74},
+    {k:'nguoiDuyet',label:'Người duyệt',t:'text',w:130},
+    {k:'ketQua',label:'Kết quả',t:'sel',opts:['Chờ phản hồi','Duyệt','Duyệt có điều kiện','Yêu cầu sửa','Từ chối'],w:150},
+    {k:'chinhSua',label:'Nội dung chỉnh sửa',t:'text',w:210},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:130}
+  ];
+  const opt={ title:'nhật ký duyệt hồ sơ', minw:1080, summary:(recs)=>{
+    const duyet=recs.filter(r=>r.ketQua==='Duyệt'||r.ketQua==='Duyệt có điều kiện').length;
+    const cho=recs.filter(r=>!r.ketQua||r.ketQua==='Chờ phản hồi').length;
+    const sua=recs.filter(r=>r.ketQua==='Yêu cầu sửa'||r.ketQua==='Từ chối').length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Nhật ký vòng gửi – phản hồi – chỉnh sửa hồ sơ với khách/BLĐ. Ghi lần gửi, người duyệt, kết quả và nội dung yêu cầu chỉnh sửa.</div>'
+      + nvKpis([['Lượt gửi',recs.length,''],['Đã duyệt',duyet,''],['Chờ phản hồi',cho,'','accent'],['Yêu cầu sửa / từ chối',sua,sua?'cần chỉnh':'',sua?'bad':'']]);
+  }};
+  return nvTable('duyeths',da,cols,opt);
+}
+
+/* ---- Trang & điều hướng nghiệp vụ ---- */
+function nvProjSelect(){ const da=window._nvDA||''; return '<select onchange="window._nvDA=this.value;render()"><option value="">— Chọn dự án —</option>'
+  + visibleProjects().map(d=>'<option value="'+esc(d['Mã DA'])+'"'+(da===d['Mã DA']?' selected':'')+'>'+esc(d['Tên dự án'])+'</option>').join('')+'</select>'; }
+function nvEnsureDA(){ if(window._nvDA===undefined||window._nvDA===null){ const f=(visibleProjects().filter(d=>d['Trạng thái']==='Đang triển khai')[0]||visibleProjects()[0]); window._nvDA=f?f['Mã DA']:''; } }
+function nvBodyHtml(){
+  const mod=window._nvMod||'nm'; const da=window._nvDA||'';
+  if(mod==='nm'){ const t=window._nmNvTab||'lsx'; return t==='qc'?qcHtml(da):t==='nvl'?nvlHtml(da):lsxHtml(da); }
+  const t=window._tkNvTab||'hsbv'; return t==='spec'?specHtml(da):t==='duyeths'?duyethsHtml(da):hsbvHtml(da);
+}
+function nvRefresh(){ const el=document.getElementById('nvBody'); if(el) el.innerHTML=nvBodyHtml(); }
+function vNhaMayNV(){
+  window._nvMod='nm'; nvEnsureDA(); const tab=window._nmNvTab||'lsx';
+  const tb=(id,lbl)=>'<button class="cv-pill'+(tab===id?' on':'')+'" onclick="window._nmNvTab=\''+id+'\';render()">'+lbl+'</button>';
+  let h='<div class="cv-head"><div><h2 style="margin:0">🧩 Nghiệp vụ chuyên sâu — Nhà máy</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Lệnh sản xuất & tiến độ tổ/chuyền · Phiếu QC theo công đoạn · Tồn NVL & định mức — lưu theo dự án, đồng bộ hệ thống.</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'+nvProjSelect()+'</div></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('lsx','📋 Lệnh sản xuất')+tb('qc','✅ Phiếu QC')+tb('nvl','📦 Tồn NVL & định mức')+'</div>';
+  h+='<div class="card"><div class="card-body"><div id="nvBody">'+nvBodyHtml()+'</div></div></div>';
+  return h;
+}
+function vThietKeNV(){
+  window._nvMod='tk'; nvEnsureDA(); const tab=window._tkNvTab||'hsbv';
+  const tb=(id,lbl)=>'<button class="cv-pill'+(tab===id?' on':'')+'" onclick="window._tkNvTab=\''+id+'\';render()">'+lbl+'</button>';
+  let h='<div class="cv-head"><div><h2 style="margin:0">🧩 Nghiệp vụ chuyên sâu — Thiết kế</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Hồ sơ bản vẽ theo phiên bản · Bảng SPEC vật liệu & duyệt mẫu · Nhật ký duyệt hồ sơ với khách/BLĐ — lưu theo dự án, đồng bộ hệ thống.</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'+nvProjSelect()+'</div></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('hsbv','📐 Hồ sơ bản vẽ')+tb('spec','🎨 SPEC & duyệt mẫu')+tb('duyeths','📨 Nhật ký duyệt HS')+'</div>';
+  h+='<div class="card"><div class="card-body"><div id="nvBody">'+nvBodyHtml()+'</div></div></div>';
+  return h;
+}
+
+
 
 /* ---------- Trang Công việc (nhóm theo thứ tự giai đoạn quy trình) ---------- */
 function vTasks(){
@@ -7455,6 +7770,156 @@ function formSafetyRecord(code){
 /* ================================================================
    ★ Biên bản nghiệm thu — 4 mẫu chuẩn xây dựng + in PDF
 ================================================================ */
+/* ═══════════════ v5.7 — BÁO CÁO PHÒNG BAN (theo kỳ · xuất PDF/Excel) ═══════════════ */
+const RP_DEPTS=[
+  {key:'all',        ten:'Tổng công ty',    icon:'🏢'},
+  {key:'mThietKe',   ten:'Phòng Thiết kế',  icon:'✏'},
+  {key:'mNhaMay',    ten:'Nhà máy',         icon:'🏭'},
+  {key:'mThuongMai', ten:'Thương mại',      icon:'💼'},
+  {key:'thauphu',    ten:'Thầu phụ',        icon:'◈'},
+];
+function rpDeptTen(k){ const r=RP_DEPTS.find(x=>x.key===k); return r?r.ten:k; }
+function rpRange(){
+  const per=window._rpPeriod||'week'; const t=today();
+  if(per==='month'){ const p=t.split('-'); const y=p[0],m=p[1]; const last=new Date(Date.UTC(+y,+m,0)).getUTCDate();
+    return {from:y+'-'+m+'-01', to:y+'-'+m+'-'+String(last).padStart(2,'0'), label:'Tháng '+m+'/'+y}; }
+  if(per==='custom'){ const from=window._rpFrom||t, to=window._rpTo||t; return {from:from,to:to,label:fmtDMY(from)+' – '+fmtDMY(to)}; }
+  const mon=nlsxMon(t), sun=nlsxAddD(mon,6); return {from:mon,to:sun,label:'Tuần '+fmtDMY(mon)+' – '+fmtDMY(sun)};
+}
+function rpIn(iso,from,to){ if(!iso) return false; const s=String(iso).slice(0,10); return s>=from && s<=to; }
+function rpDeptTasks(key){
+  const all=tvSong(visibleTasks());
+  if(key==='thauphu') return all.filter(c=>c['Thầu phụ']);
+  const cfg=DEPT_CFG[key]; if(!cfg) return [];
+  return all.filter(c=>cfg.giaiDoan.indexOf(c['Giai đoạn'])>-1);
+}
+function rpDone_(c){ return c['Trạng thái']==='Hoàn thành'||c['Trạng thái']==='Đã phê duyệt'; }
+function rpData(key,from,to){
+  const tasks=rpDeptTasks(key);
+  const done=tasks.filter(rpDone_).length;
+  const doing=tasks.filter(c=>c['Trạng thái']==='Đang làm'||c['Trạng thái']==='Đang vướng').length;
+  const late=tasks.filter(c=>!rpDone_(c)&&c['Hạn hoàn thành']&&daysLeft(c['Hạn hoàn thành'])<0);
+  const soon=tasks.filter(c=>!rpDone_(c)&&c['Hạn hoàn thành']&&rpIn(c['Hạn hoàn thành'],from,to)&&daysLeft(c['Hạn hoàn thành'])>=0);
+  const dueInP=tasks.filter(c=>c['Hạn hoàn thành']&&rpIn(c['Hạn hoàn thành'],from,to));
+  const d={key:key, tong:tasks.length, done:done, doing:doing, late:late, soon:soon,
+    pct: tasks.length?Math.round(done/tasks.length*100):0, dueInP:dueInP.length, doneInP:dueInP.filter(rpDone_).length};
+  if(key==='mNhaMay'||key==='mThietKe') d.cap=rpCap(key,from,to);
+  d.fin=rpFin(key,from,to);
+  return d;
+}
+function rpCap(key,from,to){
+  const weeks=nlsxWeeks(from,to);
+  if(key==='mNhaMay'){ const o=nlsxCfg(); const unit=nlsxUnit(); const dem=nlsxDemand(nlsxActiveItems(''),unit).dem;
+    const rows=NLSX_RES.map(rs=>{ const cap=nlsxCapWeek(o,rs.id,unit); let peak=0; weeks.forEach(w=>{ const v=dem[rs.id][w]||0; if(v>peak)peak=v; }); return {ten:rs.ten,cap:cap,peak:peak,load:cap>0?Math.round(peak/cap*100):null}; });
+    let sl=0,cnt=0; const st=khhmStore(); Object.keys(st).forEach(ma=>{ (st[ma]||[]).forEach(r=>{ if(r.phanBo==='Nhà máy'){ const ht=r.ld_ht||r.moc_ht||r.nt_ht||''; if(rpIn(ht,from,to)){ cnt++; sl+=(unit==='gt'?nlsxNum(r.tt):nlsxM2(r)); } } }); });
+    return {unit:unit, rows:rows, sl:sl, cnt:cnt};
+  }
+  const o=nltkCfg(); const dem=nltkDemand(nltkItems('')).dem;
+  const rows=NLTK_RES.map(rs=>{ const cap=nltkCapWeek(o,rs.id); let peak=0; weeks.forEach(w=>{ const v=dem[rs.id][w]||0; if(v>peak)peak=v; }); return {ten:rs.ten,cap:cap,peak:peak,load:cap>0?Math.round(peak/cap*100):null}; });
+  let cnt=0; const st=khhmStore(); Object.keys(st).forEach(ma=>{ (st[ma]||[]).forEach(r=>{ if(r.ten&&rpIn(r.hs_ht,from,to)) cnt++; }); });
+  return {unit:'bộ HS', rows:rows, sl:cnt, cnt:cnt};
+}
+function rpFin(key,from,to){
+  if(key==='mThuongMai'){ const ms=(S.muasam||[]).filter(x=>rpIn(x['Ngày đặt'],from,to));
+    return {type:'ms', n:ms.length, tong:ms.reduce((a,x)=>a+(Number(x['Tổng tiền'])||0),0), daNhan:ms.filter(x=>x['Trạng thái']==='Đã nhận').length}; }
+  if(key==='thauphu'){ const tp=(S.ttthauphu||[]);
+    const chiKy=tp.filter(x=>x['Trạng thái']==='Đã thanh toán'&&rpIn(x['Ngày chi']||x['Ngày thanh toán']||x['Ngày'],from,to));
+    return {type:'tp', chi:chiKy.reduce((a,x)=>a+ttpChi(x),0), nChi:chiKy.length,
+      choChi:tp.filter(x=>x['Trạng thái']==='Đã duyệt · chờ chi').reduce((a,x)=>a+ttpChi(x),0)}; }
+  if(key==='mNhaMay') return {type:'nm'};
+  return {type:'none'};
+}
+function rpChip(lbl,val,cls){ const c=cls==='bad'?'#b23a2e':cls==='ok'?'#2e6b3e':'#6b4e22';
+  return '<div style="background:#fff;border:1px solid #e6ddc9;border-radius:8px;padding:8px 14px;min-width:96px"><div style="font-size:11px;color:#77705f">'+esc(lbl)+'</div><div style="font-size:19px;font-weight:700;color:'+c+'">'+val+'</div></div>'; }
+function rpBodyDept(key,from,to){
+  const d=rpData(key,from,to);
+  let h='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
+    + rpChip('Đầu việc', d.tong)
+    + rpChip('Đang làm', d.doing)
+    + rpChip('Hoàn thành', d.pct+'%','ok')
+    + rpChip('Quá hạn', d.late.length, d.late.length?'bad':'')
+    + rpChip('Đến hạn trong kỳ', d.dueInP)
+    + rpChip('HT trong kỳ', d.doneInP,'ok')
+    + '</div>';
+  // Tải & năng lực
+  if(d.cap){ h+='<h4 style="margin:14px 0 6px;color:#4a3c22">Tải &amp; năng lực (đỉnh trong kỳ)</h4>'
+    + '<table class="tbl"><thead><tr><th>Bộ phận / Tổ</th><th class="num">NL/tuần</th><th class="num">Đỉnh tải</th><th class="num">% tải đỉnh</th></tr></thead><tbody>'
+    + d.cap.rows.map(function(r){ const over=r.load!=null&&r.load>100; return '<tr'+(over?' style="background:#FDEEEC"':'')+'><td>'+esc(r.ten)+'</td><td class="num">'+(d.cap.unit==='giá trị'?fmtTr(r.cap):fmtNum(r.cap))+'</td><td class="num">'+(d.cap.unit==='giá trị'?fmtTr(r.peak):fmtNum(r.peak))+'</td><td class="num">'+(r.load==null?'—':(r.load+'%'))+'</td></tr>'; }).join('')
+    + '</tbody></table>'
+    + '<div class="muted" style="font-size:12.5px;margin-top:6px">'+(key==='mNhaMay'?('Sản lượng hoàn thành trong kỳ: <b>'+(d.cap.unit==='giá trị'?fmtTr(d.cap.sl):(fmtNum(d.cap.sl)+' m²'))+'</b> · '+d.cap.cnt+' hạng mục'):('Hồ sơ hoàn thành trong kỳ: <b>'+d.cap.cnt+' bộ</b>'))+'</div>';
+  }
+  // Tài chính
+  if(d.fin&&d.fin.type==='ms') h+='<h4 style="margin:16px 0 6px;color:#4a3c22">Mua sắm / Đặt hàng trong kỳ</h4><div class="muted" style="font-size:13px"><b>'+d.fin.n+'</b> đơn · đã nhận <b>'+d.fin.daNhan+'</b> · tổng giá trị <b>'+fmtTr(d.fin.tong)+'</b></div>';
+  if(d.fin&&d.fin.type==='tp') h+='<h4 style="margin:16px 0 6px;color:#4a3c22">Chi thầu phụ trong kỳ</h4><div class="muted" style="font-size:13px">Đã chi <b>'+fmtTr(d.fin.chi)+'</b> ('+d.fin.nChi+' đợt) · chờ chi <b>'+fmtTr(d.fin.choChi)+'</b></div>';
+  // Quá hạn & sắp đến hạn
+  h+='<h4 style="margin:16px 0 6px;color:#4a3c22">Việc quá hạn ('+d.late.length+') &amp; sắp đến hạn trong kỳ ('+d.soon.length+')</h4>';
+  const list=d.late.slice().sort(function(a,b){return daysLeft(a['Hạn hoàn thành'])-daysLeft(b['Hạn hoàn thành']);}).concat(d.soon).slice(0,30);
+  if(!list.length) h+='<div class="muted" style="font-size:13px">Không có việc quá hạn hay sắp đến hạn trong kỳ.</div>';
+  else h+='<table class="tbl"><thead><tr><th>Công việc</th><th>Dự án</th><th>Phụ trách</th><th>Hạn</th><th>Tình trạng</th></tr></thead><tbody>'
+    + list.map(function(c){ const dl=daysLeft(c['Hạn hoàn thành']); const bad=dl<0; return '<tr'+(bad?' style="background:#FDEEEC"':'')+'><td>'+esc(c['Tên công việc']||'')+'</td><td>'+esc(projName(c['Mã DA']))+'</td><td>'+esc(c['Phụ trách']||'—')+'</td><td>'+esc(fmtDMY(c['Hạn hoàn thành']))+'</td><td>'+(bad?('<b style="color:#b23a2e">Trễ '+Math.abs(dl)+' ngày</b>'):('Còn '+dl+' ngày'))+'</td></tr>'; }).join('')
+    + '</tbody></table>';
+  return h;
+}
+function rpBodyAll(from,to){
+  const rows=RP_DEPTS.filter(x=>x.key!=='all').map(function(x){ return {x:x, d:rpData(x.key,from,to)}; });
+  let h='<h4 style="margin:6px 0 6px;color:#4a3c22">Tổng hợp toàn công ty</h4>'
+    + '<table class="tbl"><thead><tr><th>Phòng</th><th class="num">Đầu việc</th><th class="num">%HT</th><th class="num">Đang làm</th><th class="num">Quá hạn</th><th class="num">Đến hạn trong kỳ</th><th>Tải đỉnh / Tài chính kỳ</th></tr></thead><tbody>';
+  rows.forEach(function(o){ const d=o.d; let extra='—';
+    if(d.cap){ const mx=Math.max.apply(null,d.cap.rows.map(function(r){return r.load||0;})); extra='Tải đỉnh '+(isFinite(mx)?mx:0)+'%'; }
+    else if(d.fin&&d.fin.type==='ms') extra='Mua sắm '+fmtTr(d.fin.tong);
+    else if(d.fin&&d.fin.type==='tp') extra='Chi TP '+fmtTr(d.fin.chi);
+    h+='<tr><td><b>'+esc(o.x.ten)+'</b></td><td class="num">'+d.tong+'</td><td class="num">'+d.pct+'%</td><td class="num">'+d.doing+'</td><td class="num"'+(d.late.length?' style="color:#b23a2e;font-weight:700"':'')+'>'+d.late.length+'</td><td class="num">'+d.dueInP+'</td><td>'+extra+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  rows.forEach(function(o){ h+='<div style="margin-top:18px"><h3 style="margin:0 0 6px;color:#6b4e22">'+o.x.icon+' '+esc(o.x.ten)+'</h3>'+rpBodyDept(o.x.key,from,to)+'</div>'; });
+  return h;
+}
+function rpBody(from,to){ const k=window._rpDept||'all'; return k==='all'?rpBodyAll(from,to):rpBodyDept(k,from,to); }
+function vBaoCaoPB(){
+  const k=window._rpDept||'all'; const per=window._rpPeriod||'week'; const rg=rpRange();
+  let h='<div class="fin-hd"><h2>Báo cáo phòng ban</h2><div class="sub">Tổng hợp theo kỳ để họp &amp; báo cáo · '+esc(rg.label)+'</div></div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
+    + RP_DEPTS.map(function(x){ return '<button class="cv-pill'+(k===x.key?' on':'')+'" onclick="window._rpDept=\''+x.key+'\';render()">'+x.icon+' '+esc(x.ten)+'</button>'; }).join('')
+    + '</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+    + '<button class="cv-pill'+(per==='week'?' on':'')+'" onclick="window._rpPeriod=\'week\';render()">Tuần này</button>'
+    + '<button class="cv-pill'+(per==='month'?' on':'')+'" onclick="window._rpPeriod=\'month\';render()">Tháng này</button>'
+    + '<button class="cv-pill'+(per==='custom'?' on':'')+'" onclick="window._rpPeriod=\'custom\';render()">Tùy chọn</button>'
+    + (per==='custom'?('<input type="date" class="khhm-in" style="width:150px" value="'+esc(window._rpFrom||rg.from)+'" onchange="window._rpFrom=this.value;render()"><span>–</span><input type="date" class="khhm-in" style="width:150px" value="'+esc(window._rpTo||rg.to)+'" onchange="window._rpTo=this.value;render()">'):'')
+    + '<span style="margin-left:auto;display:flex;gap:6px"><button class="btn btn-ghost" style="padding:7px 12px;font-size:12.5px" onclick="rpExportCsv()">⬇ Xuất Excel</button>'
+    + '<button class="btn btn-brass" style="padding:7px 12px;font-size:12.5px" onclick="rpPrint()">🖨 Xuất PDF</button></span>'
+    + '</div>';
+  h+='<div class="card"><div class="card-body">'+rpBody(rg.from,rg.to)+'</div></div>';
+  return h;
+}
+function rpPrint(){
+  const rg=rpRange(); const k=window._rpDept||'all';
+  const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại',true); return; }
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo '+esc(rpDeptTen(k))+' — MDC</title>'
+    + '<style>@page{size:A4;margin:12mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#222;margin:0}'
+    + 'h2{margin:0 0 2px;color:#6b4e22} h3{color:#6b4e22;margin:14px 0 6px} h4{margin:12px 0 5px;color:#4a3c22} .sub{color:#666;font-size:11px;margin-bottom:10px}'
+    + 'table{border-collapse:collapse;width:100%;margin:6px 0;font-size:11px} th,td{border:1px solid #bbb;padding:4px 6px;text-align:left} th{background:#f0e9db;color:#5a4a2e} .num{text-align:right} .muted{color:#666}'
+    + '</style></head><body>'
+    + '<h2>BÁO CÁO — '+esc(rpDeptTen(k)).toUpperCase()+'</h2><div class="sub">MDC · Kỳ: '+esc(rg.label)+' · In: '+fmtDMY(today())+'</div>'
+    + rpBody(rg.from,rg.to) + '</body></html>');
+  w.document.close(); w.focus(); setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);
+  toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF"');
+}
+function rpExportCsv(){
+  const rg=rpRange(); const k=window._rpDept||'all';
+  const keys = k==='all'? RP_DEPTS.filter(x=>x.key!=='all').map(x=>x.key) : [k];
+  const rows=[['BÁO CÁO PHÒNG BAN','Kỳ: '+rg.label,'In: '+fmtDMY(today())]];
+  rows.push(['Phòng','Đầu việc','%HT','Đang làm','Quá hạn','Đến hạn trong kỳ','HT trong kỳ','Tải đỉnh %','Tài chính kỳ']);
+  keys.forEach(function(kk){ const d=rpData(kk,rg.from,rg.to); let taidinh='',tc='';
+    if(d.cap){ const mx=Math.max.apply(null,d.cap.rows.map(function(r){return r.load||0;})); taidinh=(isFinite(mx)?mx:0)+'%'; }
+    if(d.fin&&d.fin.type==='ms') tc='Mua sắm '+d.fin.tong; else if(d.fin&&d.fin.type==='tp') tc='Chi TP '+d.fin.chi;
+    rows.push([rpDeptTen(kk), d.tong, d.pct+'%', d.doing, d.late.length, d.dueInP, d.doneInP, taidinh, tc]);
+  });
+  // chi tiết quá hạn của phòng đang chọn (nếu không phải all)
+  if(k!=='all'){ const d=rpData(k,rg.from,rg.to); rows.push([]); rows.push(['Việc quá hạn & sắp đến hạn']); rows.push(['Công việc','Dự án','Phụ trách','Hạn','Tình trạng']);
+    d.late.concat(d.soon).slice(0,100).forEach(function(c){ const dl=daysLeft(c['Hạn hoàn thành']); rows.push([c['Tên công việc']||'', projName(c['Mã DA']), c['Phụ trách']||'', fmtDMY(c['Hạn hoàn thành']), dl<0?('Trễ '+Math.abs(dl)+'n'):('Còn '+dl+'n')]); }); }
+  dlCsv(rows, 'MDC_BaoCao_'+(k)+'_'+today()+'.csv'); toast('✓ Đã xuất báo cáo ra Excel (CSV)');
+}
 function vBaoCaoTC(){
   const tab = window._bcTab || 'lailo';
   let html = '<div class="cv-head"><div><h2 style="margin:0">Báo cáo tài chính</h2>'
