@@ -1717,6 +1717,7 @@ const NAV_GROUPS = [
     {id:'mThuongMai',name:'Thương mại',      icon:'💼'},
     {id:'hientruong',name:'Hiện trường',     icon:'📍'},
     {id:'bienban',   name:'Biên bản nghiệm thu', icon:'📝'},
+    {id:'giaoviec',  name:'Giao việc',       icon:'📋'},
     {id:'thaubo',    name:'Thầu phụ',        icon:'◈'},
     {id:'muasam',    name:'Mua sắm',         icon:'🛒'},
     {id:'phatsinh',  name:'Phát sinh HĐ',   icon:'📋'},
@@ -1897,7 +1898,7 @@ function onAddClick(){
 function render(){
   const root = document.getElementById('viewRoot');
   const fn = {
-    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, baocaoPB:vBaoCaoPB, nlCty:vCapacityAll, congKH:vPortalMgr,
+    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, baocaoPB:vBaoCaoPB, nlCty:vCapacityAll, giaoviec:vGiaoViec, congKH:vPortalMgr,
     chiphi:vExpenses, lichhen:vAppointments, thaubo:vSubcontractors,
     nhansu:vStaff, caidat:vSettings, kiemtra:vDataHealth,
     // v2.0 mới
@@ -3937,8 +3938,9 @@ function vThietKe(){
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._tkView=\'dh\';render()">✏ Điều hành & Kế hoạch TK</button>'
     + '<button class="cv-pill'+(view==='nl'?' on':'')+'" onclick="window._tkView=\'nl\';render()">📊 Năng lực & Khả thi</button>'
     + '<button class="cv-pill'+(view==='nv'?' on':'')+'" onclick="window._tkView=\'nv\';render()">🧩 Nghiệp vụ chuyên sâu</button>'
+    + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._tkView=\'gv\';render()">📋 Giao việc</button>'
     + '</div>';
-  return seg + (view==='nl' ? nltkView() : view==='nv' ? vThietKeNV() : vDeptDash('mThietKe'));
+  return seg + (view==='nl' ? nltkView() : view==='nv' ? vThietKeNV() : view==='gv' ? vDeptGiaoViec('mThietKe') : vDeptDash('mThietKe'));
 }
 function vNhaMay(){
   const view=window._nmView||'dh';
@@ -3946,10 +3948,18 @@ function vNhaMay(){
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._nmView=\'dh\';render()">🏭 Điều hành & Kế hoạch SX</button>'
     + '<button class="cv-pill'+(view==='nl'?' on':'')+'" onclick="window._nmView=\'nl\';render()">📊 Năng lực & Khả thi</button>'
     + '<button class="cv-pill'+(view==='nv'?' on':'')+'" onclick="window._nmView=\'nv\';render()">🧩 Nghiệp vụ chuyên sâu</button>'
+    + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._nmView=\'gv\';render()">📋 Giao việc</button>'
     + '</div>';
-  return seg + (view==='nl' ? nlsxView() : view==='nv' ? vNhaMayNV() : vDeptDash('mNhaMay'));
+  return seg + (view==='nl' ? nlsxView() : view==='nv' ? vNhaMayNV() : view==='gv' ? vDeptGiaoViec('mNhaMay') : vDeptDash('mNhaMay'));
 }
-function vThuongMai(){ return vDeptDash('mThuongMai'); }
+function vThuongMai(){
+  const view=window._tmView||'dh';
+  const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._tmView=\'dh\';render()">💼 Điều hành & Kế hoạch TM</button>'
+    + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._tmView=\'gv\';render()">📋 Giao việc</button>'
+    + '</div>';
+  return seg + (view==='gv' ? vDeptGiaoViec('mThuongMai') : vDeptDash('mThuongMai'));
+}
 /* ===== v5.9 — NGHIỆP VỤ CHUYÊN SÂU (Nhà máy & Thiết kế). Engine chung lưu danh sách bản ghi theo dự án trong pmkv (đồng bộ Backend v6.4). Bảng inline-edit, thêm/xóa dòng. ===== */
 function nvNum(x){ const n=Number(String(x==null?'':x).replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; }
 function nvStore(key){ return pmkvGet(key)||{}; }
@@ -4182,6 +4192,225 @@ function vThietKeNV(){
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('hsbv','📐 Hồ sơ bản vẽ')+tb('spec','🎨 SPEC & duyệt mẫu')+tb('duyeths','📨 Nhật ký duyệt HS')+'</div>';
   h+='<div class="card"><div class="card-body"><div id="nvBody">'+nvBodyHtml()+'</div></div></div>';
   return h;
+}
+
+/* ===== v6.0 — BẢNG GIAO VIỆC theo bộ phận / nhân sự (dựa vào Kế hoạch chi tiết theo hạng mục — kho khhm). Gán người thực hiện (kho pmkv 'giaoviec'), lọc theo bộ phận hoặc người, in A4 có ô ký xác nhận → PDF. ===== */
+const GV_BP=[
+  {id:'Thiết kế',  moc:'hs'},
+  {id:'Nhà máy',   moc:'sx'},
+  {id:'Thương mại',moc:'dh'},
+  {id:'Thầu phụ',  moc:'tp'}
+];
+function gvStore(){ return pmkvGet('giaoviec')||{}; }
+function gvGet(ma,hmId){ const s=gvStore(); return (s[ma]&&s[ma][hmId])||{}; }
+function gvSet(ma,hmId,k,v){ const s=gvStore(); (s[ma]=s[ma]||{}); (s[ma][hmId]=s[ma][hmId]||{})[k]=v; pmkvSet('giaoviec',s); }
+function gvEdit(ma,hmId,k,el,reRender){ gvSet(ma,hmId,k,el.value); if(reRender) render(); }
+function gvD(v){ return v?fmtDMY(v):'—'; }
+function gvMocFor(r, mocType){
+  if(mocType==='hs') return 'HS: '+gvD(r.hs_bd)+' → '+gvD(r.hs_ht);
+  if(mocType==='sx'){ let s='SX: '+gvD(r.sx_bd)+' → '+gvD(r.sx_ht); if(r.ld_bd||r.ld_ht) s+=' · Lắp: '+gvD(r.ld_bd)+'→'+gvD(r.ld_ht); return s; }
+  if(mocType==='dh') return 'Đặt: '+gvD(r.dh_dat)+' · Nhận: '+gvD(r.dh_nhan);
+  if(mocType==='tp') return 'TC: '+gvD(r.tp_bd)+' → '+gvD(r.tp_ht);
+  return '';
+}
+function gvMocOfRow(r){ const bp=GV_BP.find(x=>x.id===r.phanBo); return gvMocFor(r, bp?bp.moc:'sx'); }
+// Hạng mục thuộc 1 bộ phận: Thiết kế = mọi hạng mục; còn lại theo phanBo
+function gvRowsForBP(ma, bpId){ const rows=khhmGet(ma).filter(r=>r.ten&&String(r.ten).trim());
+  return bpId==='Thiết kế' ? rows : rows.filter(r=>r.phanBo===bpId); }
+function gvNguoiList(ma){ const set=new Set(); const s=gvStore()[ma]||{}; Object.keys(s).forEach(id=>{ const n=(s[id].ng||'').trim(); if(n) set.add(n); }); return [...set].sort(); }
+function gvStaffOptions(){ const ns=(S.nhansu||[]).map(x=>x['Họ tên']).filter(Boolean);
+  return '<datalist id="gvStaffDL">'+[...new Set(ns)].map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>'; }
+
+function vGiaoViec(){
+  const canEd=can('edit');
+  const das=visibleProjects();
+  if(window._gvDA===undefined){ const f=(das.filter(d=>d['Trạng thái']==='Đang triển khai')[0]||das[0]); window._gvDA=f?f['Mã DA']:''; }
+  const ma=window._gvDA||''; const mode=window._gvMode||'bp';
+  const bpId=window._gvBP||'Nhà máy'; const nguoiSel=window._gvNS||'';
+
+  let h='<div class="cv-head"><div><h2 style="margin:0">📋 Bảng giao việc</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Dựa trên Kế hoạch chi tiết theo hạng mục — gán người thực hiện, lọc theo bộ phận hoặc nhân sự, xuất PDF có ô ký xác nhận để giao & thực hiện.</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'
+    + '<select onchange="window._gvDA=this.value;render()"><option value="">— Chọn dự án —</option>'
+    + das.map(x=>'<option value="'+esc(x['Mã DA'])+'"'+(ma===x['Mã DA']?' selected':'')+'>'+esc(x['Tên dự án'])+'</option>').join('')+'</select></div></div>';
+
+  if(!ma){ h+='<div class="empty"><b>Chọn dự án</b>Chọn một dự án để lập bảng giao việc.</div>'; return h; }
+  const allRows=khhmGet(ma).filter(r=>r.ten&&String(r.ten).trim());
+  if(!allRows.length){ h+='<div class="empty"><b>Dự án chưa có hạng mục</b>Thêm hạng mục ở <b>Dự án → Kế hoạch chi tiết → Theo hạng mục</b> trước.</div>'; return h; }
+
+  // 1) Bảng phân công (gán người thực hiện + nội dung giao) — nguồn: kế hoạch chi tiết
+  h+='<div class="card"><div class="ct">1 · Phân công hạng mục <span class="muted" style="font-weight:400">— gán người thực hiện & nội dung giao cho từng hạng mục (lưu cùng hệ thống)</span></div><div class="card-body">';
+  h+=gvStaffOptions();
+  h+='<div class="tbl-wrap"><table class="tbl" style="min-width:960px"><thead><tr><th>Hạng mục</th><th>Phân bổ</th><th>Thời gian (mốc)</th><th>Người thực hiện</th><th>Nội dung giao / yêu cầu</th></tr></thead><tbody>';
+  allRows.forEach(r=>{ const g=gvGet(ma,r.id);
+    h+='<tr><td><b>'+esc(r.ten)+'</b>'+(r.phanLoai?'<div class="muted" style="font-size:11px">'+esc(r.phanLoai)+'</div>':'')+'</td>'
+      + '<td>'+(r.phanBo?'<span class="tag '+khhmPbCls(r.phanBo)+'">'+esc(r.phanBo)+'</span>':'<span class="muted">—</span>')+'</td>'
+      + '<td class="muted" style="font-size:11.5px">'+esc(gvMocOfRow(r))+'</td>'
+      + '<td>'+(canEd?'<input class="khhm-in" list="gvStaffDL" style="width:150px" value="'+esc(g.ng||'')+'" placeholder="Tên người…" onchange="gvEdit(\''+esc(ma)+'\',\''+r.id+'\',\'ng\',this,true)">':esc(g.ng||'—'))+'</td>'
+      + '<td>'+(canEd?'<input class="khhm-in" style="width:100%;min-width:200px" value="'+esc(g.yc||'')+'" placeholder="Nội dung / yêu cầu giao việc…" oninput="gvEdit(\''+esc(ma)+'\',\''+r.id+'\',\'yc\',this,false)">':esc(g.yc||'—'))+'</td></tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+
+  // 2) Lập & xuất bảng giao việc
+  const nguoiList=gvNguoiList(ma);
+  h+='<div class="card"><div class="ct">2 · Lập bảng giao việc & xuất PDF</div><div class="card-body">';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<button class="cv-pill'+(mode==='bp'?' on':'')+'" onclick="window._gvMode=\'bp\';render()">Theo bộ phận</button>'
+    + '<button class="cv-pill'+(mode==='ns'?' on':'')+'" onclick="window._gvMode=\'ns\';render()">Theo nhân sự</button>'
+    + '</div>';
+  h+='<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">';
+  if(mode==='bp'){
+    h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Bộ phận</label><select class="khhm-in" style="width:170px" onchange="window._gvBP=this.value;render()">'
+      + GV_BP.map(b=>'<option value="'+esc(b.id)+'"'+(bpId===b.id?' selected':'')+'>'+esc(b.id)+'</option>').join('')+'</select></div>';
+    h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Người nhận (trưởng bộ phận)</label><input class="khhm-in" list="gvStaffDL" style="width:180px" value="'+esc(window._gvNguoiNhan||'')+'" placeholder="Tên người nhận…" oninput="window._gvNguoiNhan=this.value"></div>';
+  } else {
+    h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Người thực hiện</label><select class="khhm-in" style="width:190px" onchange="window._gvNS=this.value;render()"><option value="">— Chọn người —</option>'
+      + nguoiList.map(n=>'<option value="'+esc(n)+'"'+(nguoiSel===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select>'
+      + (nguoiList.length?'':'<div class="muted" style="font-size:11px;margin-top:3px">Chưa gán người ở bảng phân công phía trên.</div>')+'</div>';
+  }
+  h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Người giao việc</label><input class="khhm-in" style="width:170px" value="'+esc(window._gvNguoiGiao!=null?window._gvNguoiGiao:(user?user['Họ tên']:''))+'" oninput="window._gvNguoiGiao=this.value"></div>';
+  h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Ngày giao</label><input type="date" class="khhm-in" value="'+esc(window._gvNgay||today())+'" onchange="window._gvNgay=this.value"></div>';
+  h+='</div>';
+
+  // preview data
+  let rows, tieu;
+  if(mode==='bp'){ rows=gvRowsForBP(ma,bpId); tieu='Bộ phận: '+bpId; }
+  else { rows=allRows.filter(r=>(gvGet(ma,r.id).ng||'')===nguoiSel && nguoiSel); tieu='Người thực hiện: '+(nguoiSel||'(chưa chọn)'); }
+
+  h+='<div class="muted" style="font-size:12.5px;margin-bottom:8px">'+esc(tieu)+' · '+rows.length+' hạng mục</div>';
+  if(!rows.length){ h+='<div class="empty" style="padding:16px"><b>Không có hạng mục phù hợp</b>'+(mode==='ns'?'Chọn người đã được gán ở bảng phân công.':'Bộ phận này chưa có hạng mục trong kế hoạch chi tiết.')+'</div>'; }
+  else{
+    h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>STT</th><th>Hạng mục</th><th>ĐVT/SL</th><th>Thời gian</th>'+(mode==='bp'?'<th>Người thực hiện</th>':'')+'<th>Nội dung / yêu cầu</th></tr></thead><tbody>';
+    rows.forEach((r,i)=>{ const g=gvGet(ma,r.id); const mocT=(mode==='bp'?(GV_BP.find(x=>x.id===bpId)||{}).moc:null);
+      h+='<tr><td class="num">'+(i+1)+'</td><td><b>'+esc(r.ten)+'</b></td><td class="muted">'+esc([r.dvt,r.sl].filter(Boolean).join(' / ')||'—')+'</td><td class="muted" style="font-size:11.5px">'+esc(mode==='bp'?gvMocFor(r,mocT):gvMocOfRow(r))+'</td>'
+        + (mode==='bp'?'<td>'+esc(g.ng||'—')+'</td>':'')+'<td>'+esc(g.yc||'—')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="margin-top:12px"><button class="btn btn-brass" onclick="gvPrint()">🖨 Xuất PDF (bảng giao việc có ô ký)</button></div>';
+  }
+  h+='</div></div>';
+  return h;
+}
+function gvPrint(){
+  const ma=window._gvDA||''; if(!ma) return; const mode=window._gvMode||'bp';
+  const bpId=window._gvBP||'Nhà máy'; const nguoiSel=window._gvNS||'';
+  let rows, doiTuong, nguoiNhan, mocT;
+  if(mode==='bp'){ rows=gvRowsForBP(ma,bpId); doiTuong='Bộ phận: '+bpId; nguoiNhan=window._gvNguoiNhan||''; mocT=(GV_BP.find(x=>x.id===bpId)||{}).moc; }
+  else { rows=khhmGet(ma).filter(r=>r.ten&&(gvGet(ma,r.id).ng||'')===nguoiSel&&nguoiSel); doiTuong='Người thực hiện: '+nguoiSel; nguoiNhan=nguoiSel; mocT=null; }
+  gvPrintCore({ma:ma, mode:mode, rows:rows, doiTuong:doiTuong, nguoiNhan:nguoiNhan, mocT:mocT,
+    nguoiGiao:(window._gvNguoiGiao!=null?window._gvNguoiGiao:(user?user['Họ tên']:''))||'', ngayGiao:window._gvNgay||today()});
+}
+function gvPrintCore(p){
+  const ma=p.ma, mode=p.mode, rows=p.rows||[], mocT=p.mocT, ngayGiao=p.ngayGiao||today(), nguoiGiao=p.nguoiGiao||'', nguoiNhan=p.nguoiNhan||'', doiTuong=p.doiTuong||'';
+  const das=visibleProjects(); const d=das.find(x=>x['Mã DA']===ma)||{};
+  if(!rows.length){ toast('Không có hạng mục để in',true); return; }
+  const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại',true); return; }
+  const esc2=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let body='<h2>BẢNG GIAO VIỆC</h2>'
+    + '<div class="sub">CÔNG TY MỘC ĐÔNG CHÂU (MDC) · Thiết kế – Sản xuất – Thi công nội thất</div>'
+    + '<table class="meta"><tr><td><b>Dự án:</b> '+esc2(d['Tên dự án']||ma)+'</td><td><b>'+esc2(doiTuong)+'</b></td></tr>'
+    + '<tr><td><b>Người giao việc:</b> '+esc2(nguoiGiao||'……………………')+'</td><td><b>Ngày giao:</b> '+esc2(fmtDMY(ngayGiao))+'</td></tr></table>';
+  body+='<table class="main"><thead><tr><th style="width:34px">STT</th><th>Hạng mục</th><th style="width:80px">ĐVT/SL</th><th style="width:150px">Thời gian</th>'+(mode==='bp'?'<th style="width:110px">Người thực hiện</th>':'')+'<th>Nội dung / yêu cầu</th><th style="width:70px">Xác nhận</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{ const g=gvGet(ma,r.id);
+    body+='<tr><td class="c">'+(i+1)+'</td><td>'+esc2(r.ten)+(r.phanLoai?'<div class="mut">'+esc2(r.phanLoai)+'</div>':'')+'</td><td class="c">'+esc2([r.dvt,r.sl].filter(Boolean).join(' / ')||'')+'</td>'
+      + '<td class="mut">'+esc2(mode==='bp'?gvMocFor(r,mocT):gvMocOfRow(r))+'</td>'+(mode==='bp'?'<td>'+esc2(g.ng||'')+'</td>':'')
+      + '<td>'+esc2(g.yc||'')+'</td><td></td></tr>';
+  });
+  body+='</tbody></table>';
+  body+='<div class="cam">Người nhận việc xác nhận đã nhận đầy đủ nội dung công việc nêu trên và cam kết thực hiện đúng yêu cầu, đúng tiến độ. Mọi vướng mắc báo lại người giao việc kịp thời.</div>';
+  body+='<table class="sign"><tr>'
+    + '<td><div class="st">NGƯỜI GIAO VIỆC</div><div class="sn">(Ký, ghi rõ họ tên)</div><div class="sp"></div><div class="snm">'+esc2(nguoiGiao)+'</div></td>'
+    + '<td><div class="st">NGƯỜI NHẬN VIỆC</div><div class="sn">(Ký, ghi rõ họ tên)</div><div class="sp"></div><div class="snm">'+esc2(nguoiNhan)+'</div></td>'
+    + '</tr></table>';
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Bảng giao việc — '+esc2(d['Tên dự án']||ma)+'</title>'
+    + '<style>@page{size:A4;margin:14mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#222;margin:0}'
+    + 'h2{margin:0 0 2px;color:#6b4e22;text-align:center;font-size:19px;letter-spacing:.5px} .sub{color:#555;font-size:11px;text-align:center;margin-bottom:12px}'
+    + 'table.meta{width:100%;border-collapse:collapse;margin-bottom:8px} table.meta td{padding:3px 2px;font-size:12px;border:0}'
+    + 'table.main{border-collapse:collapse;width:100%;font-size:11px;margin-bottom:12px} table.main th,table.main td{border:1px solid #999;padding:5px 6px;text-align:left;vertical-align:top} table.main th{background:#f0e9db;color:#5a4a2e} .c{text-align:center} .mut{color:#666;font-size:10px}'
+    + '.cam{font-size:11px;font-style:italic;color:#444;margin:6px 0 16px;line-height:1.5}'
+    + 'table.sign{width:100%;border-collapse:collapse;margin-top:6px} table.sign td{width:50%;text-align:center;vertical-align:top;padding:0 10px;border:0} .st{font-weight:700;font-size:12px} .sn{font-size:10px;color:#666;font-style:italic} .sp{height:70px} .snm{font-weight:600}'
+    + '</style></head><body>'+body+'</body></html>');
+  w.document.close(); w.focus(); setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);
+  toast('Đã mở bản in — chọn "Đích đến: Lưu thành PDF"');
+}
+
+/* ===== v6.1 — GIAO VIỆC TRONG TỪNG PHÒNG BAN: giao cho phòng ban & từng cá nhân trong phòng ban đó. Nguồn hạng mục từ Kế hoạch chi tiết (khhm), nhân sự lọc theo Phòng ban. Dùng chung kho 'giaoviec' + gvPrintCore. ===== */
+const GV_DEPT={
+  mThietKe:  {bp:'Thiết kế',  moc:'hs', ns:['Thiết kế'],                               ten:'Thiết kế'},
+  mNhaMay:   {bp:'Nhà máy',   moc:'sx', ns:['Kỹ thuật','Xưởng sản xuất','Đội thi công'], ten:'Nhà máy'},
+  mThuongMai:{bp:'Thương mại',moc:'dh', ns:['Kinh doanh'],                             ten:'Thương mại'}
+};
+function gvDeptStaff(deptKey){ const cfg=GV_DEPT[deptKey]||{}; const set=cfg.ns||[];
+  const active=(S.nhansu||[]).filter(n=>n['Họ tên']&&String(n['Họ tên']).trim()&&n['Trạng thái']!=='Nghỉ việc');
+  let list=active.filter(n=>set.includes(n['Phòng ban']));
+  if(!list.length) list=active;   // fallback: chưa khai đúng phòng ban → cho chọn mọi nhân sự
+  return list; }
+function gvDeptStaffNames(deptKey){ return [...new Set(gvDeptStaff(deptKey).map(n=>n['Họ tên']))]; }
+function vDeptGiaoViec(deptKey){
+  const cfg=GV_DEPT[deptKey]; if(!cfg) return '<div class="empty">Không hỗ trợ giao việc cho phòng ban này</div>';
+  const canEd=can('edit'); const das=visibleProjects();
+  const kA='_gvd_'+deptKey;   // per-dept project state key
+  if(window[kA]===undefined){ const f=(das.filter(d=>d['Trạng thái']==='Đang triển khai')[0]||das[0]); window[kA]=f?f['Mã DA']:''; }
+  const ma=window[kA]||'';
+  const staffNames=gvDeptStaffNames(deptKey);
+  const dataList='<datalist id="gvdDL_'+deptKey+'">'+staffNames.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>';
+
+  let h='<div class="cv-head"><div><h2 style="margin:0">📋 Giao việc — phòng '+esc(cfg.ten)+'</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Giao việc từ Kế hoạch chi tiết cho phòng '+esc(cfg.ten)+' và từng cá nhân trong phòng. Xuất PDF có ô ký xác nhận.</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'
+    + '<select onchange="window[\''+kA+'\']=this.value;render()"><option value="">— Chọn dự án —</option>'
+    + das.map(x=>'<option value="'+esc(x['Mã DA'])+'"'+(ma===x['Mã DA']?' selected':'')+'>'+esc(x['Tên dự án'])+'</option>').join('')+'</select></div></div>';
+  if(!ma){ h+='<div class="empty"><b>Chọn dự án</b>Chọn một dự án để giao việc.</div>'; return h; }
+  const rows=gvRowsForBP(ma,cfg.bp);
+  if(!rows.length){ h+='<div class="empty"><b>Chưa có hạng mục cho phòng '+esc(cfg.ten)+'</b>Thêm/điền phân bổ hạng mục ở <b>Dự án → Kế hoạch chi tiết → Theo hạng mục</b>.</div>'; return h; }
+
+  if(!staffNames.length){ h+='<div class="muted" style="font-size:12px;margin-bottom:10px">⚠ Chưa có nhân sự thuộc phòng '+esc(cfg.ten)+' (khai ở Nhân sự → Phòng ban). Tạm thời có thể gõ tên tự do.</div>'; }
+
+  // 1) Phân công cho cá nhân trong phòng
+  h+=dataList;
+  h+='<div class="card"><div class="ct">1 · Phân công cho cá nhân trong phòng <span class="muted" style="font-weight:400">— chọn người thực hiện & nội dung cho từng hạng mục</span></div><div class="card-body">';
+  h+='<div class="tbl-wrap"><table class="tbl" style="min-width:900px"><thead><tr><th>Hạng mục</th><th>Thời gian</th><th>Người thực hiện</th><th>Nội dung / yêu cầu</th></tr></thead><tbody>';
+  rows.forEach(r=>{ const g=gvGet(ma,r.id); const cur=g.ng||'';
+    let sel='<select class="khhm-in" style="min-width:150px" onchange="gvEdit(\''+esc(ma)+'\',\''+r.id+'\',\'ng\',this,true)"><option value="">— chọn người —</option>';
+    staffNames.forEach(n=>{ sel+='<option value="'+esc(n)+'"'+(cur===n?' selected':'')+'>'+esc(n)+'</option>'; });
+    if(cur&&staffNames.indexOf(cur)<0) sel+='<option value="'+esc(cur)+'" selected>'+esc(cur)+' (ngoài phòng)</option>';
+    sel+='</select>';
+    h+='<tr><td><b>'+esc(r.ten)+'</b>'+(r.phanLoai?'<div class="muted" style="font-size:11px">'+esc(r.phanLoai)+'</div>':'')+'</td>'
+      + '<td class="muted" style="font-size:11.5px">'+esc(gvMocFor(r,cfg.moc))+'</td>'
+      + '<td>'+(canEd?sel:esc(cur||'—'))+'</td>'
+      + '<td>'+(canEd?'<input class="khhm-in" style="width:100%;min-width:200px" value="'+esc(g.yc||'')+'" placeholder="Nội dung / yêu cầu…" oninput="gvEdit(\''+esc(ma)+'\',\''+r.id+'\',\'yc\',this,false)">':esc(g.yc||'—'))+'</td></tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+
+  // 2) Xuất PDF: cả phòng hoặc một cá nhân
+  const kWho='_gvdWho_'+deptKey, kNhan='_gvdNhan_'+deptKey, kGiao='_gvdGiao_'+deptKey, kNgay='_gvdNgay_'+deptKey;
+  const who=window[kWho]||'__all__';
+  const assigned=[...new Set(rows.map(r=>gvGet(ma,r.id).ng).filter(Boolean))];
+  h+='<div class="card"><div class="ct">2 · Xuất bảng giao việc (PDF có ô ký)</div><div class="card-body">';
+  h+='<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">';
+  h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Giao cho</label><select class="khhm-in" style="width:210px" onchange="window[\''+kWho+'\']=this.value;render()">'
+    + '<option value="__all__"'+(who==='__all__'?' selected':'')+'>Cả phòng '+esc(cfg.ten)+'</option>'
+    + assigned.map(n=>'<option value="'+esc(n)+'"'+(who===n?' selected':'')+'>Cá nhân: '+esc(n)+'</option>').join('')+'</select></div>';
+  if(who==='__all__') h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Người nhận (trưởng phòng)</label><input class="khhm-in" list="gvdDL_'+deptKey+'" style="width:180px" value="'+esc(window[kNhan]||'')+'" placeholder="Tên người nhận…" oninput="window[\''+kNhan+'\']=this.value"></div>';
+  h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Người giao việc</label><input class="khhm-in" style="width:170px" value="'+esc(window[kGiao]!=null?window[kGiao]:(user?user['Họ tên']:''))+'" oninput="window[\''+kGiao+'\']=this.value"></div>';
+  h+='<div><label class="muted" style="font-size:12px;display:block;margin-bottom:3px">Ngày giao</label><input type="date" class="khhm-in" value="'+esc(window[kNgay]||today())+'" onchange="window[\''+kNgay+'\']=this.value"></div>';
+  h+='<div><button class="btn btn-brass" onclick="gvPrintDept(\''+deptKey+'\')">🖨 Xuất PDF</button></div>';
+  h+='</div>';
+  const previewN = who==='__all__' ? rows.length : rows.filter(r=>(gvGet(ma,r.id).ng||'')===who).length;
+  h+='<div class="muted" style="font-size:12px;margin-top:10px">'+(who==='__all__'?('Cả phòng: '+rows.length+' hạng mục'):('Cá nhân '+esc(who)+': '+previewN+' hạng mục'))+'</div>';
+  h+='</div></div>';
+  return h;
+}
+function gvPrintDept(deptKey){
+  const cfg=GV_DEPT[deptKey]; if(!cfg) return;
+  const ma=window['_gvd_'+deptKey]||''; if(!ma){ toast('Chọn dự án',true); return; }
+  const who=window['_gvdWho_'+deptKey]||'__all__';
+  const allRows=gvRowsForBP(ma,cfg.bp);
+  let rows, doiTuong, nguoiNhan, mode;
+  if(who==='__all__'){ rows=allRows; doiTuong='Phòng: '+cfg.ten; nguoiNhan=window['_gvdNhan_'+deptKey]||''; mode='bp'; }
+  else { rows=allRows.filter(r=>(gvGet(ma,r.id).ng||'')===who); doiTuong='Cá nhân: '+who+' (phòng '+cfg.ten+')'; nguoiNhan=who; mode='ns'; }
+  gvPrintCore({ma:ma, mode:mode, rows:rows, doiTuong:doiTuong, nguoiNhan:nguoiNhan, mocT:cfg.moc,
+    nguoiGiao:(window['_gvdGiao_'+deptKey]!=null?window['_gvdGiao_'+deptKey]:(user?user['Họ tên']:''))||'', ngayGiao:window['_gvdNgay_'+deptKey]||today()});
 }
 
 
