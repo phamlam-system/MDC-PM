@@ -4,6 +4,7 @@
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
 <!-- MDC-PM v5.7 — BÁO CÁO PHÒNG BAN: nav mới "📈 Báo cáo phòng ban" (baocaoPB→vBaoCaoPB). Chọn Phòng (Tổng công ty / Thiết kế / Nhà máy / Thương mại / Thầu phụ) + Kỳ (Tuần này / Tháng này / Tùy chọn khoảng ngày) → 4 khối: KPI & tiến độ · Việc quá hạn & sắp đến hạn trong kỳ · Tải & năng lực đỉnh (Nhà máy/Thiết kế) · Tài chính phòng (Thương mại mua sắm, Thầu phụ chi). Tổng công ty = bảng tổng hợp 4 phòng + chi tiết từng phòng. Nút Xuất Excel (CSV) + Xuất PDF (A4). Không biểu đồ (số liệu & bảng). Tái dùng rpData/rpCap/rpFin + nlsx/nltk/khhm. -->
+<!-- MDC-PM v6.2 — AUTO ĐIỀN MỐC HẠNG MỤC THEO KẾ HOẠCH BỘ PHẬN: nút "⚡ Gợi ý mốc theo bộ phận" trong Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục. khhmFromKhc(ma) đọc mốc 4 bộ phận từ khc (Hồ sơ←Thiết kế cho MỌI hạng mục; SX&Lắp←Sản xuất; Đặt hàng←Thương mại; Thi công←Thầu phụ theo cột Phân bổ) → điền hs_bd/hs_ht, sx_bd/sx_ht, dh_dat/dh_nhan, tp_bd/tp_ht. CHỈ điền ô trống. Thuần frontend, dùng chung kho pmkv khhm/khc → đồng bộ BE v6.4. -->
 <!-- MDC-PM v5.6 — P0 NỀN TẢNG DỮ LIỆU: đưa các kho kế hoạch (khc/khhm/nlsx/nltk/holidays/sohd) vào S.pmkv → tự lưu localStorage (mdcpm_state) VÀ đồng bộ Backend (getAll trả pmkv + action savePMKV, ghi write-through debounce 900ms, fallback pending khi mất mạng). pmkvMigrate() chuyển dữ liệu localStorage cũ vào S.pmkv 1 lần. Accessor khc/khhm/hol/sohd/nlsx/nltk đọc-ghi qua pmkvGet/pmkvSet. CHẠY TỐT trước khi deploy .gs (giữ local, BE trả pmkv rỗng thì không sao). P0(2): khhmEdit tự suy sx_bd/sx_ht (tóm tắt) = min/max của Mộc/Sơn/Lắp đặt → 1 nguồn dữ liệu. CẦN DEPLOY MDC_HopNhat_Backend v6.4 (thêm sheet PM_KeHoach + savePMKV_ + getPMKV_). -->
 <!-- MDC-PM v5.5 — NĂNG LỰC & KHẢ THI THIẾT KẾ (module Thiết kế): nút chuyển "✏ Điều hành & Kế hoạch TK ↔ 📊 Năng lực & Khả thi". Đơn vị = số hạng mục (bộ hồ sơ). 3 nhóm: Concept/Ý tưởng · Triển khai kỹ thuật (shop) · Kết cấu/M&E; mỗi hạng mục qua CẢ 3 nhóm; xếp tuần theo cửa sổ Hồ sơ (hs_bd..hs_ht, fallback project). Cấu hình localStorage mdc_pm_nltk (res:{cc,tk,kc:{nangSuat[hạng mục/người/tuần],soNguoi}}). Bảng tải theo tuần + kiểm tra khả thi so với năng lực CÒN TRỐNG. Dùng chung helper nlsxWeeks/nlsxWkLabel/fmtNum. -->
 <!-- MDC-PM v5.4 — NĂNG LỰC theo GIÁ TRỊ (đồng): thêm nút chuyển "₫ Theo giá trị (đồng) ↔ ▦ Theo m²" trong màn Năng lực & Khả thi. Chế độ giá trị: công suất mỗi tổ = đồng/người/tháng × số người ÷ 4,33 tuần; nhu cầu mỗi hạng mục = Thành tiền (cột tt). Bảng SX thêm cột "Thành tiền"; import HĐ tự lấy Thành tiền (cột 11 / tiêu đề "Thành tiền"). nlsxUnit/nlsxQty/nlsxFmt; nlsxCapWeek(o,id,unit); res thêm khóa dongThang. Mặc định chế độ giá trị. -->
@@ -2266,6 +2267,31 @@ function khhmSummaryHtml(ma){
     + '</div>';
 }
 function khhmUpdSummary(ma){ const el=document.getElementById('khhmSum_'+ma); if(el) el.innerHTML=khhmSummaryHtml(ma); }
+/* ★ v6.2 — Auto điền mốc HẠNG MỤC theo KẾ HOẠCH CHI TIẾT 4 BỘ PHẬN (khc → khhm).
+   Hồ sơ: mọi hạng mục (Thiết kế làm cho tất cả). SX&Lắp / Đặt hàng / Thi công: theo cột Phân bổ. Chỉ điền ô đang trống. */
+function khhmFromKhc(ma){
+  if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true);
+  const rows=khhmGet(ma); if(!rows.length) return toast('Chưa có hạng mục nào để điền mốc', true);
+  const kv=(key)=>{ const v=khcRaw(ma,key); return (v===undefined||v===null)?'':String(v); };
+  const hsBd=kv('tk_sb_bd'),  hsHt=kv('tk_sd_ht')||kv('tk_dl');
+  const sxBd=kv('sx_sx_bd'),  sxHt=kv('sx_ld_ht')||kv('sx_bg')||kv('sx_sx_ht');
+  const dhDat=kv('tm_dh'),    dhNhan=kv('tm_nh');
+  const tpBd=kv('tp_tc_bd'),  tpHt=kv('tp_tc_ht')||kv('tp_bg2');
+  const anySrc=[hsBd,hsHt,sxBd,sxHt,dhDat,dhNhan,tpBd,tpHt].some(Boolean);
+  if(!anySrc) return toast('Chưa có mốc ở “Kế hoạch chi tiết theo bộ phận”. Hãy nhập mốc bộ phận (hoặc bấm ⚡ Gợi ý mốc từ công việc) trước.', true);
+  let n=0;
+  rows.forEach(r=>{
+    if(!(r.ten&&String(r.ten).trim())) return;
+    const put=(k,val)=>{ if(val && (r[k]==null||r[k]==='')){ r[k]=val; n++; } };
+    put('hs_bd',hsBd); put('hs_ht',hsHt);
+    if(r.phanBo==='Nhà máy'){ put('sx_bd',sxBd); put('sx_ht',sxHt); }
+    else if(r.phanBo==='Thương mại'){ put('dh_dat',dhDat); put('dh_nhan',dhNhan); }
+    else if(r.phanBo==='Thầu phụ'){ put('tp_bd',tpBd); put('tp_ht',tpHt); }
+  });
+  khhmSetRows(ma,rows);
+  toast(n? ('✓ Đã điền '+n+' mốc hạng mục theo kế hoạch bộ phận (chỉ ô trống)') : 'Các mốc hạng mục đã có sẵn — không có ô trống để điền', !n);
+  render();
+}
 function pjKeHoachHangMuc(d){
   const ma=d['Mã DA'];
   const canEd=(typeof canEditProject==='function')?canEditProject(d):can('edit');
@@ -2276,6 +2302,7 @@ function pjKeHoachHangMuc(d){
     + (canEd?'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmImport(\''+esc(ma)+'\')">⬆ Nhập từ hợp đồng</button> ':'')
     + '<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmExportCsv(\''+esc(ma)+'\')">⬇ Xuất Excel</button> '
     + '<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmPrint(\''+esc(ma)+'\')">🖨 Xuất PDF</button>'
+    + (canEd?' <button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmFromKhc(\''+esc(ma)+'\')" title="Lấy mốc từ Kế hoạch chi tiết theo bộ phận điền vào từng hạng mục (chỉ ô trống)">⚡ Gợi ý mốc theo bộ phận</button>':'')
     + (canEd?' <button class="btn btn-brass" style="padding:6px 12px;font-size:12.5px" onclick="khhmAdd(\''+esc(ma)+'\')">＋ Thêm hạng mục</button>':'')
     + '</span></div><div class="card-body">';
   html+='<div id="khhmSum_'+esc(ma)+'">'+khhmSummaryHtml(ma)+'</div>';
