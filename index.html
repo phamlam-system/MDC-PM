@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- MDC-PM v7.2 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC: thêm cột "Nội dung" (key `noiDung`) vào nhóm PHÂN BỐ HẠNG MỤC (sau Phân loại, w:220), lấy dữ liệu từ cột "Chất liệu, quy cách" của Hợp đồng khi ⬆ Nhập từ hợp đồng. Import: HDRKEYS + `idx.noiDung=findCol('chat lieu quy cach','chat lieu','quy cach','noi dung')`; positional `P.noiDung=3`; parse push `noiDung`; preview thêm cột Nội dung; `khhmImpConfirm` lưu `noiDung`. Cột tự vào Bảng chi tiết + Xuất Excel/PDF (dùng `khhmCols`). node --check 5/5 + Playwright (cột tồn tại, import map đúng Chất liệu/quy cách→Nội dung 2 dòng, preview có cột) OK, 0 pageerror. -->
 <!-- MDC-PM v7.1 (P2) — PHÂN QUYỀN THEO PHÒNG (giới hạn CHỈNH SỬA, KHÔNG giới hạn XEM; MẶC ĐỊNH TẮT). Bật/tắt ở Cài đặt (chỉ Giám đốc/TGĐ=admin thấy thẻ `permCard`, lưu pmkv 'perm'.deptScope). Khi bật: Trưởng phòng/Quản lý chỉ sửa được module phòng mình (Thiết kế/Nhà máy/Thương mại) — module phòng khác chuyển CHỈ ĐỌC (banner + gỡ mọi nút/ô sửa); Ban giám đốc & admin sửa tất cả; nhân viên giữ nguyên; XEM luôn mở cho mọi người. Cơ chế: cờ `window._deptEditBlock` bật trong lúc dựng HTML của module (deptGuard try/finally) → `can()/canEditProject/canEditTask` trả false → toàn module render read-only, KHÔNG phải sửa hàng chục nơi. Ánh xạ PHONG_BAN→module (`deptKeyOfPhong`): Thiết kế→mThietKe; Xưởng sản xuất/Kỹ thuật/Đội thi công→mNhaMay; Kinh doanh→mThuongMai; Ban giám đốc→sửa tất cả; Hành chính-KT/Khác/trống→KHÔNG giới hạn (tránh khóa nhầm). node --check 5/5 + Playwright 20/20 (off không khóa; đúng phòng sửa được; khác phòng read-only gỡ nút; admin/BGĐ/phòng-không-map/nhân viên không bị khóa; cờ reset sau render; toggle chỉ admin). 0 pageerror. -->
 <!-- MDC-PM v7.0 — THƯƠNG MẠI · NGHIỆP VỤ CHUYÊN SÂU: thêm 2 tab DANH MỤC DÙNG CHUNG TOÀN CÔNG TY (không theo dự án, lưu bucket cố định TM_ALL='__ALL__' trong pmkv). (1) "🏢 NCC / Đối tác" (`tmNccHtml` · kho `tmncc`): tên·loại(Vật tư/Gia công/Vận chuyển/Thầu phụ/Dịch vụ)·nhóm hàng·liên hệ·SĐT·email·địa chỉ·MST·đánh giá★·trạng thái; KPI tổng/đang hợp tác/vật tư/gia công/thầu phụ. (2) "📑 Hợp đồng" (`tmHopDongHtml` · kho `tmhopdong`): số HĐ·NCC·dự án(select từ visibleProjects, để trống=HĐ nguyên tắc)·loại HĐ·ngày ký·hiệu lực·giá trị·đã TT·còn lại(calc)·trạng thái; KPI tổng/đang hiệu lực/tổng giá trị/còn phải trả/sắp hết hạn ≤30d. `vThuongMaiNV` nay 5 tab (NCC·Hợp đồng·Báo giá·Đơn hàng·Công nợ); tab NCC/Hợp đồng ẩn ô chọn dự án, hiện chú thích "dùng chung toàn công ty". `nvBodyHtml` route tm ncc/hopdong dùng ma=TM_ALL (bỏ qua _nvDA). node --check 5/5 + Playwright (5 tab, bản ghi global hiện bất kể dự án, còn lại HĐ=6.000.000, select dự án) OK, 0 pageerror. -->
 <!-- MDC-PM v6.9 — THƯƠNG MẠI: XÂY DỰNG LẠI "CÔNG VIỆC THEO GIAI ĐOẠN" THEO ĐÚNG BẢN CHẤT MUA SẮM & ĐẶT HÀNG (bỏ giai đoạn sản xuất). GỠ cách làm v6.8 (kéo việc giai đoạn 'Sản xuất tại xưởng' vào TM qua từ khoá) — trả `deptTasks` & `vDeptDash` về nhóm theo `cfg.giaiDoan` gốc (Thiết kế/Nhà máy nguyên vẹn). Module TM giờ dùng `tmDeptDash(da)` riêng: KPI theo hạng mục đặt hàng (chưa đặt/đã đặt/trễ nhận/đã nhận %), cảnh báo "Trễ nhận hàng" (nhận DK đã qua mà chưa nhận), và "Công việc theo giai đoạn — Tiến trình mua sắm & đặt hàng" = 3 chặng ① Chưa đặt → ② Đã đặt (chờ giao) → ③ Đã nhận, xếp hạng mục phân bổ Thương mại theo trạng thái đặt hàng `dh_tt` (kho khhm); kèm đầu việc Tiếp nhận & Báo giá (giai đoạn thật), mốc khc TM, bảng Kế hoạch đặt hàng theo hạng mục, đơn Mua sắm NCC, card NV chuyên sâu. Không còn giai đoạn/đầu việc sản xuất trong TM. node --check 5/5 + Playwright (3 chặng, xếp đúng hạng mục, loại item Nhà máy & việc sản xuất, trễ nhận, Nhà máy giữ nguyên) OK, 0 pageerror. -->
@@ -2250,6 +2251,7 @@ const KHHM_GROUPS = [
   {ten:'PHÂN BỐ HẠNG MỤC', mau:'#7A5A2E', cols:[
     {key:'ten',      leaf:'Hạng mục',   t:'text', w:210, cls:'ks-name'},
     {key:'phanLoai', leaf:'Phân loại',  t:'text', w:96},
+    {key:'noiDung',  leaf:'Nội dung',   t:'text', w:220},
     {key:'phanBo',   leaf:'Phân bổ',    t:'sel',  opts:KHHM_PHANBO, w:112},
     {key:'dvt',      leaf:'ĐVT',        t:'text', w:56},
     {key:'kl',       leaf:'Khối lượng', t:'text', w:82},
@@ -2498,7 +2500,7 @@ function khhmImport(ma){
   if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true);
   window.__khhmImp=null; window.__khhmImpMa=ma;
   const body='<div class="muted" style="margin-bottom:10px;line-height:1.55">Chọn <b>file Excel (.xlsx)</b> của hợp đồng — hoặc dán bảng hạng mục copy từ Excel/Google Sheet vào ô dưới — mỗi hạng mục 1 dòng. '
-    + 'Tự nhận diện cột: <b>Chi tiết đơn hàng / Mã sản phẩm</b> (tên), <b>Phân loại hạng mục</b>, <b>ĐVT</b>, <b>Số lượng / Khối lượng</b>, và <b>Phân bổ</b> (Nhà máy MDC · Thương mại · Thầu phụ). '
+    + 'Tự nhận diện cột: <b>Chi tiết đơn hàng / Mã sản phẩm</b> (tên), <b>Phân loại hạng mục</b>, <b>Chất liệu, quy cách</b> (→ Nội dung), <b>ĐVT</b>, <b>Số lượng / Khối lượng</b>, và <b>Phân bổ</b> (Nhà máy MDC · Thương mại · Thầu phụ). '
     + 'Dòng tiêu đề, dòng nhóm (Tầng/Phòng) và dòng tổng sẽ được bỏ qua. Nếu không có dòng tiêu đề, hệ đọc theo đúng thứ tự cột của file HĐ.</div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
     + '<label class="btn btn-ghost" style="cursor:pointer">📂 Chọn file Excel / CSV<input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="khhmImpFile(this)"></label>'
@@ -2554,7 +2556,7 @@ function khhmImpParse(){
   if(!rows.length){ pv.innerHTML='<span class="tag t-bad">Không có dữ liệu</span>'; window.__khhmImp=null; if(saveBtn) saveBtn.classList.add('hide'); return; }
   const norm=s=>vnorm(s).replace(/[^a-z0-9]+/g,' ').trim();
   // Tìm DÒNG TIÊU ĐỀ = dòng có nhiều nhãn cột nhất (tránh nhầm dòng tựa "HẠNG MỤC NỘI THẤT")
-  const HDRKEYS=['chi tiet don hang','ma san pham','phan loai','don vi tinh','dvt','so luong','khoi luong','phan bo','thanh tien','don gia','kich thuoc'];
+  const HDRKEYS=['chi tiet don hang','ma san pham','phan loai','chat lieu','quy cach','noi dung','don vi tinh','dvt','so luong','khoi luong','phan bo','thanh tien','don gia','kich thuoc'];
   let hdr=-1, best=0;
   for(let i=0;i<Math.min(rows.length,8);i++){
     const H=rows[i].map(norm);
@@ -2572,6 +2574,7 @@ function khhmImpParse(){
     idx.chiTiet=findCol('chi tiet don hang','chi tiet');
     idx.ma     =findCol('ma san pham','ma sp');
     idx.phanLoai=findCol('phan loai hang muc','phan loai');
+    idx.noiDung=findCol('chat lieu quy cach','chat lieu','quy cach','noi dung');   // ★ v7.2 — cột Nội dung (Chất liệu, quy cách) từ HĐ
     idx.dvt    =findCol('don vi tinh','dvt');
     idx.kl     =findCol('khoi luong');
     idx.sl     =findCol('so luong');
@@ -2582,7 +2585,7 @@ function khhmImpParse(){
     if(idx.chiTiet<0 && idx.ma<0) hdr=-1;             // không thấy cột tên → chuyển sang positional
   }
   const posMode = hdr<0;
-  const P={chiTiet:1, ma:2, dvt:7, kl:8, sl:9, dg:10, tt:11, phanLoai:12, nm:13, tm:14, tp:15};
+  const P={chiTiet:1, ma:2, noiDung:3, dvt:7, kl:8, sl:9, dg:10, tt:11, phanLoai:12, nm:13, tm:14, tp:15};   // ★ v7.2 — cột 3 = Chất liệu, quy cách
   const get=(row,key)=>{ let ci=posMode?P[key]:idx[key]; if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
   const start=posMode?0:hdr+1; const drafts=[];
   for(let r=start;r<rows.length;r++){
@@ -2591,15 +2594,15 @@ function khhmImpParse(){
     const dvt=get(row,'dvt'), kl=get(row,'kl'), sl=get(row,'sl');
     if(!dvt && !sl && !kl) continue;                 // bỏ dòng nhóm/tổng (không có ĐVT/SL/KL)
     if(/^[\d.,\s\-]+$/.test(ten)) continue;          // bỏ dòng chỉ toàn số
-    const phanLoai=get(row,'phanLoai'); const tt=get(row,'tt');
+    const phanLoai=get(row,'phanLoai'); const tt=get(row,'tt'); const noiDung=get(row,'noiDung');
     let phanBo=''; if(get(row,'nm')) phanBo='Nhà máy'; else if(get(row,'tm')) phanBo='Thương mại'; else if(get(row,'tp')) phanBo='Thầu phụ';
-    drafts.push({ten, phanLoai, phanBo, dvt, kl:kl||'', sl:sl||'', tt});
+    drafts.push({ten, phanLoai, noiDung, phanBo, dvt, kl:kl||'', sl:sl||'', tt});
   }
   window.__khhmImp=drafts;
   if(!drafts.length){ pv.innerHTML='<span class="tag t-bad">Không nhận diện được hạng mục nào — kiểm tra lại các cột.</span>'; if(saveBtn) saveBtn.classList.add('hide'); return; }
   let h='<div style="margin:2px 0 8px;font-size:13px"><b>'+drafts.length+'</b> hạng mục nhận diện '+(posMode?'<span class="muted">(đọc theo thứ tự cột file HĐ)</span>':'<span class="muted">(đọc theo tiêu đề cột)</span>')+'</div>';
-  h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Phân bổ</th><th>ĐVT</th><th>Khối lượng</th><th>Số lượng</th></tr></thead><tbody>';
-  drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.kl||'—')+'</td><td>'+esc(d.sl||'—')+'</td></tr>'; });
+  h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Nội dung</th><th>Phân bổ</th><th>ĐVT</th><th>Khối lượng</th><th>Số lượng</th></tr></thead><tbody>';
+  drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.noiDung||'—')+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.kl||'—')+'</td><td>'+esc(d.sl||'—')+'</td></tr>'; });
   h+='</tbody></table></div><div class="muted" style="margin-top:8px">Bấm <b>Lưu</b> để thêm '+drafts.length+' hạng mục (nối tiếp danh sách hiện có).</div>';
   pv.innerHTML=h; if(saveBtn) saveBtn.classList.remove('hide');
 }
@@ -2607,7 +2610,7 @@ function khhmImpConfirm(){
   const ma=window.__khhmImpMa; const drafts=window.__khhmImp||[];
   if(!ma||!drafts.length){ toast('Không có hạng mục để nhập', true); return; }
   const rows=khhmGet(ma);
-  drafts.forEach(d=>rows.push({id:khhmNewId(), ten:d.ten, phanLoai:d.phanLoai, phanBo:d.phanBo, dvt:d.dvt, sl:d.sl, kl:d.kl||'', tt:d.tt||''}));
+  drafts.forEach(d=>rows.push({id:khhmNewId(), ten:d.ten, phanLoai:d.phanLoai, noiDung:d.noiDung||'', phanBo:d.phanBo, dvt:d.dvt, sl:d.sl, kl:d.kl||'', tt:d.tt||''}));
   khhmSetRows(ma,rows); window.__khhmImp=null; closeModal();
   toast('✓ Đã nhập '+drafts.length+' hạng mục vào kế hoạch'); render();
 }
