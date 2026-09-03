@@ -4,6 +4,8 @@
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
 <!-- MDC-PM v5.7 — BÁO CÁO PHÒNG BAN: nav mới "📈 Báo cáo phòng ban" (baocaoPB→vBaoCaoPB). Chọn Phòng (Tổng công ty / Thiết kế / Nhà máy / Thương mại / Thầu phụ) + Kỳ (Tuần này / Tháng này / Tùy chọn khoảng ngày) → 4 khối: KPI & tiến độ · Việc quá hạn & sắp đến hạn trong kỳ · Tải & năng lực đỉnh (Nhà máy/Thiết kế) · Tài chính phòng (Thương mại mua sắm, Thầu phụ chi). Tổng công ty = bảng tổng hợp 4 phòng + chi tiết từng phòng. Nút Xuất Excel (CSV) + Xuất PDF (A4). Không biểu đồ (số liệu & bảng). Tái dùng rpData/rpCap/rpFin + nlsx/nltk/khhm. -->
+<!-- MDC-PM v6.4 (P2) — % HẠNG MỤC CUỘN LÊN TIẾN ĐỘ + GANTT HẠNG MỤC: khhmRollup(ma) cuộn %HT các hạng mục (trọng số theo thành tiền, fallback TB) → hiện ở KPI tóm tắt hạng mục & chip "HM x%" trên thẻ dự án. Dự án→Kế hoạch chi tiết→📦 Theo hạng mục thêm pill "Bảng chi tiết ↔ 📊 Gantt hạng mục" → khhmGantt(ma): mỗi hạng mục 1 lane, bar theo khâu (Hồ sơ/SX&lắp/Đặt hàng/Thi công) dùng mốc hs/sx/dh/tp, tô đỏ khi trễ mốc, có vạch hôm nay + dải tháng. Thuần frontend (pmkv). node --check + Playwright. -->
+<!-- MDC-PM v6.3 (P2) — DỰ BÁO TRỄ & HIỆU CHỈNH ĐỊNH MỨC: nav "Dự báo & Cảnh báo" (dubao→vForecast). (1) Dự báo trễ: mỗi dự án đang triển khai tính hạn hoàn thành (khc htHD/Ngày kết thúc DK), %HT (projAutoProgress), "KH nên đạt %" tuyến tính, dự báo ngày xong = hôm nay+(việc còn lại/tốc độ), độ trễ, mức rủi ro (TRỄ/Nguy cơ/Chậm/Đúng hạn) + bảng công việc quá hạn + hạng mục trễ mốc (hs/sx/dh/tp). (2) Hiệu chỉnh định mức: năng suất thực tế m²/người/ngày từ hạng mục Nhà máy "Đã xong" (Σm²/(ngày công×số người)) đối chiếu định mức nlsx, nút Áp dụng ghi o.res[tổ].nangSuat + bảng chi tiết mẫu. Thuần frontend (pmkv). node --check + Playwright. -->
 <!-- MDC-PM v6.2 — AUTO ĐIỀN MỐC HẠNG MỤC THEO KẾ HOẠCH BỘ PHẬN: nút "⚡ Gợi ý mốc theo bộ phận" trong Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục. khhmFromKhc(ma) đọc mốc 4 bộ phận từ khc (Hồ sơ←Thiết kế cho MỌI hạng mục; SX&Lắp←Sản xuất; Đặt hàng←Thương mại; Thi công←Thầu phụ theo cột Phân bổ) → điền hs_bd/hs_ht, sx_bd/sx_ht, dh_dat/dh_nhan, tp_bd/tp_ht. CHỈ điền ô trống. Thuần frontend, dùng chung kho pmkv khhm/khc → đồng bộ BE v6.4. -->
 <!-- MDC-PM v5.6 — P0 NỀN TẢNG DỮ LIỆU: đưa các kho kế hoạch (khc/khhm/nlsx/nltk/holidays/sohd) vào S.pmkv → tự lưu localStorage (mdcpm_state) VÀ đồng bộ Backend (getAll trả pmkv + action savePMKV, ghi write-through debounce 900ms, fallback pending khi mất mạng). pmkvMigrate() chuyển dữ liệu localStorage cũ vào S.pmkv 1 lần. Accessor khc/khhm/hol/sohd/nlsx/nltk đọc-ghi qua pmkvGet/pmkvSet. CHẠY TỐT trước khi deploy .gs (giữ local, BE trả pmkv rỗng thì không sao). P0(2): khhmEdit tự suy sx_bd/sx_ht (tóm tắt) = min/max của Mộc/Sơn/Lắp đặt → 1 nguồn dữ liệu. CẦN DEPLOY MDC_HopNhat_Backend v6.4 (thêm sheet PM_KeHoach + savePMKV_ + getPMKV_). -->
 <!-- MDC-PM v5.5 — NĂNG LỰC & KHẢ THI THIẾT KẾ (module Thiết kế): nút chuyển "✏ Điều hành & Kế hoạch TK ↔ 📊 Năng lực & Khả thi". Đơn vị = số hạng mục (bộ hồ sơ). 3 nhóm: Concept/Ý tưởng · Triển khai kỹ thuật (shop) · Kết cấu/M&E; mỗi hạng mục qua CẢ 3 nhóm; xếp tuần theo cửa sổ Hồ sơ (hs_bd..hs_ht, fallback project). Cấu hình localStorage mdc_pm_nltk (res:{cc,tk,kc:{nangSuat[hạng mục/người/tuần],soNguoi}}). Bảng tải theo tuần + kiểm tra khả thi so với năng lực CÒN TRỐNG. Dùng chung helper nlsxWeeks/nlsxWkLabel/fmtNum. -->
@@ -1732,6 +1734,7 @@ const NAV_GROUPS = [
     {id:'baocaoTC',  name:'Báo cáo tài chính',icon:'📊'},
     {id:'baocaoPB',  name:'Báo cáo phòng ban',icon:'📈'},
     {id:'nlCty',     name:'Năng lực công ty', icon:'⚡'},
+    {id:'dubao',     name:'Dự báo & Cảnh báo', icon:'⏱'},
   ]},
   { label: null, items: [
     {id:'gantt',     name:'Tiến độ Gantt',   icon:'▭'},
@@ -1899,7 +1902,7 @@ function onAddClick(){
 function render(){
   const root = document.getElementById('viewRoot');
   const fn = {
-    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, baocaoPB:vBaoCaoPB, nlCty:vCapacityAll, giaoviec:vGiaoViec, congKH:vPortalMgr,
+    dashboard:vDashboard, duan:vProjects, congviec:vTasks, mThietKe:vThietKe, mNhaMay:vNhaMay, mThuongMai:vThuongMai, gantt:vGantt, bienban:vBienBan, baocaoTC:vBaoCaoTC, baocaoPB:vBaoCaoPB, nlCty:vCapacityAll, dubao:vForecast, giaoviec:vGiaoViec, congKH:vPortalMgr,
     chiphi:vExpenses, lichhen:vAppointments, thaubo:vSubcontractors,
     nhansu:vStaff, caidat:vSettings, kiemtra:vDataHealth,
     // v2.0 mới
@@ -2256,14 +2259,13 @@ function khhmCell(ma,r,c,canEd){
 function khhmSummaryHtml(ma){
   const rows=khhmGet(ma); const n=rows.length;
   const cnt=v=>rows.filter(r=>r.phanBo===v).length;
-  const pcts=rows.map(r=>parseFloat(r.pct)).filter(x=>!isNaN(x));
-  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  const rl=khhmRollup(ma); const rollPct=rl?rl.pct:0; const rollLbl=(rl&&rl.weighted)?'tiến độ (trọng số GT)':'tiến độ TB';
   return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
     + '<div class="ks-kpi"><b>'+n+'</b><span>hạng mục</span></div>'
     + '<div class="ks-kpi"><b>'+cnt('Nhà máy')+'</b><span>Nhà máy</span></div>'
     + '<div class="ks-kpi"><b>'+cnt('Thương mại')+'</b><span>Thương mại</span></div>'
     + '<div class="ks-kpi"><b>'+cnt('Thầu phụ')+'</b><span>Thầu phụ</span></div>'
-    + '<div class="ks-kpi"><b>'+avg+'%</b><span>tiến độ TB</span></div>'
+    + '<div class="ks-kpi"><b>'+rollPct+'%</b><span>'+rollLbl+'</span></div>'
     + '</div>';
 }
 function khhmUpdSummary(ma){ const el=document.getElementById('khhmSum_'+ma); if(el) el.innerHTML=khhmSummaryHtml(ma); }
@@ -2292,7 +2294,61 @@ function khhmFromKhc(ma){
   toast(n? ('✓ Đã điền '+n+' mốc hạng mục theo kế hoạch bộ phận (chỉ ô trống)') : 'Các mốc hạng mục đã có sẵn — không có ô trống để điền', !n);
   render();
 }
+/* ★ v6.4 (P2) — % HẠNG MỤC CUỘN LÊN TIẾN ĐỘ + GANTT HẠNG MỤC ================= */
+// Tiến độ cuộn từ các hạng mục: trọng số theo THÀNH TIỀN nếu có, không thì trung bình đều.
+function khhmRollup(ma){
+  const rows=khhmGet(ma).filter(r=>r.ten&&String(r.ten).trim());
+  if(!rows.length) return null;
+  const P=r=>Math.max(0,Math.min(100,parseFloat(r.pct)||0));
+  if(rows.some(r=>nlsxNum(r.tt)>0)){
+    let wsum=0,wpct=0; rows.forEach(r=>{ const v=nlsxNum(r.tt)||0; wsum+=v; wpct+=v*P(r); });
+    return {pct: wsum>0?Math.round(wpct/wsum):0, n:rows.length, weighted:true};
+  }
+  const ps=rows.map(P); return {pct: Math.round(ps.reduce((a,b)=>a+b,0)/ps.length), n:rows.length, weighted:false};
+}
+function khhmStageDone(r,cls){ if(cls==='hs') return r.hs_duyet==='Đã duyệt'||r.hs_chuyen==='Đã chuyển'; if(cls==='sx') return r.sx_tt==='Đã xong'; if(cls==='dh') return r.dh_tt==='Đã nhận'; if(cls==='tp') return r.tp_tt==='Đã xong'; return false; }
+function khhmGanttStages(r){
+  const out=[]; const D=/^\d{4}-\d{2}-\d{2}$/;
+  const add=(bd,ht,cls,lbl)=>{ if(bd&&ht&&D.test(bd)&&D.test(ht)) out.push({bd,ht:(ht<bd?bd:ht),cls,lbl}); };
+  add(r.hs_bd,r.hs_ht,'hs','Hồ sơ');
+  if(r.phanBo==='Nhà máy'||!r.phanBo) add(r.sx_bd,r.sx_ht,'sx','SX & lắp');
+  if(r.phanBo==='Thương mại'||!r.phanBo) add(r.dh_dat,r.dh_nhan,'dh','Đặt hàng');
+  if(r.phanBo==='Thầu phụ'||!r.phanBo) add(r.tp_bd,r.tp_ht,'tp','Thi công');
+  return out;
+}
+function khhmGantt(ma){
+  const rows=khhmGet(ma).filter(r=>r.ten&&String(r.ten).trim());
+  const all=[]; rows.forEach(r=>khhmGanttStages(r).forEach(s=>all.push(s)));
+  if(!all.length) return '<div class="muted" style="padding:22px;text-align:center;border:1px dashed var(--line-strong);border-radius:var(--r-sm)">Chưa có mốc ngày ở các hạng mục. Nhập mốc từng khâu (hoặc bấm <b>⚡ Gợi ý mốc theo bộ phận</b>) để xem Gantt.</div>';
+  let min=null,max=null; all.forEach(s=>{ if(!min||s.bd<min)min=s.bd; if(!max||s.ht>max)max=s.ht; });
+  let minD=new Date(min), maxD=new Date(max); minD.setDate(minD.getDate()-2); maxD.setDate(maxD.getDate()+2);
+  const totalDays=Math.max(1,Math.round((maxD-minD)/86400000));
+  const dayW = totalDays<=30?20:totalDays<=90?9:totalDays<=180?5:totalDays<=365?3:2;
+  const barWidth=(totalDays+1)*dayW;
+  const off=iso=>Math.max(0,Math.round((new Date(iso)-minD)/86400000))*dayW;
+  const wid=(a,b)=>Math.max(4,(Math.round((new Date(b)-new Date(a))/86400000)+1)*dayW);
+  const months={}; for(let i=0;i<=totalDays;i++){ const dt=new Date(minD); dt.setDate(dt.getDate()+i); const mk=dt.getFullYear()+'-'+(dt.getMonth()+1); (months[mk]=months[mk]||{count:0,y:dt.getFullYear(),m:dt.getMonth()+1}).count++; }
+  let strip=''; Object.keys(months).forEach(mk=>{ const mo=months[mk]; strip+='<div style="display:inline-block;width:'+(mo.count*dayW)+'px;box-sizing:border-box;border-left:1px solid var(--line);font-size:10px;color:var(--ink-soft);padding:4px 4px;white-space:nowrap;overflow:hidden">Th'+mo.m+'/'+String(mo.y).slice(2)+'</div>'; });
+  const todayD=new Date(today()); const todayIn=todayD>=minD&&todayD<=maxD; const todayOff=Math.round((todayD-minD)/86400000)*dayW;
+  const COL={hs:'#3E6E8E',dh:'#8E5E8E',tp:'#4E9A51'};   // sx: brass mặc định
+  let g='<div class="gantt-wrap"><div class="gantt" style="grid-template-columns:210px '+barWidth+'px;min-width:auto">';
+  g+='<div class="gantt-row head"><div class="gantt-name">Hạng mục</div><div style="padding:0!important;white-space:nowrap">'+strip+'</div></div>';
+  rows.forEach(r=>{ const stages=khhmGanttStages(r); if(!stages.length) return;
+    const pct=parseFloat(r.pct); const pctTxt=isNaN(pct)?'':' · '+pct+'%';
+    let bar=''; stages.forEach(s=>{ const late=(s.ht<today() && !khhmStageDone(r,s.cls));
+      const bg=(!late&&COL[s.cls])?';background:'+COL[s.cls]:'';
+      bar+='<div class="gantt-bar'+(late?' late':'')+'" style="left:'+off(s.bd)+'px;width:'+wid(s.bd,s.ht)+'px'+bg+'" title="'+esc(s.lbl+': '+fmtDMY(s.bd)+' → '+fmtDMY(s.ht)+(late?' (trễ mốc)':''))+'">'+esc(s.lbl)+'</div>';
+    });
+    g+='<div class="gantt-row"><div class="gantt-name"><b style="font-size:12px">'+esc(r.ten)+'</b><div class="muted" style="font-size:10.5px">'+esc(r.phanBo||'—')+pctTxt+'</div></div>'
+      +'<div class="gantt-bar-cell" style="width:'+barWidth+'px">'+bar+(todayIn?'<div class="gantt-today" style="left:'+todayOff+'px"></div>':'')+'</div></div>';
+  });
+  g+='</div>';
+  g+='<div class="gantt-legend"><span><i style="background:#3E6E8E"></i> Hồ sơ</span><span><i></i> SX & lắp</span><span><i style="background:#8E5E8E"></i> Đặt hàng</span><span><i style="background:#4E9A51"></i> Thi công</span><span><i class="late"></i> Trễ mốc</span><span style="margin-left:auto">Hôm nay: <span style="color:#E53935;font-weight:700">|</span></span></div>';
+  g+='</div>';
+  return g;
+}
 function pjKeHoachHangMuc(d){
+
   const ma=d['Mã DA'];
   const canEd=(typeof canEditProject==='function')?canEditProject(d):can('edit');
   const rows=khhmGet(ma); const cols=khhmCols();
@@ -2312,6 +2368,12 @@ function pjKeHoachHangMuc(d){
       + '</div></div></div>';
     return html;
   }
+  const gview=window._khhmView||'bang';
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px">'
+    +'<button class="cv-pill'+(gview==='bang'?' on':'')+'" onclick="window._khhmView=\'bang\';render()">▦ Bảng chi tiết</button>'
+    +'<button class="cv-pill'+(gview==='gantt'?' on':'')+'" onclick="window._khhmView=\'gantt\';render()">📊 Gantt hạng mục</button>'
+    +'</div>';
+  if(gview==='gantt'){ html+=khhmGantt(ma)+'</div></div>'; return html; }
   html+='<div class="tbl-wrap"><table class="tbl ks-table khhm-table"><thead>';
   html+='<tr><th rowspan="2" class="ks-stt">#</th>';
   KHHM_GROUPS.forEach(g=>{ html+='<th colspan="'+g.cols.length+'" class="ks-grp" style="border-bottom:2px solid '+g.mau+'">'+esc(g.ten)+'</th>'; });
@@ -2937,6 +2999,157 @@ function vCapacityAll(){
   const unsList=rows.filter(r=>r.uns>0.001);
   if(unsList.length) h+='<div class="muted" style="margin-top:8px;font-size:12px">Chưa xếp tuần (thiếu mốc ngày): '+unsList.map(r=>esc(r.name)+' '+r.fmt(r.uns)).join(' · ')+'</div>';
   h+='</div></div>';
+  return h;
+}
+/* ★ v6.3 (P2) — DỰ BÁO TRỄ & HIỆU CHỈNH ĐỊNH MỨC TỪ THỰC TẾ ===================== */
+function fcActiveProjects(){ return tvSong(S.duan||[]).filter(d=>{ const tt=d['Trạng thái']||'Đang triển khai'; return tt!=='Hoàn thành' && tt!=='Hủy' && tt!=='Tạm dừng'; }); }
+function fcDeadline(d){ let h=''; try{ const c=khcCalc(d); if(c&&c.htHD) h=c.htHD; }catch(e){} return h || d['Ngày kết thúc DK'] || ''; }
+function fcStart(d){ let c={}; try{ c=khcCalc(d); }catch(e){} return d['Ngày bắt đầu'] || c.ngayKy || d['Ngày ký'] || ''; }
+function fcRow(d){
+  const ma=d['Mã DA']; const dl=fcDeadline(d), st=fcStart(d); const tT=today();
+  const ap=projAutoProgress(ma); const pct= ap? ap.pct : (Number(d['Tiến độ (%)'])||0);
+  const overdue=projOverdueCount(ma);
+  const daysToDl = dl? daysLeft(dl) : null;
+  let planPct=null;
+  if(st && dl){ const tot=ksDiff(st,dl), el=ksDiff(st,tT); if(tot>0) planPct=Math.max(0,Math.min(100,Math.round(el/tot*100))); }
+  let forecast='', slip=null;
+  if(pct<100 && st){ const el=ksDiff(st,tT); if(el>0 && pct>0){ const rate=pct/el; const remDays=Math.ceil((100-pct)/rate); forecast=nlsxAddD(tT,Math.min(remDays,3650)); } }
+  if(dl && pct<100){ if(daysToDl<0) slip=-daysToDl; else if(forecast) slip=ksDiff(dl,forecast); }
+  let risk;
+  if(pct>=100) risk='done';
+  else if(daysToDl!=null && daysToDl<0) risk='tre';
+  else if(slip!=null && slip>3) risk='nguyco';
+  else if(planPct!=null && (planPct-pct)>15) risk='cham';
+  else risk='ok';
+  return {d,ma,dl,st,pct,ap,overdue,daysToDl,planPct,forecast,slip,risk};
+}
+const FC_RISK={ tre:{lbl:'TRỄ',cls:'t-bad',bg:'#FDEEEC',pri:0}, nguyco:{lbl:'Nguy cơ trễ',cls:'t-warn',bg:'#FBF3E3',pri:1}, cham:{lbl:'Chậm tiến độ',cls:'t-warn',bg:'#FBF3E3',pri:2}, ok:{lbl:'Đúng hạn',cls:'t-ok',bg:'',pri:3}, done:{lbl:'Hoàn thành',cls:'t-ok',bg:'',pri:4} };
+function fcLateItems(){
+  const out=[]; const tT=today();
+  fcActiveProjects().forEach(d=>{ const ma=d['Mã DA']; khhmGet(ma).forEach(r=>{ if(!(r.ten&&String(r.ten).trim())) return;
+    const chk=(md,done,khau)=>{ if(md && /^\d{4}-\d{2}-\d{2}$/.test(md) && md<tT && !done) out.push({d,ma,ten:r.ten,khau,moc:md,tre:ksDiff(md,tT),pct:(r.pct||'')}); };
+    chk(r.hs_ht, (r.hs_duyet==='Đã duyệt'||r.hs_chuyen==='Đã chuyển'), 'Hồ sơ');
+    if(r.phanBo==='Nhà máy')   chk(r.sx_ht, r.sx_tt==='Đã xong', 'Sản xuất & lắp');
+    if(r.phanBo==='Thương mại') chk(r.dh_nhan, r.dh_tt==='Đã nhận', 'Đặt hàng');
+    if(r.phanBo==='Thầu phụ')  chk(r.tp_ht, r.tp_tt==='Đã xong', 'Thi công');
+  }); });
+  out.sort((a,b)=>b.tre-a.tre); return out;
+}
+// ---- Hiệu chỉnh định mức năng suất (m²/người/ngày) theo tổ SX từ hạng mục ĐÃ XONG ----
+function fcNormRows(){
+  const o=nlsxCfg(); const ngc=(parseFloat(o.ngayCongTuan)||6)/7;
+  const cats=[{id:'vcn',ten:'Tổ SX ván công nghiệp'},{id:'tlt',ten:'Tổ SX tự nhiên liền tường'},{id:'tdr',ten:'Tổ SX tự nhiên đồ rời'}];
+  const store=khhmStore(); const acc={}; cats.forEach(c=>acc[c.id]={m2:0,pd:0,n:0,samples:[]});
+  Object.keys(store).forEach(ma=>{ const arr=store[ma]; if(!Array.isArray(arr)) return; const d=(S.duan||[]).find(x=>x['Mã DA']===ma)||{'Mã DA':ma};
+    arr.forEach(r=>{ if(r.phanBo!=='Nhà máy' || r.sx_tt!=='Đã xong') return;
+      const cat=nlsxToRes(r); if(!acc[cat]) return;
+      const bd=r.moc_bd||r.sx_bd||'', ht=r.moc_ht||r.sx_ht||''; if(!bd||!ht) return;
+      const m2=nlsxM2(r); if(m2<=0) return;
+      const cal=Math.max(1,(ksDiff(bd,ht)||0)+1), workDays=cal*ngc;
+      const soNguoi=parseFloat((o.res[cat]||{}).soNguoi)||0; if(soNguoi<=0) return;
+      const pd=workDays*soNguoi; acc[cat].m2+=m2; acc[cat].pd+=pd; acc[cat].n++;
+      acc[cat].samples.push({ten:r.ten,da:d['Tên dự án']||ma,m2,cal,workDays:Math.round(workDays*10)/10,soNguoi,ns:pd>0?m2/pd:0,bd,ht});
+    });
+  });
+  return cats.map(c=>{ const a=acc[c.id]; const cfgNs=parseFloat((o.res[c.id]||{}).nangSuat)||0; const realNs=a.pd>0?a.m2/a.pd:0;
+    return {id:c.id,ten:c.ten,n:a.n,m2:a.m2,pd:a.pd,cfgNs,realNs,samples:a.samples, diff:(cfgNs>0&&realNs>0)?(realNs-cfgNs)/cfgNs:null}; });
+}
+function fcRound(n){ return Math.round((Number(n)||0)*100)/100; }
+function fcApplyNorm(id){
+  if(!can('edit')) return toast('Bạn không có quyền sửa', true);
+  const row=fcNormRows().find(r=>r.id===id); if(!row||!(row.realNs>0)) return toast('Chưa đủ dữ liệu thực tế để áp dụng', true);
+  const o=nlsxCfg(); (o.res[id]=o.res[id]||{}).nangSuat=String(fcRound(row.realNs)); nlsxSaveCfg(o);
+  toast('✓ Đã cập nhật năng suất '+row.ten+' = '+fcRound(row.realNs)+' m²/người/ngày theo thực tế'); render();
+}
+function vForecast(){
+  const view = window._fcView || 'tre';
+  let h='<div class="cv-head"><div><h2 style="margin:0">⏱ Dự báo trễ & Hiệu chỉnh định mức</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Cảnh báo dự án/hạng mục có nguy cơ trễ hạn (so mốc hợp đồng & tốc độ thực tế), và hiệu chỉnh định mức năng suất tổ SX từ số liệu hạng mục đã hoàn thành.</div></div></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<button class="cv-pill'+(view==='tre'?' on':'')+'" onclick="window._fcView=\'tre\';render()">🚨 Dự báo trễ</button>'
+    + '<button class="cv-pill'+(view==='dinhmuc'?' on':'')+'" onclick="window._fcView=\'dinhmuc\';render()">🎯 Hiệu chỉnh định mức</button>'
+    + '</div>';
+  return h + (view==='dinhmuc' ? fcViewNorm() : fcViewDelay());
+}
+function fcViewDelay(){
+  const rows=fcActiveProjects().map(fcRow);
+  rows.sort((a,b)=> FC_RISK[a.risk].pri-FC_RISK[b.risk].pri || (a.dl||'zzz').localeCompare(b.dl||'zzz'));
+  const cnt=k=>rows.filter(r=>r.risk===k).length;
+  const overTotal=rows.reduce((a,r)=>a+(r.overdue||0),0);
+  const late=fcLateItems();
+  let h='';
+  h+='<div class="stat-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">';
+  const card=(lbl,val,sub,bad)=>'<div class="card" style="margin:0"><div class="card-body" style="padding:12px 14px"><div class="muted" style="font-size:12px">'+lbl+'</div><div style="font-size:22px;font-weight:800;'+(bad?'color:#B23A2E':'')+'">'+val+'</div>'+(sub?'<div class="muted" style="font-size:11px">'+sub+'</div>':'')+'</div></div>';
+  h+=card('Dự án đang triển khai', String(rows.length), (cnt('done')?cnt('done')+' đã hoàn thành':''));
+  h+=card('Đã trễ hạn', String(cnt('tre')), 'quá hạn hợp đồng', cnt('tre')>0);
+  h+=card('Nguy cơ / chậm', String(cnt('nguyco')+cnt('cham')), 'cần theo dõi', (cnt('nguyco')+cnt('cham'))>0);
+  h+=card('Công việc quá hạn', String(overTotal), 'trên toàn hệ thống', overTotal>0);
+  h+=card('Hạng mục trễ mốc', String(late.length), 'theo từng khâu', late.length>0);
+  h+='</div>';
+  // Bảng dự án
+  h+='<div class="card"><div class="ct">Dự báo tiến độ theo dự án <span class="ct-r">so mốc hoàn thành hợp đồng · dự báo theo tốc độ hiện tại</span></div><div class="card-body">';
+  if(!rows.length){ h+='<div class="muted">Chưa có dự án đang triển khai.</div>'; }
+  else{
+    h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Dự án</th><th>Hạn hoàn thành</th><th class="num">% HT</th><th class="num">KH nên đạt</th><th class="num">Còn (ngày)</th><th>Dự báo xong</th><th class="num">Trễ (ngày)</th><th class="num">Việc quá hạn</th><th>Mức rủi ro</th></tr></thead><tbody>';
+    rows.forEach(r=>{ const R=FC_RISK[r.risk];
+      const behind = (r.planPct!=null && r.pct<r.planPct);
+      h+='<tr'+(R.bg?' style="background:'+R.bg+'"':'')+'>'
+        + '<td><b class="ks-link" onclick="openProject(\''+esc(r.ma)+'\')">'+esc(r.d['Tên dự án']||r.ma)+'</b><div class="muted" style="font-size:11px">'+esc(r.ma)+'</div></td>'
+        + '<td>'+(r.dl?esc(fmtDMY(r.dl)):'<span class="muted">— chưa có</span>')+'</td>'
+        + '<td class="num"><b>'+r.pct+'%</b>'+(r.ap?'<div class="muted" style="font-size:10px">'+r.ap.done+'/'+r.ap.total+' việc</div>':'')+'</td>'
+        + '<td class="num"'+(behind?' style="color:#B23A2E"':'')+'>'+(r.planPct!=null?r.planPct+'%':'—')+'</td>'
+        + '<td class="num">'+(r.daysToDl!=null?(r.daysToDl<0?'<span style="color:#B23A2E">'+r.daysToDl+'</span>':r.daysToDl):'—')+'</td>'
+        + '<td>'+(r.pct>=100?'<span class="tag t-ok">Xong</span>':(r.forecast?esc(fmtDMY(r.forecast)):'<span class="muted">chưa ước tính</span>'))+'</td>'
+        + '<td class="num">'+(r.slip!=null&&r.slip>0?'<b style="color:#B23A2E">+'+r.slip+'</b>':(r.slip!=null?'<span class="t-ok">0</span>':'—'))+'</td>'
+        + '<td class="num">'+(r.overdue?'<span class="tag t-bad" style="font-size:10px">⚠ '+r.overdue+'</span>':'0')+'</td>'
+        + '<td><span class="tag '+R.cls+'">'+R.lbl+'</span></td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div class="muted" style="font-size:12px;margin-top:8px">“Dự báo xong” = hôm nay + (phần việc còn lại ÷ tốc độ trung bình từ khi bắt đầu). “KH nên đạt” = % lẽ ra đạt nếu đúng tiến độ tuyến tính. Cần nhập Ngày ký/Tiến độ ở <b>Kế hoạch chi tiết</b> và cập nhật trạng thái công việc để dự báo chính xác.</div>';
+  }
+  h+='</div></div>';
+  // Bảng hạng mục trễ mốc
+  h+='<div class="card"><div class="ct">Hạng mục trễ mốc <span class="ct-r">mốc kế hoạch đã qua nhưng khâu chưa hoàn tất</span></div><div class="card-body">';
+  if(!late.length){ h+='<div class="tag t-ok">✓ Không có hạng mục nào trễ mốc kế hoạch</div>'; }
+  else{
+    h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Dự án</th><th>Hạng mục</th><th>Khâu</th><th>Mốc kế hoạch</th><th class="num">Trễ (ngày)</th><th class="num">% HT</th></tr></thead><tbody>';
+    late.forEach(x=>{ h+='<tr style="background:#FDEEEC"><td class="muted">'+esc(x.d['Tên dự án']||x.ma)+'</td><td><b>'+esc(x.ten)+'</b></td><td>'+esc(x.khau)+'</td><td>'+esc(fmtDMY(x.moc))+'</td><td class="num"><b style="color:#B23A2E">'+x.tre+'</b></td><td class="num">'+(x.pct!==''?esc(x.pct)+'%':'—')+'</td></tr>'; });
+    h+='</tbody></table></div>';
+  }
+  h+='</div></div>';
+  return h;
+}
+function fcViewNorm(){
+  const rows=fcNormRows(); const o=nlsxCfg();
+  const totN=rows.reduce((a,r)=>a+r.n,0);
+  let h='';
+  h+='<div class="card"><div class="card-body" style="padding:12px 14px"><div class="muted" style="font-size:12.5px;line-height:1.6">Định mức <b>năng suất</b> (m²/người/ngày) mỗi tổ SX được dùng để tính tải & năng lực. Bảng dưới tính lại năng suất <b>thực tế</b> từ các hạng mục Nhà máy đã đánh dấu <b>“Đã xong”</b> (có khối lượng m² và mốc Mộc bắt đầu→hoàn thành): năng suất thực tế = tổng m² ÷ (số ngày công × số người). Bấm <b>Áp dụng</b> để cập nhật định mức theo thực tế. Ngày công/tuần hiện tại: <b>'+(parseFloat(o.ngayCongTuan)||6)+'</b>.</div></div></div>';
+  h+='<div class="card"><div class="ct">Đối chiếu định mức năng suất — tổ Sản xuất</div><div class="card-body">';
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tổ sản xuất</th><th class="num">Số HM đã xong</th><th class="num">Tổng m²</th><th class="num">Người·ngày</th><th class="num">Định mức hiện tại</th><th class="num">Năng suất thực tế</th><th class="num">Chênh lệch</th><th></th></tr></thead><tbody>';
+  const canEd=can('edit');
+  rows.forEach(r=>{
+    const diffTxt = r.diff==null ? '—' : ((r.diff>=0?'+':'')+Math.round(r.diff*100)+'%');
+    const diffCol = r.diff==null?'':(r.diff<-0.05?'color:#B23A2E':r.diff>0.05?'color:#2E7D46':'');
+    h+='<tr><td><b>'+esc(r.ten)+'</b></td>'
+      + '<td class="num">'+r.n+'</td>'
+      + '<td class="num">'+(r.m2?fmtNum(r.m2):'—')+'</td>'
+      + '<td class="num">'+(r.pd?fmtNum(r.pd):'—')+'</td>'
+      + '<td class="num">'+(r.cfgNs?r.cfgNs:'<span class="muted">chưa khai</span>')+'</td>'
+      + '<td class="num"><b>'+(r.realNs?fcRound(r.realNs):'—')+'</b></td>'
+      + '<td class="num" style="'+diffCol+'">'+diffTxt+'</td>'
+      + '<td>'+((r.realNs>0&&canEd)?'<button class="btn btn-brass" style="padding:5px 11px;font-size:12px" onclick="fcApplyNorm(\''+esc(r.id)+'\')">Áp dụng</button>':'<span class="muted" style="font-size:11px">'+(r.realNs>0?'':'thiếu dữ liệu')+'</span>')+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  if(!totN) h+='<div class="muted" style="font-size:12px;margin-top:8px">Chưa có hạng mục Nhà máy nào ở trạng thái “Đã xong” kèm khối lượng m² và mốc Mộc. Cập nhật ở <b>Nhà máy → Nghiệp vụ (LSX)</b> hoặc bảng hạng mục để có dữ liệu hiệu chỉnh.</div>';
+  h+='</div></div>';
+  // Chi tiết mẫu
+  const samples=[]; rows.forEach(r=>r.samples.forEach(sp=>samples.push(Object.assign({to:r.ten},sp))));
+  if(samples.length){
+    samples.sort((a,b)=>(b.ht||'').localeCompare(a.ht||''));
+    h+='<div class="card"><div class="ct">Chi tiết mẫu tính năng suất <span class="ct-r">'+samples.length+' hạng mục đã xong</span></div><div class="card-body"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tổ</th><th>Hạng mục</th><th>Dự án</th><th class="num">m²</th><th>Mộc BĐ→HT</th><th class="num">Ngày công</th><th class="num">Người</th><th class="num">NS (m²/ng·ngày)</th></tr></thead><tbody>';
+    samples.forEach(sp=>{ h+='<tr><td class="muted">'+esc(sp.to)+'</td><td><b>'+esc(sp.ten||'—')+'</b></td><td class="muted">'+esc(sp.da)+'</td><td class="num">'+fmtNum(sp.m2)+'</td><td class="muted" style="font-size:12px">'+esc(fmtDMY(sp.bd))+'→'+esc(fmtDMY(sp.ht))+'</td><td class="num">'+sp.workDays+'</td><td class="num">'+sp.soNguoi+'</td><td class="num">'+fcRound(sp.ns)+'</td></tr>'; });
+    h+='</tbody></table></div></div></div>';
+  }
   return h;
 }
 function khcEdit(ma, key, el){
@@ -3770,7 +3983,7 @@ function projCard(d){
     + '<div class="muted" style="margin-top:4px">Chi '+fmtTr(chi)+(ns?' / NS '+fmtTr(ns):'')+(over?' <span class="tag t-bad" style="font-size:10px">Vượt NS</span>':'')+'</div></div></div>'
     + '<div style="display:flex;align-items:center;gap:8px;margin:6px 0 2px"><div class="bar" style="flex:1"><i style="width:'+pct+'%"></i></div>'
     + '<span class="muted" style="font-size:11px;white-space:nowrap">'+pct+'%'+(ap?' ('+ap.done+'/'+ap.total+' việc)':'')+'</span>'
-    + (overdue?' <span class="tag t-bad" style="font-size:10px">⚠ '+overdue+' việc trễ</span>':'')+'</div>'
+    + (overdue?' <span class="tag t-bad" style="font-size:10px">⚠ '+overdue+' việc trễ</span>':'')    + (function(){ const rl=khhmRollup(d['Mã DA']); return rl? ' <span class="tag t-brass" style="font-size:10px" title="Tiến độ cuộn từ '+rl.n+' hạng mục'+(rl.weighted?' (trọng số theo giá trị)':' (trung bình)')+'">HM '+rl.pct+'%</span>':''; })()+'</div>'
     + '<div class="phase-rail">'+rail+'</div></div>';
 }
 
