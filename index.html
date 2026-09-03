@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- MDC-PM v6.7 — CỘT KHỐI LƯỢNG LAN SANG CÁC PHÒNG BAN: thêm cột "Khối lượng" (kl) vào bảng kế hoạch theo hạng mục ở tất cả phòng — Thiết kế, Thương mại, Thầu phụ, và card Kế hoạch SX của Nhà máy (dùng chung `khhmDeptPlanHtml` → sửa roCols 2 nhánh: có/không cột Phân bổ, đặt KL sau ĐVT trước Số lượng, w:80). Nhà máy biểu mẫu SX (KHSX_GROUPS) vốn đã có KL. Đồng bộ chung kho pmkv khhm. node --check 5/5 + Playwright (TM/TK/TP đều có header Khối lượng + giá trị) OK. -->
+<!-- MDC-PM v6.6 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC: (1) Thêm cột "Khối lượng" (kl) vào nhóm PHÂN BỐ HẠNG MỤC, tách bạch với "Số lượng" — bám dữ liệu Khối lượng khi ⬆ Nhập từ hợp đồng (import không còn dồn kl vào sl; preview hiện 2 cột KL & SL riêng). (2) Thêm pill "🗂 Phân loại theo phân bổ" cạnh ▦ Bảng chi tiết / 📊 Gantt (window._khhmView='phanbo' → khhmByPhanBo(ma)): nhóm hạng mục theo nơi phân bổ (Nhà máy / Thương mại / Thầu phụ / Chưa phân bổ), mỗi nhóm 1 thẻ có tag màu + số hạng mục + tiến độ TB, bảng gọn (Hạng mục · Phân loại · ĐVT · Khối lượng · Số lượng · %HT · Ghi chú). Cột KL tự vào Xuất Excel/PDF (dùng khhmCols). Thuần frontend (pmkv). node --check + Playwright OK. -->
 <!-- MDC-PM v2.0 — Bổ sung: Khách hàng, Hiện trường, Mua sắm, Phát sinh HĐ, Tài chính, Hồ sơ & Tài liệu, An toàn & Chất lượng, Sự không phù hợp, Rủi ro. Sidebar phân nhóm như iSolutions. -->
 <!-- MDC-PM v4.2 — TOÀN DIỆN XÂY DỰNG & NỘI THẤT: thêm 6 giai đoạn thi công xây dựng/hoàn thiện (Chuẩn bị & Khởi công, Phần ngầm & Móng, Kết cấu phần thô, Xây tô & Hoàn thiện thô, Cơ điện M&E, Hoàn thiện xây dựng) + ~70 đầu việc chi tiết vào thư viện kế hoạch; thêm loại hình "Xây dựng" & "Tổng thầu". Giữ nguyên hành vi 3 loại hình nội thất cũ. -->
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
@@ -216,6 +218,13 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 .khhm-pb.pb-nm{background:#EAF3EC;border-color:#9CC6A6}
 .khhm-pb.pb-tm{background:#F3ECF3;border-color:#C6A6C6}
 .khhm-pb.pb-tp{background:#F5ECE8;border-color:#D6B3A3}
+.khhm-pbwrap{display:flex;flex-direction:column;gap:2px}
+.khhm-pbcard{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:12px 12px 6px;margin-bottom:14px;background:var(--card)}
+.khhm-pbhd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.khhm-pbtag{display:inline-block;padding:3px 14px;border-radius:999px;font-weight:700;font-size:13px;border:1px solid var(--line-strong);color:var(--ink)}
+.khhm-pbtag.pb-nm{background:#EAF3EC;border-color:#9CC6A6;color:#2E6E3A}
+.khhm-pbtag.pb-tm{background:#F3ECF3;border-color:#C6A6C6;color:#6E3E6E}
+.khhm-pbtag.pb-tp{background:#F5ECE8;border-color:#D6B3A3;color:#8E4A2E}
 .khhm-del{border:1px solid var(--line-strong);background:var(--card);color:var(--bad);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;line-height:1}
 .khhm-del:hover{background:var(--bad-bg);border-color:var(--bad)}
 .bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;min-width:70px}
@@ -2195,6 +2204,7 @@ const KHHM_GROUPS = [
     {key:'phanLoai', leaf:'Phân loại',  t:'text', w:96},
     {key:'phanBo',   leaf:'Phân bổ',    t:'sel',  opts:KHHM_PHANBO, w:112},
     {key:'dvt',      leaf:'ĐVT',        t:'text', w:56},
+    {key:'kl',       leaf:'Khối lượng', t:'text', w:82},
     {key:'sl',       leaf:'Số lượng',   t:'text', w:70},
   ]},
   {ten:'KẾ HOẠCH HỒ SƠ', mau:'#3E6E8E', cols:[
@@ -2372,9 +2382,11 @@ function pjKeHoachHangMuc(d){
   const gview=window._khhmView||'bang';
   html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px">'
     +'<button class="cv-pill'+(gview==='bang'?' on':'')+'" onclick="window._khhmView=\'bang\';render()">▦ Bảng chi tiết</button>'
+    +'<button class="cv-pill'+(gview==='phanbo'?' on':'')+'" onclick="window._khhmView=\'phanbo\';render()">🗂 Phân loại theo phân bổ</button>'
     +'<button class="cv-pill'+(gview==='gantt'?' on':'')+'" onclick="window._khhmView=\'gantt\';render()">📊 Gantt hạng mục</button>'
     +'</div>';
   if(gview==='gantt'){ html+=khhmGantt(ma)+'</div></div>'; return html; }
+  if(gview==='phanbo'){ html+=khhmByPhanBo(ma)+'</div></div>'; return html; }
   html+='<div class="tbl-wrap"><table class="tbl ks-table khhm-table"><thead>';
   html+='<tr><th rowspan="2" class="ks-stt">#</th>';
   KHHM_GROUPS.forEach(g=>{ html+='<th colspan="'+g.cols.length+'" class="ks-grp" style="border-bottom:2px solid '+g.mau+'">'+esc(g.ten)+'</th>'; });
@@ -2390,6 +2402,48 @@ function pjKeHoachHangMuc(d){
   html+='<p class="muted" style="font-size:12px;margin-top:10px">Mỗi hạng mục = 1 dòng bóc từ hợp đồng. Nhập mốc ngày & tình trạng từng khâu (Hồ sơ · Sản xuất · Lắp đặt · Đặt hàng · Thầu phụ) và % hoàn thành. Lưu tại máy (localStorage · <code>mdc_pm_khhm</code>).</p>';
   html+='</div></div>';
   return html;
+}
+/* ★ Phân loại theo phân bổ — nhóm hạng mục theo nơi phân bổ (Nhà máy / Thương mại / Thầu phụ) để dễ theo dõi ai làm gì */
+function khhmByPhanBo(ma){
+  const rows=khhmGet(ma);
+  const groups=[
+    {key:'Nhà máy',    cls:'pb-nm', mau:'#4E9A51'},
+    {key:'Thương mại', cls:'pb-tm', mau:'#8E5E8E'},
+    {key:'Thầu phụ',   cls:'pb-tp', mau:'#B5714A'},
+    {key:'',           cls:'',      mau:'#9A9A9A', lbl:'Chưa phân bổ'}
+  ];
+  const avgOf=list=>{ const p=list.map(r=>parseFloat(r.pct)).filter(v=>!isNaN(v)); return p.length?Math.round(p.reduce((a,b)=>a+b,0)/p.length):0; };
+  let anyShown=false;
+  let h='<div class="khhm-pbwrap">';
+  groups.forEach(g=>{
+    const list=rows.filter(r=>(r.phanBo||'')===g.key);
+    if(!list.length) return;
+    anyShown=true;
+    const nm=g.lbl||g.key;
+    h+='<div class="khhm-pbcard" style="border-top:3px solid '+g.mau+'">'
+      +'<div class="khhm-pbhd"><span class="khhm-pbtag '+g.cls+'">'+esc(nm)+'</span>'
+      +'<span class="muted" style="font-size:12px">'+list.length+' hạng mục · tiến độ TB '+avgOf(list)+'%</span></div>'
+      +'<div class="tbl-wrap"><table class="tbl khhm-table"><thead><tr>'
+      +'<th class="ks-stt">#</th><th style="min-width:200px">Hạng mục</th><th style="min-width:96px">Phân loại</th>'
+      +'<th style="min-width:52px">ĐVT</th><th style="min-width:80px">Khối lượng</th><th style="min-width:66px">Số lượng</th>'
+      +'<th style="min-width:56px">% HT</th><th style="min-width:150px">Ghi chú</th></tr></thead><tbody>';
+    list.forEach((r,i)=>{
+      const pct=(r.pct!==''&&r.pct!=null)?esc(r.pct)+'%':'—';
+      h+='<tr><td class="ks-stt">'+(i+1)+'</td>'
+        +'<td class="ks-name">'+esc(r.ten||'—')+'</td>'
+        +'<td>'+esc(r.phanLoai||'—')+'</td>'
+        +'<td>'+esc(r.dvt||'—')+'</td>'
+        +'<td>'+esc(r.kl||'—')+'</td>'
+        +'<td>'+esc(r.sl||'—')+'</td>'
+        +'<td>'+pct+'</td>'
+        +'<td>'+esc(r.ghichu||'')+'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  });
+  h+='</div>';
+  if(!anyShown) return '<div class="muted" style="padding:26px;text-align:center;border:1px dashed var(--line-strong);border-radius:var(--r-sm)">Chưa có hạng mục nào. Bấm <b>▦ Bảng chi tiết</b> để thêm.</div>';
+  h+='<p class="muted" style="font-size:12px;margin-top:6px">Tổng hợp hạng mục theo <b>nơi phân bổ</b> để dễ theo dõi phần việc của Nhà máy / Thương mại / Thầu phụ. Muốn đổi phân bổ của một hạng mục, sửa cột <b>Phân bổ</b> ở tab <b>▦ Bảng chi tiết</b>.</p>';
+  return h;
 }
 /* Nhập hạng mục từ hợp đồng (dán từ Excel/Sheet hoặc chọn file CSV) */
 function khhmImport(ma){
@@ -2491,13 +2545,13 @@ function khhmImpParse(){
     if(/^[\d.,\s\-]+$/.test(ten)) continue;          // bỏ dòng chỉ toàn số
     const phanLoai=get(row,'phanLoai'); const tt=get(row,'tt');
     let phanBo=''; if(get(row,'nm')) phanBo='Nhà máy'; else if(get(row,'tm')) phanBo='Thương mại'; else if(get(row,'tp')) phanBo='Thầu phụ';
-    drafts.push({ten, phanLoai, phanBo, dvt, sl:sl||kl, kl, tt});
+    drafts.push({ten, phanLoai, phanBo, dvt, kl:kl||'', sl:sl||'', tt});
   }
   window.__khhmImp=drafts;
   if(!drafts.length){ pv.innerHTML='<span class="tag t-bad">Không nhận diện được hạng mục nào — kiểm tra lại các cột.</span>'; if(saveBtn) saveBtn.classList.add('hide'); return; }
   let h='<div style="margin:2px 0 8px;font-size:13px"><b>'+drafts.length+'</b> hạng mục nhận diện '+(posMode?'<span class="muted">(đọc theo thứ tự cột file HĐ)</span>':'<span class="muted">(đọc theo tiêu đề cột)</span>')+'</div>';
-  h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Phân bổ</th><th>ĐVT</th><th>SL/KL</th></tr></thead><tbody>';
-  drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.sl)+'</td></tr>'; });
+  h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Phân bổ</th><th>ĐVT</th><th>Khối lượng</th><th>Số lượng</th></tr></thead><tbody>';
+  drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.kl||'—')+'</td><td>'+esc(d.sl||'—')+'</td></tr>'; });
   h+='</tbody></table></div><div class="muted" style="margin-top:8px">Bấm <b>Lưu</b> để thêm '+drafts.length+' hạng mục (nối tiếp danh sách hiện có).</div>';
   pv.innerHTML=h; if(saveBtn) saveBtn.classList.remove('hide');
 }
@@ -2555,8 +2609,8 @@ function khhmDeptPlanHtml(pb, groupTitles, da){
     +'<div class="ks-kpi"><b>'+avg+'%</b><span>tiến độ TB</span></div></div>';
   if(!list.length) return h+'<div class="empty"><b>Chưa có hạng mục'+(pb?(' phân bổ '+esc(pb)):'')+'</b>Lập ở <b>Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục</b>'+(pb?(', đặt cột Phân bổ = '+esc(pb)):'')+'.</div>';
   const roCols= pb
-    ? [{key:'ten',leaf:'Hạng mục',w:190},{key:'phanLoai',leaf:'Phân loại',w:92},{key:'dvt',leaf:'ĐVT',w:52},{key:'sl',leaf:'Số lượng',w:64}]
-    : [{key:'ten',leaf:'Hạng mục',w:190},{key:'phanLoai',leaf:'Phân loại',w:92},{key:'phanBo',leaf:'Phân bổ',w:88},{key:'dvt',leaf:'ĐVT',w:52},{key:'sl',leaf:'Số lượng',w:64}];
+    ? [{key:'ten',leaf:'Hạng mục',w:190},{key:'phanLoai',leaf:'Phân loại',w:92},{key:'dvt',leaf:'ĐVT',w:52},{key:'kl',leaf:'Khối lượng',w:80},{key:'sl',leaf:'Số lượng',w:64}]
+    : [{key:'ten',leaf:'Hạng mục',w:190},{key:'phanLoai',leaf:'Phân loại',w:92},{key:'phanBo',leaf:'Phân bổ',w:88},{key:'dvt',leaf:'ĐVT',w:52},{key:'kl',leaf:'Khối lượng',w:80},{key:'sl',leaf:'Số lượng',w:64}];
   const edCols=[]; KHHM_GROUPS.filter(g=>groupTitles.includes(g.ten)).forEach(g=>g.cols.forEach(c=>edCols.push(c)));
   const tail=[{key:'pct',leaf:'% HT',t:'num',w:56},{key:'ghichu',leaf:'Ghi chú',t:'text',w:140}];
   h+='<div class="tbl-wrap"><table class="tbl ks-table khhm-table"><thead><tr>'
