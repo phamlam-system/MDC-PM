@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- MDC-PM v7.1 (P2) — PHÂN QUYỀN THEO PHÒNG (giới hạn CHỈNH SỬA, KHÔNG giới hạn XEM; MẶC ĐỊNH TẮT). Bật/tắt ở Cài đặt (chỉ Giám đốc/TGĐ=admin thấy thẻ `permCard`, lưu pmkv 'perm'.deptScope). Khi bật: Trưởng phòng/Quản lý chỉ sửa được module phòng mình (Thiết kế/Nhà máy/Thương mại) — module phòng khác chuyển CHỈ ĐỌC (banner + gỡ mọi nút/ô sửa); Ban giám đốc & admin sửa tất cả; nhân viên giữ nguyên; XEM luôn mở cho mọi người. Cơ chế: cờ `window._deptEditBlock` bật trong lúc dựng HTML của module (deptGuard try/finally) → `can()/canEditProject/canEditTask` trả false → toàn module render read-only, KHÔNG phải sửa hàng chục nơi. Ánh xạ PHONG_BAN→module (`deptKeyOfPhong`): Thiết kế→mThietKe; Xưởng sản xuất/Kỹ thuật/Đội thi công→mNhaMay; Kinh doanh→mThuongMai; Ban giám đốc→sửa tất cả; Hành chính-KT/Khác/trống→KHÔNG giới hạn (tránh khóa nhầm). node --check 5/5 + Playwright 20/20 (off không khóa; đúng phòng sửa được; khác phòng read-only gỡ nút; admin/BGĐ/phòng-không-map/nhân viên không bị khóa; cờ reset sau render; toggle chỉ admin). 0 pageerror. -->
 <!-- MDC-PM v7.0 — THƯƠNG MẠI · NGHIỆP VỤ CHUYÊN SÂU: thêm 2 tab DANH MỤC DÙNG CHUNG TOÀN CÔNG TY (không theo dự án, lưu bucket cố định TM_ALL='__ALL__' trong pmkv). (1) "🏢 NCC / Đối tác" (`tmNccHtml` · kho `tmncc`): tên·loại(Vật tư/Gia công/Vận chuyển/Thầu phụ/Dịch vụ)·nhóm hàng·liên hệ·SĐT·email·địa chỉ·MST·đánh giá★·trạng thái; KPI tổng/đang hợp tác/vật tư/gia công/thầu phụ. (2) "📑 Hợp đồng" (`tmHopDongHtml` · kho `tmhopdong`): số HĐ·NCC·dự án(select từ visibleProjects, để trống=HĐ nguyên tắc)·loại HĐ·ngày ký·hiệu lực·giá trị·đã TT·còn lại(calc)·trạng thái; KPI tổng/đang hiệu lực/tổng giá trị/còn phải trả/sắp hết hạn ≤30d. `vThuongMaiNV` nay 5 tab (NCC·Hợp đồng·Báo giá·Đơn hàng·Công nợ); tab NCC/Hợp đồng ẩn ô chọn dự án, hiện chú thích "dùng chung toàn công ty". `nvBodyHtml` route tm ncc/hopdong dùng ma=TM_ALL (bỏ qua _nvDA). node --check 5/5 + Playwright (5 tab, bản ghi global hiện bất kể dự án, còn lại HĐ=6.000.000, select dự án) OK, 0 pageerror. -->
 <!-- MDC-PM v6.9 — THƯƠNG MẠI: XÂY DỰNG LẠI "CÔNG VIỆC THEO GIAI ĐOẠN" THEO ĐÚNG BẢN CHẤT MUA SẮM & ĐẶT HÀNG (bỏ giai đoạn sản xuất). GỠ cách làm v6.8 (kéo việc giai đoạn 'Sản xuất tại xưởng' vào TM qua từ khoá) — trả `deptTasks` & `vDeptDash` về nhóm theo `cfg.giaiDoan` gốc (Thiết kế/Nhà máy nguyên vẹn). Module TM giờ dùng `tmDeptDash(da)` riêng: KPI theo hạng mục đặt hàng (chưa đặt/đã đặt/trễ nhận/đã nhận %), cảnh báo "Trễ nhận hàng" (nhận DK đã qua mà chưa nhận), và "Công việc theo giai đoạn — Tiến trình mua sắm & đặt hàng" = 3 chặng ① Chưa đặt → ② Đã đặt (chờ giao) → ③ Đã nhận, xếp hạng mục phân bổ Thương mại theo trạng thái đặt hàng `dh_tt` (kho khhm); kèm đầu việc Tiếp nhận & Báo giá (giai đoạn thật), mốc khc TM, bảng Kế hoạch đặt hàng theo hạng mục, đơn Mua sắm NCC, card NV chuyên sâu. Không còn giai đoạn/đầu việc sản xuất trong TM. node --check 5/5 + Playwright (3 chặng, xếp đúng hạng mục, loại item Nhà máy & việc sản xuất, trễ nhận, Nhà máy giữ nguyên) OK, 0 pageerror. -->
 <!-- MDC-PM v6.8 — THƯƠNG MẠI: NGHIỆP VỤ CHUYÊN SÂU + RÀ SOÁT CÔNG VIỆC THEO GIAI ĐOẠN. (1) Thêm pill "🧩 Nghiệp vụ chuyên sâu" vào module Thương mại (window._tmView='nv'→vThuongMaiNV) với 3 tab: 📝 Báo giá & So sánh NCC (tmrfq: hạng mục·NCC·đơn giá·thành tiền·chọn NCC) · 🧾 Đơn đặt hàng & Giao nhận (tmpo: số PO·giá trị·nhận DK/TT·cảnh báo trễ giao) · 💰 Công nợ phải trả (tmcongno: giá trị·đã trả·còn lại·quá hạn). Hạng mục lọc theo phân bổ Thương mại (nvHmTM). Lưu pmkv theo dự án. (2) RÀ SOÁT: sửa deptTasks dùng cfg.match — Thương mại nay lấy cả đầu việc MUA SẮM/ĐẶT HÀNG/VẬT TƯ/BÁO GIÁ nằm ngoài giai đoạn 'Tiếp nhận & Báo giá' (trước đây bị bỏ sót); vDeptDash nhóm theo GIAI ĐOẠN THỰC TẾ (xếp theo GIAI_DOAN) thay vì cfg.giaiDoan cố định — không phá Thiết kế/Nhà máy. Khung "Nghiệp vụ chuyên sâu" trong dashboard TM chuyển thành "đã có". node --check 5/5 + Playwright (3 tab, calc thành tiền/còn lại, trễ giao, lọc hạng mục TM, procurement hiện ở TM không hiện ở QC thuần, Nhà máy giữ nguyên) OK, 0 pageerror. -->
@@ -1635,6 +1636,7 @@ function enterApp(){
   buildNav(); go('dashboard'); syncAll(false);
 }
 function can(action){
+  if(window._deptEditBlock) return false;   // ★ v7.1 — phân quyền theo phòng: đang xem module phòng khác ở chế độ chỉ đọc
   const r = user ? capBacRank_(user['Vai trò']) : '';
   if(r === 'admin') return true;
   if(r === 'quanly') return action !== 'staff' && action !== 'deleteAny';
@@ -1657,6 +1659,7 @@ function capBacRank_(vaiTro){
        (3) người Phụ trách công việc đó (chỉ cho riêng công việc mình phụ trách).
    Không còn dùng cột "Thành viên" để xét quyền. */
 function canEditProject(d){
+  if(window._deptEditBlock) return false;   // ★ v7.1 — chế độ chỉ đọc theo phân quyền phòng
   if(!user || !d) return false;
   const r = capBacRank_(user['Vai trò']);
   if(r === 'admin' || r === 'quanly') return true;
@@ -1664,6 +1667,7 @@ function canEditProject(d){
 }
 // Quyền sửa 1 công việc: cấp QL trở lên, HOẶC phụ trách dự án, HOẶC phụ trách chính công việc đó
 function canEditTask(c){
+  if(window._deptEditBlock) return false;   // ★ v7.1 — chế độ chỉ đọc theo phân quyền phòng
   if(!user || !c) return false;
   const r = capBacRank_(user['Vai trò']);
   if(r === 'admin' || r === 'quanly') return true;
@@ -1671,6 +1675,47 @@ function canEditTask(c){
   if((c['Phụ trách']||'') === me) return true;            // phụ trách công việc
   const d = S.duan.find(x=>x['Mã DA']===c['Mã DA']);
   return !!d && (d['Phụ trách']||'') === me;              // phụ trách dự án chứa việc
+}
+/* ★ v7.1 — PHÂN QUYỀN THEO PHÒNG (giới hạn CHỈNH SỬA, không giới hạn XEM).
+   Bật/tắt ở Cài đặt (kho pmkv 'perm'.deptScope). Khi bật: Trưởng phòng/Quản lý chỉ sửa module phòng mình;
+   Ban giám đốc & Giám đốc/TGĐ (admin) sửa tất cả; nhân viên giữ nguyên quyền (vốn tối thiểu). Mặc định TẮT. */
+function deptScopeOn(){ return !!((pmkvGet('perm')||{}).deptScope); }
+// Ánh xạ 'Phòng ban' (PHONG_BAN) → module phòng ban
+function deptKeyOfPhong(pb){
+  const n = vnorm(pb);
+  if(n==='thiet ke') return 'mThietKe';
+  if(n==='xuong san xuat' || n==='ky thuat' || n==='doi thi cong') return 'mNhaMay';
+  if(n==='kinh doanh') return 'mThuongMai';
+  return null;   // Ban giám đốc / Hành chính-Kế toán / Khác / trống → không ánh xạ (không bị giới hạn)
+}
+function userDeptKey(){ return user ? deptKeyOfPhong(user['Phòng ban']) : null; }
+// Người dùng hiện tại có được QUẢN LÝ (sửa) module phòng deptKey không?
+function canManageDept(deptKey){
+  if(!deptScopeOn()) return true;
+  if(!user) return false;
+  if(capBacRank_(user['Vai trò'])==='admin') return true;                 // Giám đốc / TGĐ
+  if((user['Phòng ban']||'')==='Ban giám đốc') return true;              // BGĐ xem/sửa tất cả
+  const ud = userDeptKey();
+  if(ud===null) return true;                                             // phòng không ánh xạ → không khoá (tránh khoá nhầm)
+  return ud===deptKey;
+}
+// Có bọc module deptKey ở chế độ CHỈ ĐỌC cho người dùng hiện tại không? (chỉ áp cho cấp Quản lý/Trưởng phòng)
+function deptBlocked(deptKey){
+  return deptScopeOn() && user && capBacRank_(user['Vai trò'])==='quanly' && !canManageDept(deptKey);
+}
+function deptRoBanner(name){
+  return '<div class="card" style="border-color:var(--brass);background:#FBF4E6"><div class="card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+    + '<span style="font-size:18px">🔒</span><div><b>Chế độ chỉ đọc — bạn không thuộc phòng '+esc(name)+'</b>'
+    + '<div class="muted" style="font-size:12px">Phân quyền theo phòng đang bật: bạn xem được nhưng chỉ Trưởng phòng '+esc(name)+' (hoặc Ban giám đốc) mới chỉnh sửa.</div></div></div></div>';
+}
+// Bọc 1 hàm render module phòng ban: bật cờ chỉ đọc trong lúc dựng HTML rồi trả lại
+function deptGuard(deptKey, name, buildFn){
+  const blocked = deptBlocked(deptKey);
+  const prev = window._deptEditBlock;
+  window._deptEditBlock = blocked;
+  let body='';
+  try{ body = buildFn(); } finally { window._deptEditBlock = prev||false; }
+  return (blocked ? deptRoBanner(name) : '') + body;
 }
 
 function visibleProjects(){ return user ? S.duan : []; }
@@ -4232,7 +4277,7 @@ function vDeptDash(key){
   }
   return html;
 }
-function vThietKe(){
+function vThietKe(){ return deptGuard('mThietKe','Thiết kế',()=>{
   const view=window._tkView||'dh';
   const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._tkView=\'dh\';render()">✏ Điều hành & Kế hoạch TK</button>'
@@ -4241,8 +4286,8 @@ function vThietKe(){
     + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._tkView=\'gv\';render()">📋 Giao việc</button>'
     + '</div>';
   return seg + (view==='nl' ? nltkView() : view==='nv' ? vThietKeNV() : view==='gv' ? vDeptGiaoViec('mThietKe') : vDeptDash('mThietKe'));
-}
-function vNhaMay(){
+}); }
+function vNhaMay(){ return deptGuard('mNhaMay','Nhà máy',()=>{
   const view=window._nmView||'dh';
   const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._nmView=\'dh\';render()">🏭 Điều hành & Kế hoạch SX</button>'
@@ -4251,7 +4296,7 @@ function vNhaMay(){
     + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._nmView=\'gv\';render()">📋 Giao việc</button>'
     + '</div>';
   return seg + (view==='nl' ? nlsxView() : view==='nv' ? vNhaMayNV() : view==='gv' ? vDeptGiaoViec('mNhaMay') : vDeptDash('mNhaMay'));
-}
+}); }
 /* ★ v6.9 — THƯƠNG MẠI: dashboard theo TIẾN TRÌNH MUA SẮM & ĐẶT HÀNG (không dùng giai đoạn sản xuất).
    Hạng mục phân bổ Thương mại (kho khhm) chảy qua 3 chặng theo trạng thái đặt hàng dh_tt: Chưa đặt → Đã đặt (chờ giao) → Đã nhận. */
 function tmDeptDash(da){
@@ -4350,7 +4395,7 @@ function tmDeptDash(da){
 
   return html;
 }
-function vThuongMai(){
+function vThuongMai(){ return deptGuard('mThuongMai','Thương mại',()=>{
   const view=window._tmView||'dh';
   const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     + '<button class="cv-pill'+(view==='dh'?' on':'')+'" onclick="window._tmView=\'dh\';render()">💼 Điều hành & Kế hoạch TM</button>'
@@ -4358,7 +4403,7 @@ function vThuongMai(){
     + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._tmView=\'gv\';render()">📋 Giao việc</button>'
     + '</div>';
   return seg + (view==='nv' ? vThuongMaiNV() : view==='gv' ? vDeptGiaoViec('mThuongMai') : tmDeptDash(window._deptDA||''));
-}
+}); }
 /* ===== v5.9 — NGHIỆP VỤ CHUYÊN SÂU (Nhà máy & Thiết kế). Engine chung lưu danh sách bản ghi theo dự án trong pmkv (đồng bộ Backend v6.4). Bảng inline-edit, thêm/xóa dòng. ===== */
 function nvNum(x){ const n=Number(String(x==null?'':x).replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; }
 function nvStore(key){ return pmkvGet(key)||{}; }
@@ -6497,7 +6542,24 @@ function vSettings(){
     + '<div class="card"><div class="card-head"><h3>Dữ liệu trên thiết bị</h3></div><div class="card-body">'
     + '<p class="muted" style="margin-bottom:12px">Dữ liệu hiển thị: '+S.duan.length+' dự án · '+S.congviec.length+' công việc · '+S.chiphi.length+' khoản chi · '+S.nhansu.length+' nhân sự. Bản gốc luôn nằm trên Google Sheets.</p>'
     + '<button class="btn btn-danger" onclick="if(confirm(\'Xóa toàn bộ cache trên thiết bị này? Dữ liệu trên Google Sheets KHÔNG bị ảnh hưởng.\')){localStorage.removeItem(\'mdcpm_state\');localStorage.removeItem(\'mdcpm_pending\');toast(\'Đã xóa cache\');syncAll(true);}">Xóa cache thiết bị</button>'
+    + '</div></div>'
+    + permCard();
+}
+/* ★ v7.1 — Thẻ bật/tắt phân quyền theo phòng (chỉ Giám đốc/TGĐ = admin thấy & chỉnh) */
+function permCard(){
+  if(!user || capBacRank_(user['Vai trò'])!=='admin') return '';
+  const on=deptScopeOn();
+  return '<div class="card"><div class="card-head"><h3>🔒 Phân quyền theo phòng</h3>'+(on?'<span class="tag t-ok">Đang bật</span>':'<span class="tag t-pause">Đang tắt</span>')+'</div><div class="card-body">'
+    + '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:14px;line-height:1.6">'
+    + '<input type="checkbox" '+(on?'checked':'')+' onchange="setDeptScope(this.checked)" style="width:18px;height:18px;margin-top:2px">'
+    + '<span><b>Giới hạn chỉnh sửa theo phòng ban.</b> Khi bật: <b>Trưởng phòng / Quản lý</b> chỉ chỉnh sửa được module phòng mình (module phòng khác chuyển sang chỉ đọc); <b>Ban giám đốc</b> và <b>Giám đốc/TGĐ</b> xem & sửa tất cả; nhân viên giữ nguyên quyền. <b>Mọi người vẫn XEM được tất cả.</b></span></label>'
+    + '<div class="muted" style="font-size:12px;margin-top:12px;line-height:1.8;border-top:1px solid var(--line);padding-top:10px">Ánh xạ <b>Phòng ban → Module</b>:<br>• Thiết kế → <b>Thiết kế</b><br>• Xưởng sản xuất · Kỹ thuật · Đội thi công → <b>Nhà máy</b><br>• Kinh doanh → <b>Thương mại</b><br>• Ban giám đốc → sửa tất cả · Hành chính-Kế toán / Khác / chưa khai phòng → <b>không bị giới hạn</b> (tránh khóa nhầm).</div>'
     + '</div></div>';
+}
+function setDeptScope(on){
+  if(!user || capBacRank_(user['Vai trò'])!=='admin'){ toast('Chỉ Giám đốc/TGĐ mới đổi được cài đặt này', true); return; }
+  const p=pmkvGet('perm')||{}; p.deptScope=!!on; pmkvSet('perm',p);
+  toast(on?'✓ Đã bật phân quyền theo phòng':'Đã tắt phân quyền theo phòng'); render();
 }
 function saveApi(){
   store.api = document.getElementById('apiUrlInput').value;
