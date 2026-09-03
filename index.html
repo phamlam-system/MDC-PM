@@ -4,6 +4,7 @@
 <!-- MDC-PM v4.3 — THIẾT KẾ XÂY DỰNG: thêm giai đoạn "Thiết kế kiến trúc & kết cấu" (nhóm TX) với hạng mục Kiến trúc, Kết cấu, M&E, Dự toán & Xin phép — cho loại hình Thiết kế / Xây dựng / Tổng thầu. Loại hình "Thiết kế & Thi công" (nội thất) giữ nguyên phạm vi cũ. GIAI_DOAN = 14 giai đoạn. -->
 <!-- MDC-PM v4.4 — KẾ HOẠCH CHUNG CÁC DỰ ÁN: trang mới (nav) hiển thị mọi dự án theo DÒNG CHẢY qua các bộ phận. Có Xuất Excel/PDF, Nhập Excel. -->
 <!-- MDC-PM v5.7 — BÁO CÁO PHÒNG BAN: nav mới "📈 Báo cáo phòng ban" (baocaoPB→vBaoCaoPB). Chọn Phòng (Tổng công ty / Thiết kế / Nhà máy / Thương mại / Thầu phụ) + Kỳ (Tuần này / Tháng này / Tùy chọn khoảng ngày) → 4 khối: KPI & tiến độ · Việc quá hạn & sắp đến hạn trong kỳ · Tải & năng lực đỉnh (Nhà máy/Thiết kế) · Tài chính phòng (Thương mại mua sắm, Thầu phụ chi). Tổng công ty = bảng tổng hợp 4 phòng + chi tiết từng phòng. Nút Xuất Excel (CSV) + Xuất PDF (A4). Không biểu đồ (số liệu & bảng). Tái dùng rpData/rpCap/rpFin + nlsx/nltk/khhm. -->
+<!-- MDC-PM v6.5 (P2) — LSX + QC + TỒN NVL THEO TỔ: thêm cột "Tổ / Chuyền" cho Phiếu QC (qc) và Tồn NVL (nvl) (dùng TO_NM = 5 tổ: Ván CN/TN liền tường/TN đồ rời/Sơn/Lắp đặt; LSX vốn đã có). Tab mới "📊 Tổng hợp theo tổ" trong Nhà máy→Nghiệp vụ chuyên sâu (_nmNvTab=to → nvByToHtml): gộp toàn nhà máy theo từng tổ — LSX (tổng/đang SX/xong/quá hạn), QC (số phiếu/%đạt/lỗi), NVL (số vật tư/đang thiếu) + KPI + hàng tổng; toggle "đang triển khai / tất cả dự án" (window._toActive). nvAllRecords(key) gom mọi dự án. Thuần frontend (pmkv). node --check + Playwright. -->
 <!-- MDC-PM v6.4 (P2) — % HẠNG MỤC CUỘN LÊN TIẾN ĐỘ + GANTT HẠNG MỤC: khhmRollup(ma) cuộn %HT các hạng mục (trọng số theo thành tiền, fallback TB) → hiện ở KPI tóm tắt hạng mục & chip "HM x%" trên thẻ dự án. Dự án→Kế hoạch chi tiết→📦 Theo hạng mục thêm pill "Bảng chi tiết ↔ 📊 Gantt hạng mục" → khhmGantt(ma): mỗi hạng mục 1 lane, bar theo khâu (Hồ sơ/SX&lắp/Đặt hàng/Thi công) dùng mốc hs/sx/dh/tp, tô đỏ khi trễ mốc, có vạch hôm nay + dải tháng. Thuần frontend (pmkv). node --check + Playwright. -->
 <!-- MDC-PM v6.3 (P2) — DỰ BÁO TRỄ & HIỆU CHỈNH ĐỊNH MỨC: nav "Dự báo & Cảnh báo" (dubao→vForecast). (1) Dự báo trễ: mỗi dự án đang triển khai tính hạn hoàn thành (khc htHD/Ngày kết thúc DK), %HT (projAutoProgress), "KH nên đạt %" tuyến tính, dự báo ngày xong = hôm nay+(việc còn lại/tốc độ), độ trễ, mức rủi ro (TRỄ/Nguy cơ/Chậm/Đúng hạn) + bảng công việc quá hạn + hạng mục trễ mốc (hs/sx/dh/tp). (2) Hiệu chỉnh định mức: năng suất thực tế m²/người/ngày từ hạng mục Nhà máy "Đã xong" (Σm²/(ngày công×số người)) đối chiếu định mức nlsx, nút Áp dụng ghi o.res[tổ].nangSuat + bảng chi tiết mẫu. Thuần frontend (pmkv). node --check + Playwright. -->
 <!-- MDC-PM v6.2 — AUTO ĐIỀN MỐC HẠNG MỤC THEO KẾ HOẠCH BỘ PHẬN: nút "⚡ Gợi ý mốc theo bộ phận" trong Dự án → Kế hoạch chi tiết → 📦 Theo hạng mục. khhmFromKhc(ma) đọc mốc 4 bộ phận từ khc (Hồ sơ←Thiết kế cho MỌI hạng mục; SX&Lắp←Sản xuất; Đặt hàng←Thương mại; Thi công←Thầu phụ theo cột Phân bổ) → điền hs_bd/hs_ht, sx_bd/sx_ht, dh_dat/dh_nhan, tp_bd/tp_ht. CHỈ điền ô trống. Thuần frontend, dùng chung kho pmkv khhm/khc → đồng bộ BE v6.4. -->
@@ -4279,12 +4280,42 @@ function nvGroupedByHm(key,ma,cols,o){
 function nvHsChip(r){ return [['Chốt Spec', r.hs_spec, r.hs_spec==='Đã chốt'?'t-ok':''],['Mốc HS', (r.hs_bd?fmtDMY(r.hs_bd):'?')+' → '+(r.hs_ht?fmtDMY(r.hs_ht):'?')],['Chuyển HS', r.hs_chuyen, r.hs_chuyen==='Đã chuyển'?'t-ok':''],['Duyệt mẫu', r.hs_duyet, r.hs_duyet==='Đã duyệt'?'t-ok':'']]; }
 
 /* ---- Nhà máy ---- */
+// ★ v6.5 (P2) — danh mục Tổ/Chuyền + tổng hợp LSX·QC·NVL theo tổ (toàn nhà máy)
+const TO_NM=['Ván công nghiệp','TN liền tường','TN đồ rời','Sơn','Lắp đặt'];
+function nvAllRecords(key){ const s=nvStore(key); const out=[]; visibleProjects().forEach(d=>{ const arr=s[d['Mã DA']]; if(Array.isArray(arr)) arr.forEach(r=>out.push({d,ma:d['Mã DA'],r})); }); return out; }
+function nvByToHtml(){
+  const onlyActive = window._toActive!==false;
+  const filt = rec => onlyActive ? (rec.d['Trạng thái']==='Đang triển khai') : true;
+  const lsx=nvAllRecords('lsx').filter(filt), qc=nvAllRecords('qc').filter(filt), nvl=nvAllRecords('nvl').filter(filt);
+  const groups={}; const keyOf=t=>{ t=(t||'').trim(); return TO_NM.indexOf(t)>=0?t:'(chưa gán tổ)'; };
+  const ensure=t=>(groups[t]=groups[t]||{lsxN:0,dangSX:0,done:0,late:0,qcN:0,dat:0,loi:0,nvlN:0,thieu:0});
+  TO_NM.forEach(ensure);
+  lsx.forEach(({r})=>{ const g=ensure(keyOf(r.to)); g.lsxN++; if(r.trangThai==='Đang SX')g.dangSX++; if(r.trangThai==='Hoàn thành')g.done++; if(r.trangThai!=='Hoàn thành'&&r.hanHT&&daysLeft(r.hanHT)<0)g.late++; });
+  qc.forEach(({r})=>{ const g=ensure(keyOf(r.to)); g.qcN++; if(r.ketQua==='Đạt')g.dat++; if(r.ketQua==='Lỗi'||r.ketQua==='Sửa lại')g.loi++; });
+  nvl.forEach(({r})=>{ const g=ensure(keyOf(r.to)); g.nvlN++; if(nvNum(r.slCan)-nvNum(r.daNhap)>0)g.thieu++; });
+  const tos=TO_NM.slice(); const orphan=groups['(chưa gán tổ)']; if(orphan&&(orphan.lsxN||orphan.qcN||orphan.nvlN)) tos.push('(chưa gán tổ)');
+  const T={lsxN:0,dangSX:0,done:0,late:0,qcN:0,dat:0,loi:0,nvlN:0,thieu:0}; Object.keys(groups).forEach(t=>Object.keys(T).forEach(k=>T[k]+=groups[t][k]));
+  let h='';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">'
+    +'<button class="cv-pill'+(onlyActive?' on':'')+'" onclick="window._toActive=true;render()">Dự án đang triển khai</button>'
+    +'<button class="cv-pill'+(!onlyActive?' on':'')+'" onclick="window._toActive=false;render()">Tất cả dự án</button>'
+    +'<span class="muted" style="font-size:12px">Gộp Lệnh sản xuất · Phiếu QC · Tồn NVL của toàn nhà máy theo từng tổ/chuyền. Nhớ chọn <b>Tổ</b> cho từng dòng ở các tab để lên đúng đây.</span></div>';
+  h+=nvKpis([['LSX đang SX',T.dangSX,T.late?('⚠ '+T.late+' quá hạn'):'','accent'],['LSX hoàn thành',T.done,''],['Tỉ lệ QC đạt',(T.qcN?Math.round(T.dat/T.qcN*100):0)+'%',T.loi?(T.loi+' lỗi/sửa'):''],['Vật tư đang thiếu',T.thieu,T.thieu?'cần mua bổ sung':'đủ',T.thieu?'bad':'']]);
+  h+='<div class="tbl-wrap"><table class="tbl" style="min-width:940px"><thead><tr><th>Tổ / Chuyền</th><th class="num">LSX</th><th class="num">Đang SX</th><th class="num">Xong</th><th class="num">Quá hạn</th><th class="num">QC</th><th class="num">%Đạt</th><th class="num">Lỗi</th><th class="num">Vật tư</th><th class="num">Thiếu</th></tr></thead><tbody>';
+  tos.forEach(t=>{ const g=groups[t]; const tl=g.qcN?Math.round(g.dat/g.qcN*100):0;
+    h+='<tr><td><b>'+esc(t)+'</b></td><td class="num">'+(g.lsxN||'—')+'</td><td class="num">'+(g.dangSX||'—')+'</td><td class="num">'+(g.done||'—')+'</td><td class="num">'+(g.late?'<b style="color:#B23A2E">'+g.late+'</b>':'—')+'</td><td class="num">'+(g.qcN||'—')+'</td><td class="num">'+(g.qcN?tl+'%':'—')+'</td><td class="num">'+(g.loi?'<b style="color:#B23A2E">'+g.loi+'</b>':'—')+'</td><td class="num">'+(g.nvlN||'—')+'</td><td class="num">'+(g.thieu?'<span class="tag t-bad">⚠ '+g.thieu+'</span>':'—')+'</td></tr>';
+  });
+  h+='<tr style="font-weight:700;background:var(--surface-2,#F4F1EA)"><td>Tổng cộng</td><td class="num">'+T.lsxN+'</td><td class="num">'+T.dangSX+'</td><td class="num">'+T.done+'</td><td class="num">'+T.late+'</td><td class="num">'+T.qcN+'</td><td class="num">'+(T.qcN?Math.round(T.dat/T.qcN*100)+'%':'—')+'</td><td class="num">'+T.loi+'</td><td class="num">'+T.nvlN+'</td><td class="num">'+T.thieu+'</td></tr>';
+  h+='</tbody></table></div>';
+  if(!T.lsxN && !T.qcN && !T.nvlN) h+='<div class="empty" style="margin-top:10px"><b>Chưa có dữ liệu</b>Nhập ở các tab Lệnh sản xuất · Phiếu QC · Tồn NVL (nhớ chọn Tổ/Chuyền cho từng dòng).</div>';
+  return h;
+}
 function lsxPct(r){ let n=0; ['cd_moc','cd_son','cd_lap'].forEach(k=>{ if(r[k]==='Xong') n++; }); return Math.round(n/3*100); }
 function lsxHtml(da){
   const cols=[
     {k:'soLSX',label:'Số LSX',t:'text',w:90,ph:'LSX-01'},
     {k:'hm',label:'Hạng mục',t:'hm',w:170},
-    {k:'to',label:'Tổ / Chuyền',t:'sel',opts:['Ván công nghiệp','TN liền tường','TN đồ rời','Sơn','Lắp đặt'],w:140},
+    {k:'to',label:'Tổ / Chuyền',t:'sel',opts:TO_NM,w:140},
     {k:'sl',label:'SL',t:'num',w:60},
     {k:'ngayGiao',label:'Giao việc',t:'date',w:140},
     {k:'hanHT',label:'Hạn HT',t:'date',w:140},
@@ -4308,6 +4339,7 @@ function qcHtml(da){
   const cols=[
     {k:'ngay',label:'Ngày',t:'date',w:140},
     {k:'hm',label:'Hạng mục',t:'hm',w:170},
+    {k:'to',label:'Tổ / Chuyền',t:'sel',opts:TO_NM,w:130},
     {k:'congDoan',label:'Công đoạn',t:'sel',opts:['QC Mộc','QC Sơn','QC Xuất xưởng','QC Lắp đặt'],w:140},
     {k:'ketQua',label:'Kết quả',t:'sel',opts:['Đạt','Lỗi','Sửa lại'],w:100},
     {k:'loi',label:'Mô tả lỗi',t:'text',w:200},
@@ -4326,6 +4358,7 @@ function qcHtml(da){
 function nvlHtml(da){
   const cols=[
     {k:'vatTu',label:'Vật tư',t:'text',w:170},
+    {k:'to',label:'Tổ / Chuyền',t:'sel',opts:TO_NM,w:130},
     {k:'dvt',label:'ĐVT',t:'text',w:70},
     {k:'ncc',label:'NCC',t:'text',w:130},
     {k:'dinhMuc',label:'Định mức',t:'text',w:90,ph:'vd 1.2/m²'},
@@ -4409,7 +4442,7 @@ function nvProjSelect(){ const da=window._nvDA||''; return '<select onchange="wi
 function nvEnsureDA(){ if(window._nvDA===undefined||window._nvDA===null){ const f=(visibleProjects().filter(d=>d['Trạng thái']==='Đang triển khai')[0]||visibleProjects()[0]); window._nvDA=f?f['Mã DA']:''; } }
 function nvBodyHtml(){
   const mod=window._nvMod||'nm'; const da=window._nvDA||'';
-  if(mod==='nm'){ const t=window._nmNvTab||'lsx'; return t==='qc'?qcHtml(da):t==='nvl'?nvlHtml(da):lsxHtml(da); }
+  if(mod==='nm'){ const t=window._nmNvTab||'lsx'; return t==='qc'?qcHtml(da):t==='nvl'?nvlHtml(da):t==='to'?nvByToHtml():lsxHtml(da); }
   const t=window._tkNvTab||'hsbv'; return t==='spec'?specHtml(da):t==='duyeths'?duyethsHtml(da):hsbvHtml(da);
 }
 function nvRefresh(){ const el=document.getElementById('nvBody'); if(el) el.innerHTML=nvBodyHtml(); }
@@ -4419,7 +4452,7 @@ function vNhaMayNV(){
   let h='<div class="cv-head"><div><h2 style="margin:0">🧩 Nghiệp vụ chuyên sâu — Nhà máy</h2>'
     + '<div class="muted" style="font-size:13px;margin-top:2px">Lệnh sản xuất & tiến độ tổ/chuyền · Phiếu QC theo công đoạn · Tồn NVL & định mức — lưu theo dự án, đồng bộ hệ thống.</div></div>'
     + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'+nvProjSelect()+'</div></div>';
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('lsx','📋 Lệnh sản xuất')+tb('qc','✅ Phiếu QC')+tb('nvl','📦 Tồn NVL & định mức')+'</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('lsx','📋 Lệnh sản xuất')+tb('qc','✅ Phiếu QC')+tb('nvl','📦 Tồn NVL & định mức')+tb('to','📊 Tổng hợp theo tổ')+'</div>';
   h+='<div class="card"><div class="card-body"><div id="nvBody">'+nvBodyHtml()+'</div></div></div>';
   return h;
 }
