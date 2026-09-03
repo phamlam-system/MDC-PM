@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- MDC-PM v7.0 — THƯƠNG MẠI · NGHIỆP VỤ CHUYÊN SÂU: thêm 2 tab DANH MỤC DÙNG CHUNG TOÀN CÔNG TY (không theo dự án, lưu bucket cố định TM_ALL='__ALL__' trong pmkv). (1) "🏢 NCC / Đối tác" (`tmNccHtml` · kho `tmncc`): tên·loại(Vật tư/Gia công/Vận chuyển/Thầu phụ/Dịch vụ)·nhóm hàng·liên hệ·SĐT·email·địa chỉ·MST·đánh giá★·trạng thái; KPI tổng/đang hợp tác/vật tư/gia công/thầu phụ. (2) "📑 Hợp đồng" (`tmHopDongHtml` · kho `tmhopdong`): số HĐ·NCC·dự án(select từ visibleProjects, để trống=HĐ nguyên tắc)·loại HĐ·ngày ký·hiệu lực·giá trị·đã TT·còn lại(calc)·trạng thái; KPI tổng/đang hiệu lực/tổng giá trị/còn phải trả/sắp hết hạn ≤30d. `vThuongMaiNV` nay 5 tab (NCC·Hợp đồng·Báo giá·Đơn hàng·Công nợ); tab NCC/Hợp đồng ẩn ô chọn dự án, hiện chú thích "dùng chung toàn công ty". `nvBodyHtml` route tm ncc/hopdong dùng ma=TM_ALL (bỏ qua _nvDA). node --check 5/5 + Playwright (5 tab, bản ghi global hiện bất kể dự án, còn lại HĐ=6.000.000, select dự án) OK, 0 pageerror. -->
+<!-- MDC-PM v6.9 — THƯƠNG MẠI: XÂY DỰNG LẠI "CÔNG VIỆC THEO GIAI ĐOẠN" THEO ĐÚNG BẢN CHẤT MUA SẮM & ĐẶT HÀNG (bỏ giai đoạn sản xuất). GỠ cách làm v6.8 (kéo việc giai đoạn 'Sản xuất tại xưởng' vào TM qua từ khoá) — trả `deptTasks` & `vDeptDash` về nhóm theo `cfg.giaiDoan` gốc (Thiết kế/Nhà máy nguyên vẹn). Module TM giờ dùng `tmDeptDash(da)` riêng: KPI theo hạng mục đặt hàng (chưa đặt/đã đặt/trễ nhận/đã nhận %), cảnh báo "Trễ nhận hàng" (nhận DK đã qua mà chưa nhận), và "Công việc theo giai đoạn — Tiến trình mua sắm & đặt hàng" = 3 chặng ① Chưa đặt → ② Đã đặt (chờ giao) → ③ Đã nhận, xếp hạng mục phân bổ Thương mại theo trạng thái đặt hàng `dh_tt` (kho khhm); kèm đầu việc Tiếp nhận & Báo giá (giai đoạn thật), mốc khc TM, bảng Kế hoạch đặt hàng theo hạng mục, đơn Mua sắm NCC, card NV chuyên sâu. Không còn giai đoạn/đầu việc sản xuất trong TM. node --check 5/5 + Playwright (3 chặng, xếp đúng hạng mục, loại item Nhà máy & việc sản xuất, trễ nhận, Nhà máy giữ nguyên) OK, 0 pageerror. -->
 <!-- MDC-PM v6.8 — THƯƠNG MẠI: NGHIỆP VỤ CHUYÊN SÂU + RÀ SOÁT CÔNG VIỆC THEO GIAI ĐOẠN. (1) Thêm pill "🧩 Nghiệp vụ chuyên sâu" vào module Thương mại (window._tmView='nv'→vThuongMaiNV) với 3 tab: 📝 Báo giá & So sánh NCC (tmrfq: hạng mục·NCC·đơn giá·thành tiền·chọn NCC) · 🧾 Đơn đặt hàng & Giao nhận (tmpo: số PO·giá trị·nhận DK/TT·cảnh báo trễ giao) · 💰 Công nợ phải trả (tmcongno: giá trị·đã trả·còn lại·quá hạn). Hạng mục lọc theo phân bổ Thương mại (nvHmTM). Lưu pmkv theo dự án. (2) RÀ SOÁT: sửa deptTasks dùng cfg.match — Thương mại nay lấy cả đầu việc MUA SẮM/ĐẶT HÀNG/VẬT TƯ/BÁO GIÁ nằm ngoài giai đoạn 'Tiếp nhận & Báo giá' (trước đây bị bỏ sót); vDeptDash nhóm theo GIAI ĐOẠN THỰC TẾ (xếp theo GIAI_DOAN) thay vì cfg.giaiDoan cố định — không phá Thiết kế/Nhà máy. Khung "Nghiệp vụ chuyên sâu" trong dashboard TM chuyển thành "đã có". node --check 5/5 + Playwright (3 tab, calc thành tiền/còn lại, trễ giao, lọc hạng mục TM, procurement hiện ở TM không hiện ở QC thuần, Nhà máy giữ nguyên) OK, 0 pageerror. -->
 <!-- MDC-PM v6.7 — CỘT KHỐI LƯỢNG LAN SANG CÁC PHÒNG BAN: thêm cột "Khối lượng" (kl) vào bảng kế hoạch theo hạng mục ở tất cả phòng — Thiết kế, Thương mại, Thầu phụ, và card Kế hoạch SX của Nhà máy (dùng chung `khhmDeptPlanHtml` → sửa roCols 2 nhánh: có/không cột Phân bổ, đặt KL sau ĐVT trước Số lượng, w:80). Nhà máy biểu mẫu SX (KHSX_GROUPS) vốn đã có KL. Đồng bộ chung kho pmkv khhm. node --check 5/5 + Playwright (TM/TK/TP đều có header Khối lượng + giá trị) OK. -->
 <!-- MDC-PM v6.6 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC: (1) Thêm cột "Khối lượng" (kl) vào nhóm PHÂN BỐ HẠNG MỤC, tách bạch với "Số lượng" — bám dữ liệu Khối lượng khi ⬆ Nhập từ hợp đồng (import không còn dồn kl vào sl; preview hiện 2 cột KL & SL riêng). (2) Thêm pill "🗂 Phân loại theo phân bổ" cạnh ▦ Bảng chi tiết / 📊 Gantt (window._khhmView='phanbo' → khhmByPhanBo(ma)): nhóm hạng mục theo nơi phân bổ (Nhà máy / Thương mại / Thầu phụ / Chưa phân bổ), mỗi nhóm 1 thẻ có tag màu + số hạng mục + tiến độ TB, bảng gọn (Hạng mục · Phân loại · ĐVT · Khối lượng · Số lượng · %HT · Ghi chú). Cột KL tự vào Xuất Excel/PDF (dùng khhmCols). Thuần frontend (pmkv). node --check + Playwright OK. -->
@@ -4114,19 +4116,15 @@ const DEPT_CFG = {
     khc:[['sx_sx_bd','SX bắt đầu'],['sx_sx_ht','SX hoàn thành'],['sx_ld_bd','Lắp đặt BĐ'],['sx_ld_ht','Lắp đặt HT'],['sx_bg','Bàn giao'],['sx_kq','Đạt/Không']],
     buoc2:['Lệnh sản xuất (LSX) & tiến độ tổ/chuyền','Phiếu QC nhập – xuất xưởng','Tồn nguyên vật liệu & định mức'] },
   mThuongMai:{ ten:'Thương mại (Mua sắm & Đặt hàng)', icon:'💼', mau:'#B9772E',
-    giaiDoan:['Tiếp nhận & Báo giá'],
-    // ★ v6.8 — Thương mại còn phụ trách MUA SẮM/ĐẶT HÀNG: các đầu việc này nằm rải ở giai đoạn sản xuất/hoàn thiện.
-    // match: lấy giai đoạn "Tiếp nhận & Báo giá" + mọi đầu việc có từ khoá mua sắm/đặt hàng/vật tư/báo giá (dù ở giai đoạn nào).
-    match:c=>{ if(c['Giai đoạn']==='Tiếp nhận & Báo giá') return true; const n=vnorm(c['Tên công việc']); return /(mua sam|mua |dat hang|dat vat|vat tu|bao gia|ncc|nha cung cap|cung ung|nhap hang)/.test(n); },
+    giaiDoan:['Tiếp nhận & Báo giá'],   // đầu việc thực sự của TM (tiếp nhận nhu cầu & báo giá); phần đặt hàng đi theo tiến trình mua sắm riêng
+    // ★ v6.9 — Thương mại KHÔNG dùng giai đoạn sản xuất. Dashboard TM đi theo TIẾN TRÌNH MUA SẮM & ĐẶT HÀNG (tmDeptDash), không gom việc theo giai đoạn sản xuất.
+    pipeline:'muasam',
     khc:[['tm_dt','Dự toán'],['tm_dh','Đặt hàng'],['tm_nh','Nhận hàng'],['tm_bgkh','BG khách'],['tm_kq','Đạt/Không']],
     muaSam:true,
     buoc2:['Yêu cầu báo giá & so sánh nhà cung cấp','Đơn đặt hàng NCC & theo dõi giao nhận','Công nợ phải trả nhà cung cấp'] }
 };
 function deptTasks(cfg, da){
-  return tvSong(visibleTasks()).filter(c=>{
-    if(da && c['Mã DA']!==da) return false;
-    return cfg.match ? cfg.match(c) : cfg.giaiDoan.includes(c['Giai đoạn']);   // ★ v6.8 — cfg.match ưu tiên (Thương mại lấy cả việc mua sắm ngoài giai đoạn)
-  });
+  return tvSong(visibleTasks()).filter(c=> cfg.giaiDoan.includes(c['Giai đoạn']) && (!da || c['Mã DA']===da));
 }
 function vDeptDash(key){
   const cfg=DEPT_CFG[key]; if(!cfg) return '<div class="empty">Không tìm thấy module</div>';
@@ -4164,10 +4162,7 @@ function vDeptDash(key){
   // Công việc theo giai đoạn của phòng
   html+='<div class="card"><div class="ct">Công việc theo giai đoạn'
     + '<span class="ct-r">'+tasks.length+' đầu việc'+(can('edit')?' · <button class="btn btn-ghost" style="padding:4px 10px;font-size:11.5px" onclick="'+(da?'window._ftp=\''+esc(da)+'\';':'')+'formTask()">+ Giao việc</button>':'')+'</span></div>';
-  // ★ v6.8 — nhóm theo GIAI ĐOẠN THỰC TẾ có trong tập việc (xếp theo thứ tự GIAI_DOAN) — phủ được việc mua sắm của Thương mại nằm ngoài giai đoạn mặc định
-  const stagesPresent=[]; tasks.forEach(t=>{ const g=t['Giai đoạn']||'(Chưa gán giai đoạn)'; if(!stagesPresent.includes(g)) stagesPresent.push(g); });
-  stagesPresent.sort((a,b)=>{ const ia=GIAI_DOAN.indexOf(a), ib=GIAI_DOAN.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
-  const groups=stagesPresent.map(g=>({g,items:tasks.filter(t=>(t['Giai đoạn']||'(Chưa gán giai đoạn)')===g)}));
+  const groups=cfg.giaiDoan.map(g=>({g,items:tasks.filter(t=>t['Giai đoạn']===g)})).filter(x=>x.items.length);
   if(!groups.length){ html+='<div class="empty"><b>Chưa có đầu việc</b>Lập ở tab Kế hoạch của dự án → “⚡ Lập kế hoạch từ thư viện”.</div>'; }
   groups.forEach(gr=>{
     const gdone=gr.items.filter(x=>x['Trạng thái']==='Hoàn thành').length;
@@ -4257,6 +4252,104 @@ function vNhaMay(){
     + '</div>';
   return seg + (view==='nl' ? nlsxView() : view==='nv' ? vNhaMayNV() : view==='gv' ? vDeptGiaoViec('mNhaMay') : vDeptDash('mNhaMay'));
 }
+/* ★ v6.9 — THƯƠNG MẠI: dashboard theo TIẾN TRÌNH MUA SẮM & ĐẶT HÀNG (không dùng giai đoạn sản xuất).
+   Hạng mục phân bổ Thương mại (kho khhm) chảy qua 3 chặng theo trạng thái đặt hàng dh_tt: Chưa đặt → Đã đặt (chờ giao) → Đã nhận. */
+function tmDeptDash(da){
+  const cfg=DEPT_CFG.mThuongMai;
+  const myDuan=visibleProjects();
+  const items=khhmDeptRows('Thương mại', da);                 // [{d,r}] hạng mục phân bổ Thương mại
+  const stageOf=r=>{ const t=r.dh_tt||''; return t==='Đã nhận'?'received':t==='Đã đặt'?'ordered':'pending'; };
+  const cnt=s=>items.filter(x=>stageOf(x.r)===s).length;
+  const late=items.filter(x=>x.r.dh_tt!=='Đã nhận' && x.r.dh_nhan && daysLeft(x.r.dh_nhan)<0);
+  const received=cnt('received'); const pct=items.length?Math.round(received/items.length*100):0;
+  const bgTasks=deptTasks(cfg, da);                            // đầu việc thực sự: Tiếp nhận & Báo giá
+
+  let html='<div class="cv-head"><div><h2 style="margin:0">💼 '+esc(cfg.ten)+'</h2>'
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Tiến trình <b>mua sắm & đặt hàng</b> theo giai đoạn — bám hạng mục phân bổ Thương mại (không gồm giai đoạn sản xuất)</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    + '<select onchange="window._deptDA=this.value;render()"><option value="">Tất cả dự án</option>'
+      + myDuan.map(d=>'<option value="'+esc(d['Mã DA'])+'"'+(da===d['Mã DA']?' selected':'')+'>'+esc(d['Tên dự án'])+'</option>').join('')+'</select>'
+    + '</div></div>';
+
+  html+='<div class="kpis">'
+    + kpi('Hạng mục đặt hàng', items.length, (da?projName(da):'toàn bộ dự án'))
+    + kpi('Chưa đặt hàng', cnt('pending'), cnt('pending')?'cần lập đơn':'', cnt('pending')?'accent':'')
+    + kpi('Đã đặt — chờ giao', cnt('ordered'), 'đang chờ NCC giao')
+    + kpi('Trễ nhận', late.length, late.length?'quá hạn nhận DK':'đúng tiến độ', late.length?'bad':'')
+    + kpi('Đã nhận', pct+'%', received+'/'+items.length+' hạng mục')
+    + '</div>';
+
+  // Trễ nhận hàng
+  if(late.length){
+    html+='<div class="card" style="border-color:var(--bad)"><div class="ct" style="color:var(--bad)">⚠ Trễ nhận hàng ('+late.length+')</div>'
+      + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hạng mục</th><th>Dự án</th><th>Ngày đặt</th><th>Nhận dự kiến</th><th>Trễ</th></tr></thead><tbody>'
+      + late.sort((a,b)=>daysLeft(a.r.dh_nhan)-daysLeft(b.r.dh_nhan)).slice(0,12).map(x=>
+        '<tr><td><b>'+esc(x.r.ten||'—')+'</b></td><td class="muted">'+esc(projName(x.d['Mã DA']))+'</td><td class="muted">'+esc(x.r.dh_dat?fmtDMY(x.r.dh_dat):'—')+'</td><td>'+esc(x.r.dh_nhan?fmtDMY(x.r.dh_nhan):'—')+'</td><td><span class="tag t-bad">'+Math.abs(daysLeft(x.r.dh_nhan))+' ngày</span></td></tr>').join('')
+      + '</tbody></table></div></div></div>';
+  }
+
+  // Tiến trình mua sắm & đặt hàng theo giai đoạn (pipeline 3 chặng)
+  const PH=[['pending','① Chưa đặt hàng','#B9772E'],['ordered','② Đã đặt — chờ giao','#3E6E8E'],['received','③ Đã nhận hàng','#4E9A51']];
+  html+='<div class="card"><div class="ct">Công việc theo giai đoạn — Tiến trình mua sắm & đặt hàng<span class="ct-r">'+items.length+' hạng mục</span></div><div class="card-body">';
+  if(!items.length){ html+='<div class="empty"><b>Chưa có hạng mục phân bổ Thương mại</b>Vào Dự án → Kế hoạch chi tiết → Theo hạng mục, đặt cột <b>Phân bổ = Thương mại</b>.</div>'; }
+  PH.forEach(ph=>{
+    const list=items.filter(x=>stageOf(x.r)===ph[0]); if(!list.length) return;
+    html+='<div class="phase-head" style="border-left:3px solid '+ph[2]+';padding-left:8px"><span>'+ph[1]+'</span><span class="cnt">'+list.length+' hạng mục</span></div>'
+      + '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hạng mục</th><th>Dự án</th><th>ĐVT</th><th>Khối lượng</th><th>Số lượng</th><th>Ngày đặt</th><th>Nhận dự kiến</th><th>% HT</th></tr></thead><tbody>'
+      + list.map(x=>{ const r=x.r; const overdue=r.dh_tt!=='Đã nhận'&&r.dh_nhan&&daysLeft(r.dh_nhan)<0;
+        return '<tr><td><b>'+esc(r.ten||'—')+'</b>'+(r.phanLoai?'<div class="muted" style="font-size:11px">'+esc(r.phanLoai)+'</div>':'')+'</td>'
+          + '<td class="muted">'+esc(projName(x.d['Mã DA']))+'</td><td>'+esc(r.dvt||'—')+'</td><td>'+esc(r.kl||'—')+'</td><td>'+esc(r.sl||'—')+'</td>'
+          + '<td class="muted">'+esc(r.dh_dat?fmtDMY(r.dh_dat):'—')+'</td>'
+          + '<td>'+(r.dh_nhan?((overdue?'<span class="tag t-bad">':'')+esc(fmtDMY(r.dh_nhan))+(overdue?'</span>':'')):'—')+'</td>'
+          + '<td>'+(r.pct!==''&&r.pct!=null?esc(r.pct)+'%':'—')+'</td></tr>'; }).join('')
+      + '</tbody></table></div>';
+  });
+  html+='<p class="muted" style="font-size:12px;margin-top:8px">Chặng của mỗi hạng mục theo cột <b>Tình trạng đặt hàng</b> (Chưa đặt / Đã đặt / Đã nhận) trong Kế hoạch chi tiết theo hạng mục. Chi tiết báo giá – PO – công nợ ở tab <b>🧩 Nghiệp vụ chuyên sâu</b>.</p></div></div>';
+
+  // Đầu việc Tiếp nhận & Báo giá (nếu có)
+  if(bgTasks.length){
+    html+='<div class="card"><div class="ct">Tiếp nhận & Báo giá <span class="muted" style="font-weight:400">(đầu việc)</span><span class="ct-r">'+bgTasks.length+' việc</span></div>'
+      + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Công việc</th><th>Dự án</th><th>Phụ trách</th><th>Hạn</th><th>Trạng thái</th></tr></thead><tbody>'
+      + bgTasks.map(c=>'<tr class="row-click" onclick="formTask(\''+esc(c['Mã CV'])+'\')"><td><b>'+esc(c['Tên công việc'])+'</b></td><td class="muted">'+esc(projName(c['Mã DA']))+'</td><td>'+esc(c['Phụ trách']||'—')+'</td><td>'+esc(c['Hạn hoàn thành']?fmtDMY(c['Hạn hoàn thành']):'—')+'</td><td>'+tagTT(c['Trạng thái'])+'</td></tr>').join('')
+      + '</tbody></table></div></div></div>';
+  }
+
+  // Mốc kế hoạch mua sắm theo dự án (khc TM)
+  const projList=(da?myDuan.filter(d=>d['Mã DA']===da):myDuan.filter(d=>d['Trạng thái']==='Đang triển khai'));
+  html+='<div class="card"><div class="ct">Mốc kế hoạch mua sắm theo dự án <span class="muted" style="font-weight:400">(đồng bộ Kế hoạch chi tiết)</span></div>'
+    + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Dự án</th>'
+    + cfg.khc.map(k=>'<th>'+esc(k[1])+'</th>').join('')+'<th></th></tr></thead><tbody>';
+  if(!projList.length){ html+='<tr><td colspan="'+(cfg.khc.length+2)+'"><div class="empty">Chưa có dự án phù hợp</div></td></tr>'; }
+  projList.forEach(d=>{ const ma=d['Mã DA'];
+    html+='<tr><td><b class="ks-link" onclick="window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';go(\'duanDetail\')">'+esc(d['Tên dự án']||ma)+'</b><div class="muted" style="font-size:11px">'+esc(ma)+'</div></td>'
+      + cfg.khc.map(k=>{ const v=khcShowFmt(ma,k[0]); const cls=(k[0].endsWith('_kq'))?(v==='Đạt'?'t-ok':v==='Không'?'t-bad':''):''; return '<td class="ks-c">'+(v?(cls?'<span class="tag '+cls+'">'+esc(v)+'</span>':esc(v)):'<span class="muted">—</span>')+'</td>'; }).join('')
+      + '<td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="window._pjCode=\''+esc(ma)+'\';window._pjTab=\'kehoachCT\';go(\'duanDetail\')">Mở kế hoạch →</button></td></tr>';
+  });
+  html+='</tbody></table></div></div></div>';
+
+  // Kế hoạch đặt hàng theo hạng mục (bảng nhập, bám phân bổ Thương mại)
+  html+='<div class="card"><div class="ct">Kế hoạch đặt hàng theo hạng mục <span class="muted" style="font-weight:400">— bóc từ hợp đồng · phân bổ Thương mại</span></div>'
+    + '<div class="card-body">'+khhmDeptPlanHtml('Thương mại', ['KẾ HOẠCH ĐẶT HÀNG (TM)'], da)+'</div></div>';
+
+  // Mua sắm & Đặt hàng NCC (đơn mua)
+  const ms=(S.muasam||[]).filter(x=>!da||x['Mã DA']===da);
+  const tong=ms.reduce((a,x)=>a+(Number(x['Tổng tiền'])||0),0);
+  const daNhan=ms.filter(x=>x['Trạng thái']==='Đã nhận').length;
+  html+='<div class="card"><div class="ct">Mua sắm & Đặt hàng NCC<span class="ct-r">'+ms.length+' đơn · '+daNhan+' đã nhận · '+fmt(tong)+(can('edit')?' · <button class="btn btn-ghost" style="padding:4px 10px;font-size:11.5px" onclick="'+(da?'window._msDA=\''+esc(da)+'\';':'')+'formPurchase()">+ Đơn mua</button>':'')+'</span></div>'
+    + '<div class="card-body" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hạng mục</th><th>Dự án</th><th>NCC</th><th class="num">Số lượng</th><th class="num">Tổng tiền</th><th>Ngày đặt</th><th>Nhận DK</th><th>Trạng thái</th></tr></thead><tbody>'
+    + (ms.length?[...ms].sort((a,b)=>(b['Ngày đặt']||'')>(a['Ngày đặt']||'')?1:-1).map(x=>
+      '<tr class="row-click" onclick="formPurchase(\''+esc(x['Mã MS'])+'\')"><td><b>'+esc(x['Hạng mục'])+'</b></td><td class="muted">'+esc(projName(x['Mã DA']))+'</td><td>'+esc(x['NCC / Thầu phụ']||'—')+'</td><td class="num">'+esc(x['Số lượng']||'—')+'</td><td class="num"><b>'+fmt(x['Tổng tiền'])+'</b></td><td class="muted">'+esc(x['Ngày đặt']?fmtDMY(x['Ngày đặt']):'—')+'</td><td class="muted">'+esc(x['Ngày nhận dự kiến']?fmtDMY(x['Ngày nhận dự kiến']):'—')+'</td><td>'+tagTT(x['Trạng thái']||'Đang soạn')+'</td></tr>').join('')
+      :'<tr><td colspan="8"><div class="empty"><b>Chưa có đơn mua</b>Bấm "+ Đơn mua" để tạo.</div></td></tr>')
+    + '</tbody></table></div></div></div>';
+
+  // Nghiệp vụ chuyên sâu
+  html+='<div class="card" style="border-color:var(--accent)"><div class="ct">🧩 Nghiệp vụ chuyên sâu <span class="tag t-ok" style="margin-left:6px">đã có</span></div>'
+    + '<div class="card-body"><div class="muted" style="font-size:12.5px;line-height:1.7">Biểu mẫu nghiệp vụ Thương mại đã sẵn ở tab <b>🧩 Nghiệp vụ chuyên sâu</b> (đầu trang):<ul style="margin:6px 0 8px 18px">'
+    + cfg.buoc2.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'
+    + '<button class="btn btn-ghost" onclick="window._tmView=\'nv\';render()">Mở Nghiệp vụ chuyên sâu →</button></div></div></div>';
+
+  return html;
+}
 function vThuongMai(){
   const view=window._tmView||'dh';
   const seg='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
@@ -4264,7 +4357,7 @@ function vThuongMai(){
     + '<button class="cv-pill'+(view==='nv'?' on':'')+'" onclick="window._tmView=\'nv\';render()">🧩 Nghiệp vụ chuyên sâu</button>'
     + '<button class="cv-pill'+(view==='gv'?' on':'')+'" onclick="window._tmView=\'gv\';render()">📋 Giao việc</button>'
     + '</div>';
-  return seg + (view==='nv' ? vThuongMaiNV() : view==='gv' ? vDeptGiaoViec('mThuongMai') : vDeptDash('mThuongMai'));
+  return seg + (view==='nv' ? vThuongMaiNV() : view==='gv' ? vDeptGiaoViec('mThuongMai') : tmDeptDash(window._deptDA||''));
 }
 /* ===== v5.9 — NGHIỆP VỤ CHUYÊN SÂU (Nhà máy & Thiết kế). Engine chung lưu danh sách bản ghi theo dự án trong pmkv (đồng bộ Backend v6.4). Bảng inline-edit, thêm/xóa dòng. ===== */
 function nvNum(x){ const n=Number(String(x==null?'':x).replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; }
@@ -4569,13 +4662,67 @@ function tmCongNoHtml(da){
   }};
   return nvTable('tmcongno',da,cols,opt);
 }
+/* ★ v7.0 — Danh mục dùng chung TOÀN CÔNG TY (không theo dự án): NCC/Đối tác + Hợp đồng. Lưu ở bucket cố định TM_ALL trong pmkv. */
+const TM_ALL='__ALL__';
+function tmNccHtml(){
+  const cols=[
+    {k:'ten',label:'Tên NCC / Đối tác',t:'text',w:190},
+    {k:'loai',label:'Loại',t:'sel',opts:['Vật tư','Gia công','Vận chuyển','Thầu phụ','Dịch vụ','Khác'],w:120},
+    {k:'nhomHang',label:'Nhóm hàng / Chuyên môn',t:'text',w:170},
+    {k:'lienHe',label:'Người liên hệ',t:'text',w:130},
+    {k:'sdt',label:'SĐT',t:'text',w:120},
+    {k:'email',label:'Email',t:'text',w:160},
+    {k:'diaChi',label:'Địa chỉ',t:'text',w:190},
+    {k:'mst',label:'MST',t:'text',w:120},
+    {k:'danhGia',label:'Đánh giá',t:'sel',opts:['★','★★','★★★','★★★★','★★★★★'],w:120},
+    {k:'trangThai',label:'Trạng thái',t:'sel',opts:['Đang hợp tác','Thử việc','Tạm dừng','Ngừng'],w:130},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:150}
+  ];
+  const opt={ title:'danh sách NCC / đối tác', minw:1360, summary:(recs)=>{
+    const hop=recs.filter(r=>r.trangThai==='Đang hợp tác').length;
+    const vt=recs.filter(r=>r.loai==='Vật tư').length;
+    const gc=recs.filter(r=>r.loai==='Gia công').length;
+    const tp=recs.filter(r=>r.loai==='Thầu phụ').length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Danh mục nhà cung cấp / đối tác <b>dùng chung toàn công ty</b> (không theo dự án): thông tin liên hệ, chuyên môn, đánh giá và trạng thái hợp tác. Dùng lại ở các nghiệp vụ báo giá – đặt hàng – công nợ.</div>'
+      + nvKpis([['Tổng NCC/đối tác',recs.length,''],['Đang hợp tác',hop,'','accent'],['Vật tư',vt,''],['Gia công',gc,''],['Thầu phụ',tp,'']]);
+  }};
+  return nvTable('tmncc',TM_ALL,cols,opt);
+}
+function tmHopDongHtml(){
+  const projOpts=visibleProjects().map(d=>d['Tên dự án']||d['Mã DA']);
+  const cols=[
+    {k:'soHD',label:'Số HĐ',t:'text',w:110,ph:'HĐ-01'},
+    {k:'ncc',label:'NCC / Đối tác',t:'text',w:170},
+    {k:'duAn',label:'Dự án',t:'sel',opts:projOpts,w:160},
+    {k:'loaiHD',label:'Loại HĐ',t:'sel',opts:['Mua bán','Gia công','Nguyên tắc','Dịch vụ','Vận chuyển'],w:120},
+    {k:'ngayKy',label:'Ngày ký',t:'date',w:140},
+    {k:'hieuLuc',label:'Hiệu lực đến',t:'date',w:140},
+    {k:'giaTri',label:'Giá trị HĐ',t:'num',w:120},
+    {k:'daTT',label:'Đã thanh toán',t:'num',w:120},
+    {k:'_conLai',label:'Còn lại',t:'calc',w:120,calc:r=>{ const v=nvNum(r.giaTri)-nvNum(r.daTT); return {html:'<span class="tag '+(v>0?'t-bad':'t-ok')+'">'+fmt(v)+'</span>'}; }},
+    {k:'trangThai',label:'Trạng thái',t:'sel',opts:['Đang hiệu lực','Đã thanh lý','Hết hạn','Tạm dừng'],w:130},
+    {k:'ghichu',label:'Ghi chú',t:'text',w:140}
+  ];
+  const opt={ title:'hợp đồng NCC / đối tác', minw:1420, summary:(recs)=>{
+    const hl=recs.filter(r=>r.trangThai==='Đang hiệu lực').length;
+    const tong=recs.reduce((a,r)=>a+nvNum(r.giaTri),0);
+    const tt=recs.reduce((a,r)=>a+nvNum(r.daTT),0);
+    const conLai=tong-tt;
+    const sapHet=recs.filter(r=>r.trangThai!=='Đã thanh lý'&&r.hieuLuc&&daysLeft(r.hieuLuc)>=0&&daysLeft(r.hieuLuc)<=30).length;
+    return '<div class="muted" style="font-size:12.5px;margin-bottom:10px">Hợp đồng với NCC / đối tác <b>dùng chung toàn công ty</b>: số HĐ, dự án áp dụng (để trống = HĐ nguyên tắc/khung), giá trị, đã thanh toán, còn lại, hiệu lực và trạng thái.</div>'
+      + nvKpis([['Tổng HĐ',recs.length,''],['Đang hiệu lực',hl,'','accent'],['Tổng giá trị',fmt(tong),'đ'],['Còn phải trả',fmt(conLai),'đ',conLai>0?'accent':''],['Sắp hết hạn (≤30d)',sapHet,sapHet?'cần gia hạn':'',sapHet?'bad':'']]);
+  }};
+  return nvTable('tmhopdong',TM_ALL,cols,opt);
+}
 function vThuongMaiNV(){
   window._nvMod='tm'; nvEnsureDA(); const tab=window._tmNvTab||'rfq';
   const tb=(id,lbl)=>'<button class="cv-pill'+(tab===id?' on':'')+'" onclick="window._tmNvTab=\''+id+'\';render()">'+lbl+'</button>';
+  const isAll=(tab==='ncc'||tab==='hopdong');
   let h='<div class="cv-head"><div><h2 style="margin:0">🧩 Nghiệp vụ chuyên sâu — Thương mại</h2>'
-    + '<div class="muted" style="font-size:13px;margin-top:2px">Yêu cầu báo giá & so sánh nhà cung cấp · Đơn đặt hàng NCC & theo dõi giao nhận · Công nợ phải trả NCC — lưu theo dự án, đồng bộ hệ thống.</div></div>'
-    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'+nvProjSelect()+'</div></div>';
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('rfq','📝 Báo giá & So sánh NCC')+tb('po','🧾 Đơn đặt hàng & Giao nhận')+tb('congno','💰 Công nợ phải trả')+'</div>';
+    + '<div class="muted" style="font-size:13px;margin-top:2px">Danh sách NCC/đối tác & Hợp đồng (dùng chung) · Yêu cầu báo giá & so sánh NCC · Đơn đặt hàng & giao nhận · Công nợ phải trả — đồng bộ hệ thống.</div></div>'
+    + (isAll ? '<div class="muted" style="font-size:12px;align-self:center">Danh mục dùng chung toàn công ty</div>'
+             : '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="muted" style="font-size:12px">Dự án:</label>'+nvProjSelect()+'</div>') + '</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+tb('ncc','🏢 NCC / Đối tác')+tb('hopdong','📑 Hợp đồng')+tb('rfq','📝 Báo giá & So sánh NCC')+tb('po','🧾 Đơn đặt hàng & Giao nhận')+tb('congno','💰 Công nợ phải trả')+'</div>';
   h+='<div class="card"><div class="card-body"><div id="nvBody">'+nvBodyHtml()+'</div></div></div>';
   return h;
 }
@@ -4587,7 +4734,7 @@ function nvEnsureDA(){ if(window._nvDA===undefined||window._nvDA===null){ const 
 function nvBodyHtml(){
   const mod=window._nvMod||'nm'; const da=window._nvDA||'';
   if(mod==='nm'){ const t=window._nmNvTab||'lsx'; return t==='qc'?qcHtml(da):t==='nvl'?nvlHtml(da):t==='to'?nvByToHtml():lsxHtml(da); }
-  if(mod==='tm'){ const t=window._tmNvTab||'rfq'; return t==='po'?tmPoHtml(da):t==='congno'?tmCongNoHtml(da):tmRfqHtml(da); }
+  if(mod==='tm'){ const t=window._tmNvTab||'rfq'; return t==='ncc'?tmNccHtml():t==='hopdong'?tmHopDongHtml():t==='po'?tmPoHtml(da):t==='congno'?tmCongNoHtml(da):tmRfqHtml(da); }
   const t=window._tkNvTab||'hsbv'; return t==='spec'?specHtml(da):t==='duyeths'?duyethsHtml(da):hsbvHtml(da);
 }
 function nvRefresh(){ const el=document.getElementById('nvBody'); if(el) el.innerHTML=nvBodyHtml(); }
