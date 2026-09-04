@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- MDC-PM v7.4 — NHẬP HĐ: CHỌN CỘT "NỘI DUNG" THỦ CÔNG (khắc phục cột Nội dung trống do tự nhận diện không khớp file HĐ thật). Trong modal ⬆ Nhập từ hợp đồng, phần xem trước thêm ô chọn "Cột lấy Nội dung (Chất liệu, quy cách)" liệt kê MỌI cột của file (kèm tên tiêu đề + giá trị mẫu), mặc định = cột tự nhận diện; đổi lựa chọn → `window.__khhmNoiDungCol` (chỉ số cột) → parse lại, hiện số dòng có dữ liệu + nhãn "đã chọn thủ công". `get('noiDung')` ưu tiên cột đã chọn. Kết hợp checkbox "Cập nhật hạng mục trùng tên" (v7.3) để BACKFILL Nội dung vào hạng mục cũ mà KHÔNG nhân bản & GIỮ nguyên mốc kế hoạch. Reset lựa chọn khi mở modal. node --check 5/5 + Playwright (tự nhận diện khi có 'Chất liệu, quy cách'; picker hiện; khi tên cột lạ → chọn tay lấy đúng; merge điền 2 dòng cũ không nhân bản, giữ ngày) OK, 0 pageerror. -->
 <!-- MDC-PM v7.3 — CỘT NỘI DUNG: (1) ĐỔI THỨ TỰ cột nhóm PHÂN BỐ HẠNG MỤC → Hạng mục · Nội dung · Phân loại · Phân bổ · ĐVT · Khối lượng · Số lượng (đưa Nội dung lên sau Hạng mục). (2) NHẬN DIỆN mạnh hơn cột "Chất liệu, quy cách" khi nhập HĐ: `idx.noiDung` thêm từ khoá mo ta/dien giai/vat lieu/thong so/dac diem/chi tiet ky thuat; HDRKEYS thêm 'mo ta','vat lieu'. (3) BACKFILL cho hạng mục CŨ (import trước v7.2 nên Nội dung trống): thêm checkbox "Cập nhật hạng mục trùng tên đã có" trong modal nhập — khớp theo tên (vnorm), CHỈ điền ô đang trống (noiDung/phanLoai/phanBo/dvt/kl/sl/tt), KHÔNG tạo dòng trùng; bỏ chọn = thêm mới như cũ. LƯU Ý: dữ liệu cũ phải RE-IMPORT hợp đồng (tick checkbox) mới có Nội dung. node --check 5/5 + Playwright (thứ tự cột, parse Chất liệu/quy cách→Nội dung, merge điền đúng 2 dòng cũ không nhân bản) OK, 0 pageerror. -->
 <!-- MDC-PM v7.2 — KẾ HOẠCH CHI TIẾT THEO HẠNG MỤC: thêm cột "Nội dung" (key `noiDung`) vào nhóm PHÂN BỐ HẠNG MỤC (sau Phân loại, w:220), lấy dữ liệu từ cột "Chất liệu, quy cách" của Hợp đồng khi ⬆ Nhập từ hợp đồng. Import: HDRKEYS + `idx.noiDung=findCol('chat lieu quy cach','chat lieu','quy cach','noi dung')`; positional `P.noiDung=3`; parse push `noiDung`; preview thêm cột Nội dung; `khhmImpConfirm` lưu `noiDung`. Cột tự vào Bảng chi tiết + Xuất Excel/PDF (dùng `khhmCols`). node --check 5/5 + Playwright (cột tồn tại, import map đúng Chất liệu/quy cách→Nội dung 2 dòng, preview có cột) OK, 0 pageerror. -->
 <!-- MDC-PM v7.1 (P2) — PHÂN QUYỀN THEO PHÒNG (giới hạn CHỈNH SỬA, KHÔNG giới hạn XEM; MẶC ĐỊNH TẮT). Bật/tắt ở Cài đặt (chỉ Giám đốc/TGĐ=admin thấy thẻ `permCard`, lưu pmkv 'perm'.deptScope). Khi bật: Trưởng phòng/Quản lý chỉ sửa được module phòng mình (Thiết kế/Nhà máy/Thương mại) — module phòng khác chuyển CHỈ ĐỌC (banner + gỡ mọi nút/ô sửa); Ban giám đốc & admin sửa tất cả; nhân viên giữ nguyên; XEM luôn mở cho mọi người. Cơ chế: cờ `window._deptEditBlock` bật trong lúc dựng HTML của module (deptGuard try/finally) → `can()/canEditProject/canEditTask` trả false → toàn module render read-only, KHÔNG phải sửa hàng chục nơi. Ánh xạ PHONG_BAN→module (`deptKeyOfPhong`): Thiết kế→mThietKe; Xưởng sản xuất/Kỹ thuật/Đội thi công→mNhaMay; Kinh doanh→mThuongMai; Ban giám đốc→sửa tất cả; Hành chính-KT/Khác/trống→KHÔNG giới hạn (tránh khóa nhầm). node --check 5/5 + Playwright 20/20 (off không khóa; đúng phòng sửa được; khác phòng read-only gỡ nút; admin/BGĐ/phòng-không-map/nhân viên không bị khóa; cờ reset sau render; toggle chỉ admin). 0 pageerror. -->
@@ -2499,7 +2500,7 @@ function khhmByPhanBo(ma){
 /* Nhập hạng mục từ hợp đồng (dán từ Excel/Sheet hoặc chọn file CSV) */
 function khhmImport(ma){
   if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true);
-  window.__khhmImp=null; window.__khhmImpMa=ma;
+  window.__khhmImp=null; window.__khhmImpMa=ma; window.__khhmNoiDungCol=null;   // ★ v7.4 — reset chọn cột Nội dung thủ công
   const body='<div class="muted" style="margin-bottom:10px;line-height:1.55">Chọn <b>file Excel (.xlsx)</b> của hợp đồng — hoặc dán bảng hạng mục copy từ Excel/Google Sheet vào ô dưới — mỗi hạng mục 1 dòng. '
     + 'Tự nhận diện cột: <b>Chi tiết đơn hàng / Mã sản phẩm</b> (tên), <b>Phân loại hạng mục</b>, <b>Chất liệu, quy cách</b> (→ Nội dung), <b>ĐVT</b>, <b>Số lượng / Khối lượng</b>, và <b>Phân bổ</b> (Nhà máy MDC · Thương mại · Thầu phụ). '
     + 'Dòng tiêu đề, dòng nhóm (Tầng/Phòng) và dòng tổng sẽ được bỏ qua. Nếu không có dòng tiêu đề, hệ đọc theo đúng thứ tự cột của file HĐ.</div>'
@@ -2587,7 +2588,11 @@ function khhmImpParse(){
   }
   const posMode = hdr<0;
   const P={chiTiet:1, ma:2, noiDung:3, dvt:7, kl:8, sl:9, dg:10, tt:11, phanLoai:12, nm:13, tm:14, tp:15};   // ★ v7.2 — cột 3 = Chất liệu, quy cách
-  const get=(row,key)=>{ let ci=posMode?P[key]:idx[key]; if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
+  // ★ v7.4 — Nội dung: ưu tiên cột người dùng CHỌN THỦ CÔNG (window.__khhmNoiDungCol), nếu chưa chọn thì tự nhận diện
+  const autoNd = posMode ? P.noiDung : ((idx.noiDung==null)?-1:idx.noiDung);
+  const ndOverride = (typeof window.__khhmNoiDungCol==='number') ? window.__khhmNoiDungCol : null;
+  const ndCol = (ndOverride!==null) ? ndOverride : autoNd;
+  const get=(row,key)=>{ let ci=(key==='noiDung')?ndCol:(posMode?P[key]:idx[key]); if(ci==null||ci<0) return ''; return String(row[ci]==null?'':row[ci]).trim(); };
   const start=posMode?0:hdr+1; const drafts=[];
   for(let r=start;r<rows.length;r++){
     const row=rows[r]; const maSp=get(row,'ma'), ct=get(row,'chiTiet'); let ten=maSp||ct;
@@ -2604,7 +2609,23 @@ function khhmImpParse(){
   let h='<div style="margin:2px 0 8px;font-size:13px"><b>'+drafts.length+'</b> hạng mục nhận diện '+(posMode?'<span class="muted">(đọc theo thứ tự cột file HĐ)</span>':'<span class="muted">(đọc theo tiêu đề cột)</span>')+'</div>';
   h+='<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Tên hạng mục</th><th>Phân loại</th><th>Nội dung</th><th>Phân bổ</th><th>ĐVT</th><th>Khối lượng</th><th>Số lượng</th></tr></thead><tbody>';
   drafts.forEach((d,i)=>{ h+='<tr><td class="muted">'+(i+1)+'</td><td>'+esc(d.ten)+'</td><td>'+esc(d.phanLoai)+'</td><td>'+esc(d.noiDung||'—')+'</td><td>'+esc(d.phanBo||'—')+'</td><td>'+esc(d.dvt)+'</td><td>'+esc(d.kl||'—')+'</td><td>'+esc(d.sl||'—')+'</td></tr>'; });
-  h+='</tbody></table></div>'
+  h+='</tbody></table></div>';
+  // ★ v7.4 — CHỌN CỘT NỘI DUNG THỦ CÔNG (khi tự nhận diện không đúng / cột trống)
+  const ncols=rows.reduce((m,r)=>Math.max(m,(r?r.length:0)),0);
+  const hdrCells=(!posMode && rows[hdr])?rows[hdr]:[];
+  const sampleRow=rows[start]||[];
+  const ndCntFilled=drafts.filter(d=>String(d.noiDung||'').trim()!=='').length;
+  const colLabel=c=>{ const hn=(hdrCells[c]!=null?String(hdrCells[c]).trim():''); const sv=(sampleRow[c]!=null?String(sampleRow[c]).trim():''); let lb='Cột '+(c+1); if(hn) lb+=' · '+hn.slice(0,26); else if(sv) lb+=' · "'+sv.slice(0,22)+'"'; return lb; };
+  let ndSel='<div style="margin-top:12px;padding:9px 11px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface-2,#F7F4EE)">'
+    + '<label style="font-weight:600;font-size:12.5px">Cột lấy “Nội dung” (Chất liệu, quy cách): </label>'
+    + '<select onchange="window.__khhmNoiDungCol=parseInt(this.value,10);khhmImpParse()" style="border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:5px 8px;font-size:12.5px;max-width:100%">'
+    + '<option value="-1"'+(ndCol<0?' selected':'')+'>— Không lấy —</option>';
+  for(let c=0;c<ncols;c++){ ndSel+='<option value="'+c+'"'+(c===ndCol?' selected':'')+'>'+esc(colLabel(c))+'</option>'; }
+  ndSel+='</select> '+(ndOverride!==null?'<span class="tag t-brass" style="font-size:10px">đã chọn thủ công</span>':'<span class="muted" style="font-size:11px">(tự nhận diện)</span>')
+    + '<div class="muted" style="margin-top:5px;font-size:11.5px">'
+    + (ndCol>=0 ? ('Đang lấy Nội dung từ <b>'+esc(colLabel(ndCol))+'</b> — '+ndCntFilled+'/'+drafts.length+' dòng có dữ liệu. ') : '')
+    + 'Nếu cột Nội dung trống, hãy mở file HĐ xem cột “Chất liệu, quy cách” là cột thứ mấy rồi chọn đúng cột đó ở đây.</div></div>';
+  h+=ndSel
     + '<label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12.5px;cursor:pointer;line-height:1.5"><input type="checkbox" id="khhmImpMerge" style="width:16px;height:16px;margin-top:1px"> <span><b>Cập nhật hạng mục trùng tên đã có</b> (điền Nội dung & các ô còn trống từ hợp đồng, không tạo dòng trùng). Bỏ chọn = thêm mới nối tiếp danh sách.</span></label>'
     + '<div class="muted" style="margin-top:6px">Bấm <b>Lưu</b> để áp dụng '+drafts.length+' hạng mục.</div>';
   pv.innerHTML=h; if(saveBtn) saveBtn.classList.remove('hide');
