@@ -984,7 +984,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
    3. Ghi offline xếp hàng đợi (pending) → tự đẩy lại khi có mạng
 ================================================================ */
 
-const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbxamtecKswoDZh4kX1xTlco_-319E4dKEOBjrLwpjS541HVI-kW1AxNsquLBdMJ55gk/exec'; // ★ v5 — URL HỢP NHẤT CRM+PM (deployment mới, có verifyLogin + self-heal)
+const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbxamtecKswoDZh4kX1xTlco_-319E4dKEOBjrLwpjS541HVI-kW1AxNsquLBdMJ55gk/exec';
+const SECRET_TOKEN = 'MDC-Secure-2026-Kp9Qv3Ls2Tn8w'; // ★ P0 bảo mật: khớp SECRET_TOKEN backend // ★ v5 — URL HỢP NHẤT CRM+PM (deployment mới, có verifyLogin + self-heal)
 // Danh sách URL backend đã ngừng dùng — tự dọn khỏi localStorage của MỌI thiết bị,
 // kể cả khi người dùng từng tự sửa URL (cờ mdcpm_api_custom). Chống lỗi 'máy này chạy máy kia không'.
 const OBSOLETE_APIS = [
@@ -1434,7 +1435,7 @@ function pmkvMigrate(){
 async function apiGet(action){
   const url = store.api;
   if(!url) throw new Error('Chưa cấu hình URL Apps Script');
-  const res = await fetch(url + '?app=pm&action=' + action, {method:'GET'});
+  const res = await fetch(url + '?app=pm&action=' + action + '&token=' + encodeURIComponent(SECRET_TOKEN), {method:'GET'});
   return res.json();
 }
 async function apiPost(action, data){
@@ -1446,7 +1447,7 @@ async function apiPost(action, data){
   const res = await fetch(url, {
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'}, // chống CORS preflight
-    body: JSON.stringify({app:'pm', action, data: payload, user: user ? user['Họ tên'] : ''})
+    body: JSON.stringify({app:'pm', action, data: payload, token: SECRET_TOKEN, user: user ? user['Họ tên'] : ''})
   });
   return res.json();
 }
@@ -1464,7 +1465,7 @@ async function flushPending(){
   try{
     const url = store.api;
     const res = await fetch(url, {method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({app:'pm', action:'batch', ops, user: user ? user['Họ tên'] : ''})});
+      body: JSON.stringify({app:'pm', action:'batch', ops, token: SECRET_TOKEN, user: user ? user['Họ tên'] : ''})});
     const j = await res.json();
     if(j.ok && j.results){
       // Lọc bỏ các op có lỗi logic vĩnh viễn (action không tồn tại, sai cấu trúc…)
@@ -1616,7 +1617,7 @@ async function doLogin(){
     // ★ v4.0 — xác thực TẠI MÁY CHỦ: mật khẩu không bao giờ rời khỏi Sheets
     const res = await fetch(store.api, {method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'verifyLogin', username:u, password:p})});
+      body: JSON.stringify({action:'verifyLogin', username:u, password:p, token: SECRET_TOKEN})});
     const j = await res.json();
     if(!j.ok){ err.textContent = j.error || 'Sai tài khoản hoặc mật khẩu.'; return; }
     const q = j.user || {};
@@ -11075,7 +11076,7 @@ async function apiBatch(ops){
   if(!url) throw new Error('Chưa cấu hình URL Apps Script');
   const res = await fetch(url, {method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({action:'batch', ops, user: user ? user['Họ tên'] : ''})});
+    body: JSON.stringify({action:'batch', ops, token: SECRET_TOKEN, user: user ? user['Họ tên'] : ''})});
   return res.json();
 }
 
