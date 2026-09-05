@@ -2359,6 +2359,38 @@ function khhmFromKhc(ma){
   toast(n? ('✓ Đã điền '+n+' mốc hạng mục theo kế hoạch bộ phận (chỉ ô trống)') : 'Các mốc hạng mục đã có sẵn — không có ô trống để điền', !n);
   render();
 }
+/* ★ v7.7 (F7) — NẠP HẠNG MỤC TỪ BÁO GIÁ ĐÃ CHỐT (CRM→PM). Thuần frontend, chống trùng theo ten|dvt. */
+function khhmFromBaoGia(ma){
+  if(!khhmCanEd(ma)) return toast('Bạn không có quyền sửa', true);
+  var d=(S.duan||[]).find(function(x){return x['Mã DA']===ma;})||{};
+  var maKH=String(d['Mã KH (CRM)']||'').trim();
+  if(!maKH) return toast('Dự án chưa liên kết khách CRM (thiếu Mã KH (CRM)) — không tìm được báo giá.', true);
+  var bgs=(S.baogia||[]).filter(function(b){return String(b['Mã KH']||'').trim()===maKH;});
+  var pick=function(arr){return arr.sort(function(a,b){return (+b['Phiên bản']||0)-(+a['Phiên bản']||0);})[0];};
+  var bg=pick(bgs.filter(function(b){return b['Trạng thái']==='Khách chấp thuận';}))
+        || pick(bgs.filter(function(b){return b['Trạng thái']==='Đã duyệt';}))
+        || pick(bgs);
+  if(!bg) return toast('Khách chưa có báo giá (cần báo giá đã chốt/duyệt).', true);
+  var items=[]; try{ items=JSON.parse(bg['Hạng mục JSON']||'[]')||[]; }catch(e){}
+  var HEAD={nhom:1,tang:1,phong:1};
+  var leaf=items.filter(function(it){return it && String(it.ten||'').trim() && !HEAD[it.cap];});
+  if(!leaf.length) return toast('Báo giá '+(bg['Mã BG']||'')+' không có hạng mục chi tiết để nạp.', true);
+  var rows=khhmGet(ma), existed={};
+  rows.forEach(function(r){ existed[String(r.ten||'').trim()+'|'+(r.dvt||'')]=true; });
+  var n=0;
+  leaf.forEach(function(it){
+    var key=String(it.ten).trim()+'|'+(it.dvt||'');
+    if(existed[key]) return;
+    existed[key]=true;
+    rows.push({ id:khhmNewId(), ten:String(it.ten).trim(), noiDung:it.mt||'', dvt:it.dvt||'',
+      kl:(it.kl!=null?String(it.kl):''), sl:(it.sl!=null?String(it.sl):''),
+      tt:(it.tt!=null?it.tt:''), ghichu:it.gc||'' });
+    n++;
+  });
+  khhmSetRows(ma,rows);
+  toast(n? ('✓ Đã nạp '+n+' hạng mục từ báo giá '+(bg['Mã BG']||'')+' (bỏ qua trùng)') : 'Các hạng mục của báo giá đã có trong kế hoạch — không nạp thêm.', !n);
+  render();
+}
 /* ★ v6.4 (P2) — % HẠNG MỤC CUỘN LÊN TIẾN ĐỘ + GANTT HẠNG MỤC ================= */
 // Tiến độ cuộn từ các hạng mục: trọng số theo THÀNH TIỀN nếu có, không thì trung bình đều.
 function khhmRollup(ma){
@@ -2421,6 +2453,7 @@ function pjKeHoachHangMuc(d){
     + '<span class="muted" style="font-weight:400">— bóc tách từ bảng hạng mục hợp đồng</span>'
     + '<span class="ct-r">'
     + (canEd?'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmImport(\''+esc(ma)+'\')">⬆ Nhập từ hợp đồng</button> ':'')
+    + (canEd?'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmFromBaoGia(\''+esc(ma)+'\')" title="Nạp hạng mục từ báo giá đã chốt của khách (bỏ qua trùng)">📥 Nạp từ báo giá</button> ':'')
     + '<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmExportCsv(\''+esc(ma)+'\')">⬇ Xuất Excel</button> '
     + '<button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmPrint(\''+esc(ma)+'\')">🖨 Xuất PDF</button>'
     + (canEd?' <button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="khhmFromKhc(\''+esc(ma)+'\')" title="Lấy mốc từ Kế hoạch chi tiết theo bộ phận điền vào từng hạng mục (chỉ ô trống)">⚡ Gợi ý mốc theo bộ phận</button>':'')
