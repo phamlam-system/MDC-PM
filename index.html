@@ -476,7 +476,7 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 @media print{
   body.print-doc>*{display:none!important}
   body.print-doc>#docPrintHolder{display:block!important;position:absolute;left:0;top:0;width:100%}
-  #docPrintHolder .doc-print{display:block;font-family:Arial;color:#111}
+  #docPrintHolder .doc-print{display:block;font-family:"Times New Roman",Times,serif;color:#111}
 }
 
 /* ★ Nhóm 3 — Thầu phụ card */
@@ -5677,7 +5677,7 @@ function vGantt(){
 // Chuyển lớp hiển thị Gantt (Kế hoạch / Thực tế / cả hai)
 function gLayer(v){ window._gLayer = v; render(); }
 // Xuất PDF sơ đồ Gantt: nhân bản vùng biểu đồ ra ngoài body rồi gọi hộp thoại in (Lưu dạng PDF)
-function setPrintPage(o){ let s=document.getElementById('printPageStyle'); if(!s){ s=document.createElement('style'); s.id='printPageStyle'; document.head.appendChild(s); } s.textContent='@page{size:A4 '+o+';margin:'+(o==='landscape'?'9mm':'14mm')+'}'; }
+function setPrintPage(o){ let s=document.getElementById('printPageStyle'); if(!s){ s=document.createElement('style'); s.id='printPageStyle'; document.head.appendChild(s); } s.textContent='@page{size:A4 '+o+';margin:'+(o==='landscape'?'12mm 9mm 14mm':'16mm 14mm')+'}@page{@bottom-center{content:"Trang " counter(page) " / " counter(pages);font-size:9px;color:#9AA3AD;font-family:Arial,sans-serif}}'; }
 function printGantt(){
   setPrintPage('landscape');
   const area = document.getElementById('ganttPrintArea');
