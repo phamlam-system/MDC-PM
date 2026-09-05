@@ -4196,7 +4196,7 @@ function vProjects(){
   const canNew=can('edit')||capBacRank_(user['Vai trò'])!=='nhanvien';
   // Header
   let html=seg+'<div class="cv-head"><div><h2 style="margin:0">Dự án</h2><div class="muted" style="font-size:13px;margin-top:2px">Tất cả dự án và trạng thái tiến độ</div></div>'
-    + (canNew?'<button class="btn btn-brass" onclick="formProject()">+ Tạo dự án</button>':'')+'</div>';
+    + (canNew?'<button class="btn btn-ghost" onclick="dnImport()">⬆ Nhập dự án</button> <button class="btn btn-brass" onclick="formProject()">+ Tạo dự án</button>':'')+'</div>';
   html += leadSection();
   // KPI
   html+='<div class="kpis">'
@@ -6984,6 +6984,96 @@ function __updateProjSeedPreview(){
   if(lh && box) box.innerHTML = seedPreviewHtml(lh.value);
   const seed = document.getElementById('pSeed');
   if(lh && seed){ const xd = laLoaiXayDung(lh.value); seed.disabled = xd; if(xd) seed.checked = false; }
+}
+/* ★ v7.9 — TRÌNH NHẬP DỰ ÁN TỪ FILE (CSV / dán từ Excel). Tự khớp Mã KH (CRM) theo SĐT. */
+function dnImpNorm(s){ return String(s==null?'':s).trim(); }
+function dnImpPhone(x){ var s=String(x||'').replace(/[^0-9]/g,''); if(s.indexOf('84')===0&&s.length>=11)s=s.slice(2); return s.replace(/^0+/,''); }
+function dnImpSplit(line){
+  if(line.indexOf('\t')>-1) return line.split('\t').map(dnImpNorm);
+  var out=[],cur='',q=false;
+  for(var i=0;i<line.length;i++){ var c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===','){ out.push(cur); cur=''; } else cur+=c; }
+  }
+  out.push(cur); return out.map(dnImpNorm);
+}
+function dnImpParse(text){
+  var lines=String(text||'').split(/\r?\n/).filter(function(l){return l.trim()!=='';});
+  var map={ten:0,kh:1,sdt:2,dc:3,lh:4,tk:5,tc:6,bd:7,pt:8};
+  if(lines.length){
+    var h=dnImpSplit(lines[0]).map(function(x){return String(x).toLowerCase();});
+    var find=function(subs){ for(var i=0;i<h.length;i++){ for(var j=0;j<subs.length;j++){ if(h[i].indexOf(subs[j])>-1) return i; } } return -1; };
+    if(h.some(function(x){return /tên dự án|ten du an|dự án|du an/.test(x);})){
+      map={ ten:find(['tên dự án','ten du an','tên','ten']), kh:find(['khách hàng','khach hang','khách','khach']),
+        sdt:find(['số điện thoại','so dien thoai','sđt','điện thoại']), dc:find(['địa chỉ','dia chi']),
+        lh:find(['loại hình','loai hinh','loại','loai']), tk:find(['thiết kế','thiet ke']),
+        tc:find(['thi công','thi cong']), bd:find(['ngày bắt đầu','ngay bat dau','bắt đầu']), pt:find(['phụ trách','phu trach']) };
+      lines=lines.slice(1);
+    }
+  }
+  var G=function(c,k){ var i=map[k]; return (i!=null&&i>=0&&i<c.length)?dnImpNorm(c[i]):''; };
+  var num=function(v){ return Math.round(+String(v).replace(/[^\d]/g,'')||0); };
+  var existTen={}; (S.duan||[]).forEach(function(d){ existTen[dnImpNorm(d['Tên dự án']).toLowerCase()]=true; });
+  var items=[];
+  lines.forEach(function(line){
+    if(/dòng ví dụ|vi du|example/i.test(line)) return;
+    var c=dnImpSplit(line);
+    var ten=G(c,'ten'); if(!ten) return;
+    var sdt=G(c,'sdt'), phk=dnImpPhone(sdt), maKH='';
+    if(phk && Array.isArray(S.leads)){ var m=S.leads.find(function(l){return dnImpPhone(l.sdt||l.phone)===phk;}); if(m) maKH=m.code||m.id||''; }
+    var status='ok', reason='';
+    if(existTen[dnImpNorm(ten).toLowerCase()]){ status='dup'; reason='Trùng tên dự án đã có'; }
+    else if(!maKH){ status='warn'; reason='Chưa khớp khách CRM'; }
+    items.push({ ten:ten, kh:G(c,'kh'), sdt:sdt, dc:G(c,'dc'), lh:G(c,'lh'),
+      tk:num(G(c,'tk')), tc:num(G(c,'tc')), bd:G(c,'bd'), pt:G(c,'pt'), maKH:maKH, status:status, reason:reason });
+  });
+  window.__dnImp=items;
+  var pv=document.getElementById('dnImpPv'); if(!pv) return;
+  if(!items.length){ pv.innerHTML='<div class="muted" style="margin-top:8px">Chưa có dòng hợp lệ (cần cột Tên dự án).</div>'; return; }
+  var ok=items.filter(function(x){return x.status!=='dup';});
+  var body=items.slice(0,8).map(function(x){ var col=x.status==='dup'?'#9A8F82':(x.status==='warn'?'#7A3800':'#0F5132');
+    var lbl=x.status==='dup'?'⊘ trùng':(x.status==='warn'?'⚠ chưa khớp KH':'✓ '+esc(x.maKH));
+    return '<tr><td>'+esc(x.ten)+'</td><td>'+esc(x.kh)+'</td><td>'+esc(x.sdt)+'</td><td style="color:'+col+';white-space:nowrap">'+lbl+'</td></tr>'; }).join('');
+  pv.innerHTML='<div style="font-weight:700;margin:10px 0 6px">Xem trước: '+ok.length+' dự án sẽ nhập'+(items.length>ok.length?(' · '+(items.length-ok.length)+' trùng bỏ qua'):'')+'</div>'
+    +'<div style="max-height:220px;overflow:auto;border:1px solid #e3ddd0;border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:#f3efe6"><th style="text-align:left;padding:5px 7px">Tên dự án</th><th style="text-align:left;padding:5px 7px">Khách</th><th style="text-align:left;padding:5px 7px">SĐT</th><th style="text-align:left;padding:5px 7px">Khớp CRM</th></tr>'+body+'</table></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn btn-ghost" onclick="closeModal()">Hủy</button>'
+    +'<button class="btn btn-brass" onclick="dnImpConfirm()">Nhập '+ok.length+' dự án</button></div>';
+}
+function dnImpFile(input){
+  var f=input.files&&input.files[0]; if(!f) return;
+  var rd=new FileReader();
+  rd.onload=function(){ var t=document.getElementById('dnImpTxt'); if(t) t.value=rd.result; dnImpParse(rd.result); };
+  rd.readAsText(f,'utf-8');
+}
+function dnImpConfirm(){
+  var items=(window.__dnImp||[]).filter(function(x){return x.status!=='dup';});
+  if(!items.length) return toast('Không có dự án hợp lệ để nhập', true);
+  var n=0;
+  items.forEach(function(x){
+    var rec={ 'Mã DA':'', 'Tên dự án':x.ten, 'Khách hàng':x.kh, 'SĐT khách':x.sdt,
+      'Địa chỉ công trình':x.dc, 'Loại hình':x.lh, 'Giai đoạn':'Tiếp nhận & Báo giá',
+      'Ngân sách (đ)':'', 'Giá trị HĐ Thiết kế (đ)':x.tk||0, 'Giá trị HĐ Thi công (đ)':x.tc||0,
+      'Giá trị HĐ (đ)':(x.tk||0)+(x.tc||0), 'Tiến độ (%)':0,
+      'Ngày bắt đầu':x.bd, 'Ngày kết thúc DK':'', 'Phụ trách':x.pt, 'Trạng thái':'Đang triển khai',
+      'Ghi chú':'Nhập từ file', 'Thành viên':'' };
+    if(x.maKH) rec['Mã KH (CRM)']=x.maKH;
+    rec['Mã DA']=tempCode('DA', S.duan, 'Mã DA'); S.duan.push(rec);
+    pushOp('seedNewProject', { project: rec, seedTasks:false, __newRef: rec });
+    n++;
+  });
+  closeModal();
+  if(typeof render==='function') render();
+  toast('✓ Đã tạo '+n+' dự án từ file (đang đồng bộ lên Sheet)');
+}
+function dnImport(){
+  if(typeof can==='function' && !can('edit')) return toast('Bạn không có quyền tạo dự án', true);
+  window.__dnImp=null;
+  var body='<div class="muted" style="margin-bottom:8px;line-height:1.5">Dán bảng từ template Dự án (bôi đen các dòng rồi Ctrl+C) hoặc chọn file <b>.csv</b>. Cột: <b>Tên dự án · Khách hàng · Số điện thoại · Địa chỉ · Loại hình · Giá trị HĐ Thiết kế · Giá trị HĐ Thi công · Ngày bắt đầu · Phụ trách</b>. Hệ tự khớp <b>Mã KH (CRM)</b> theo SĐT; dòng tiêu đề &amp; ví dụ tự bỏ.</div>'
+    +'<label class="btn btn-ghost" style="cursor:pointer">📂 Chọn file CSV<input type="file" accept=".csv,text/csv" style="display:none" onchange="dnImpFile(this)"></label>'
+    +'<textarea id="dnImpTxt" placeholder="…hoặc dán ở đây (cột cách nhau bằng Tab hoặc dấu phẩy)…" oninput="dnImpParse(this.value)" style="width:100%;height:120px;margin-top:8px;padding:8px;border:1px solid #ddd6c8;border-radius:7px;font-size:12.5px;font-family:monospace"></textarea>'
+    +'<div id="dnImpPv"></div>';
+  openModal('⬆ Nhập Dự án từ file', body);
+  var ms=document.getElementById('modalSave'); if(ms) ms.classList.add('hide');
 }
 function formProject(code){
   const d = code ? S.duan.find(x=>x['Mã DA']===code) : null;
