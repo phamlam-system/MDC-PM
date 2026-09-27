@@ -2154,13 +2154,16 @@ function tcExcel(){
    Nguồn: sheet 'Hợp đồng KH' (CRM). Kế hoạch chung lấy ngày ký HĐ chính (ưu tiên thi công).
    Khi CRM đổi ngày ký, máy chủ đặt cờ __tinhLai → PM tự tính lại ngày hoàn thành HĐ & lưu vào dự án. */
 function pmNgayHT(v){ var i=pbNgay(v); return i?fmtDMY(i):String(v||''); }
-function pmNgayKyCRM(d){
-  if(!d) return ''; var da=d['Mã DA'], kh=String(d['Mã KH (CRM)']||'').trim();
+/* HĐ chính của dự án (giống backend hdChinhCuaDA_): hiệu lực, ưu tiên thi công, ký sớm nhất */
+function pmHDChinh(d){
+  if(!d) return null; var da=d['Mã DA'], kh=String(d['Mã KH (CRM)']||'').trim();
   var ds=(S.hopdongKH||[]).filter(function(r){ if(/nháp|hủy|huỷ/i.test(String(r['Trạng thái']||''))) return false; var rd=String(r['Mã DA']||'').trim(); return rd ? rd===da : !!(kh && String(r['Mã KH']||'').trim()===kh); });
-  if(!ds.length) return '';
+  if(!ds.length) return null;
   var tc=ds.filter(function(r){ var n=String(r['Nhóm HĐ']||'').toUpperCase(); return n ? n==='TC' : /^TC|thi công/i.test(String(r['Loại HĐ']||'')+' '+String(r['Tiêu đề']||'')); });
-  return (tc.length?tc:ds).map(function(r){ return pbNgay(r['Ngày ký']); }).filter(Boolean).sort()[0]||'';
+  return (tc.length?tc:ds).slice().sort(function(a,b){ var x=pbNgay(a['Ngày ký'])||'9', y=pbNgay(b['Ngày ký'])||'9'; return x>y?1:x<y?-1:0; })[0];
 }
+function pmNgayKyCRM(d){ var h=pmHDChinh(d); return h?pbNgay(h['Ngày ký']):''; }
+function pmSoHDCRM(d){ var h=pmHDChinh(d); return h?String(h['Số HĐ']||'').trim():''; }
 function pmApNgayKyCRM(){
   var st=khcStore(), doi=false, n=0; if(!st || typeof st!=='object') return 0;
   var sua=(typeof can==='function' && can('edit'));
@@ -2454,7 +2457,7 @@ function khcRaw(ma, key){ const s=khcGet(ma); return (key in s) ? s[key] : undef
 // ---- Helper dùng chung ----
 function ksDiff(a,b){ if(!a||!b) return null; return Math.round((new Date(b)-new Date(a))/86400000); }
 function ksSoHDStore(){ return pmkvGet('sohd')||{}; }
-function ksSoHD(maDA){ const d=(S.duan||[]).find(x=>x['Mã DA']===maDA); return (d&&(d['Số hợp đồng']||d['Số HĐ'])) || ksSoHDStore()[maDA] || ''; }
+function ksSoHD(maDA){ const d=(S.duan||[]).find(x=>x['Mã DA']===maDA); return (d&&(d['Số hợp đồng']||d['Số HĐ'])) || ksSoHDStore()[maDA] || pmSoHDCRM(d) || ''; }   /* ★ v8.7 — thiếu thì lấy số HĐ chính từ CRM */
 function ksSetSoHD(maDA,v){ if(!maDA) return; const s=ksSoHDStore(); if(v) s[maDA]=String(v); else delete s[maDA]; pmkvSet('sohd', s); }
 
 // ---- Cách tính ngày theo tính chất hợp đồng + Danh mục ngày lễ (v4.8) ----
