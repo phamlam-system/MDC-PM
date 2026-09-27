@@ -142,7 +142,8 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:22px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
 .kpi .lbl{font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.7px}
-.kpi .val{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .val{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-top:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.2}
+.money-hint{font-size:11px;color:var(--ok,#0F5132);font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
 .kpi .hint{font-size:11.5px;color:var(--ink-faint);margin-top:2px}
 .kpi.accent .val{color:var(--brass-deep)}
 .kpi.bad .val{color:var(--bad)}
@@ -1375,7 +1376,7 @@ const LOAI_BB = [
   {k:'Nghiệm thu hoàn thành bộ phận / giai đoạn thi công', d:'Nghiệm thu xong một bộ phận hoặc một giai đoạn (phần móng, phần thô, hoàn thiện…)'},
   {k:'Nghiệm thu bàn giao công trình đưa vào sử dụng', d:'Bàn giao toàn bộ công trình cho chủ đầu tư khi hoàn thành'}
 ];
-const TT_BB = ['Nháp','Đạt','Không đạt','Chờ ký','Đã ký','Đã huỷ'];
+const TT_BB = ['Nháp','Đạt','Không đạt','Chờ ký','Đã ký','Đã hủy'];   /* ★ v8.0 — thống nhất dấu "hủy" */
 const TT_AT       = ['Ghi nhận','Đang xử lý','Đã xử lý','Đóng'];
 
 /* ---------- Lưu trữ cục bộ ---------- */
@@ -1538,6 +1539,7 @@ async function syncAll(manual){
         // Di cư lần đầu sau deploy: đẩy lên server các kho local có mà server CHƯA có
         Object.keys(localKV).forEach(function(k){ if(j.pmkv[k]===undefined && localKV[k]!=null) pmkvSet(k, localKV[k]); });
       } else { S.pmkv = S.pmkv || {}; }
+      try{ pmChuanHoaDuLieu(); }catch(_e){ console.warn('chuẩn hóa', _e); }   /* ★ v8.0 */
       store.saveState();
       setSync('ok','Đồng bộ ' + new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}));
       if(user) render();
@@ -1549,6 +1551,7 @@ async function syncAll(manual){
   }
 }
 function pushOp(action, data){
+  try{ pmChuanBanGhi(data); }catch(_e){}   /* ★ v8.0 — SĐT có số 0 đầu */
   // Cập nhật cục bộ ngay (optimistic), sau đó đẩy lên Sheets
   // PHÂN BIỆT 2 loại lỗi:
   //   - Lỗi LOGIC backend (j.ok=false): rollback optimistic, báo lỗi cụ thể, KHÔNG đẩy pending
@@ -1747,8 +1750,148 @@ function btnZalo(sdt, label){
 }
 
 /* ---------- Tiện ích ---------- */
-const fmt = n => (Number(n)||0).toLocaleString('vi-VN');
-const fmtTr = n => { n = Number(n)||0; return n >= 1e9 ? (n/1e9).toFixed(2).replace('.',',')+' tỷ' : n >= 1e6 ? (n/1e6).toFixed(1).replace('.',',')+' tr' : fmt(n)+' đ'; };
+const fmt = n => soTien(n);   /* ★ v8.0 — số nguyên, tách hàng nghìn bằng dấu chấm */
+const fmtTr = n => soTien(n)+' đ';   /* ★ v8.0 — số tiền hiển thị đủ đến hàng đơn vị (trước: "1,25 tỷ", "350,0 tr") */
+
+/* ══════════════════ ★ v8.0 — CHUẨN HÓA DỮ LIỆU PM (đồng bộ với CRM v9.66 · backend v6.24) ══════════════════
+   Số tiền đủ đến hàng đơn vị · SĐT có số 0 đầu · trạng thái quy về đúng danh sách TT_* · tiền dạng chữ → số. */
+function soTien(v){ v=Math.round(+v||0); var a=String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); return (v<0?'-':'')+a; }
+function pmN(s){ return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9()]+/g,' ').replace(/\s+/g,' ').trim(); }
+function chuanSDT(p){ var s=String(p||'').replace(/[^0-9]/g,''); if(s.indexOf('84')===0 && s.length>=11) s='0'+s.slice(2); if(s.charAt(0)!=='0' && (s.length===9 || (s.length===10 && s.charAt(0)==='2'))) s='0'+s; return s; }
+function sdtChuan(p){
+  if(p==null) return ''; var raw=String(p).trim(); if(!raw) return '';
+  if(/[A-Za-zÀ-ỹ]/.test(raw)) return raw.replace(/(^|[^0-9])(\+?84)?([1-9]\d{8})(?![0-9])/g, function(m,a,b,c){ return a+'0'+c; });
+  return raw.split(/\s*[\/;,|]\s*|\s+-\s+/).filter(Boolean).map(function(x){ var d=x.replace(/[^0-9]/g,''); return d.length<8?x.trim():chuanSDT(x); }).filter(Boolean).join(' / ');
+}
+function laKhoaSDT(k){ return /^(sđt|sdt|số điện thoại|điện thoại|phone)\b|sđt khách|sđt kh\b|điện thoại khách/i.test(String(k||'').trim()); }
+function laCotSo(h){ var k=String(h||'').trim(); if(/\(đ\)\s*$/i.test(k) || /^(đơn giá|thành tiền|tổng tiền|số tiền)( ước tính)?$/i.test(k)) return 'tien'; if(/%/.test(k)) return 'pct'; return ''; }
+function soVN(v){
+  if(typeof v==='number') return isFinite(v)?v:null;
+  if(v===''||v==null) return null;
+  var s=String(v).trim().toLowerCase().replace(/\s+/g,''), nhan=1;
+  var m=s.match(/^(-?[\d.,]+)(tỷ|ty|tỉ|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)$/);
+  if(m){ s=m[1]; nhan=/^t[yỷỉ]/.test(m[2])?1e9:/^tr/.test(m[2])?1e6:1e3; }
+  s=s.replace(/(đồng|dong|vnđ|vnd|đ|₫|%)$/,'');
+  if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s=s.replace(/\./g,'').replace(',','.');
+  else if(/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s=s.replace(/,/g,'');
+  else if(/^-?\d+,\d+$/.test(s)) s=s.replace(',','.');
+  else if(!/^-?\d+(\.\d+)?$/.test(s)) return null;
+  var n=parseFloat(s); return isFinite(n)?n*nhan:null;
+}
+/* Từ điển trạng thái: danh sách chuẩn = đúng TT_* app đang dùng; alias = cách viết khác gặp trên Sheet (giống backend) */
+var PM_TT = {
+  duan:[TT_DUAN,{'dang thuc hien':'Đang triển khai','dang chay':'Đang triển khai','dang thi cong':'Đang triển khai','da hoan thanh':'Hoàn thành','da huy':'Hủy'}],
+  congviec:[TT_CV,{'chua lam':'Chưa bắt đầu','moi':'Chưa bắt đầu','dang thuc hien':'Đang làm','dang lam viec':'Đang làm','vuong':'Đang vướng','bi vuong':'Đang vướng','da duyet':'Đã phê duyệt','da hoan thanh':'Hoàn thành','xong':'Hoàn thành','hoan tat':'Hoàn thành'}],
+  thanhtoan:[TT_DOT,{'da thu':'Đã thu đủ','da thanh toan':'Đã thu đủ','thu du':'Đã thu đủ','da thu du tien':'Đã thu đủ','hoan thanh':'Đã thu đủ','da thu 1 phan':'Đã thu một phần','thu mot phan':'Đã thu một phần','mot phan':'Đã thu một phần','thu 1 phan':'Đã thu một phần','chua thu':'Chưa đến hạn','chua toi han':'Chưa đến hạn','da xuat de nghi thanh toan':'Đã xuất đề nghị','da de nghi':'Đã xuất đề nghị','de nghi thanh toan':'Đã xuất đề nghị','da huy':'Hủy','huy bo':'Hủy'}],
+  ttthauphu:[TT_TTP,{'da nghiem thu':'Đã nghiệm thu · chờ duyệt','da nghiem thu cho duyet':'Đã nghiệm thu · chờ duyệt','da duyet':'Đã duyệt · chờ chi','da duyet cho chi':'Đã duyệt · chờ chi','da chi':'Đã thanh toán','da tra':'Đã thanh toán'}],
+  hdthauphu:[TT_HDTP,{'hieu luc':'Đang hiệu lực','thanh ly':'Đã thanh lý','da huy':'Hủy'}],
+  tamung:[TT_TU,{'da chi':'Đã chi tạm ứng','da tam ung':'Đã chi tạm ứng','da hoan ung':'Đã hoàn ứng đủ','hoan ung du':'Đã hoàn ứng đủ','hoan ung mot phan':'Đã hoàn ứng một phần','da hoan ung 1 phan':'Đã hoàn ứng một phần'}],
+  thaubo:[TT_THAU,{'hop tac':'Đang hợp tác','dang xem xet':'Đang xét','ngung':'Ngừng hợp tác','da ngung':'Ngừng hợp tác'}],
+  lichhen:[TT_LH,{'len lich':'Đã lên lịch','xac nhan':'Đã xác nhận','hoan thanh':'Đã hoàn thành','da hoan':'Hoãn','tam hoan':'Hoãn','da huy':'Hủy'}],
+  muasam:[TT_MUASAM,{'da giao':'Đã nhận','da nhan hang':'Đã nhận','nhan hang':'Đã nhận','dat hang':'Đang đặt hàng','da dat hang':'Đang đặt hàng','nhap':'Đang soạn','da huy':'Hủy'}],
+  yeucaumua:[TT_YC,{'da dat':'Đã đặt mua','da mua':'Đã đặt mua'}],
+  bangluong:[TT_BL,{'ban nhap':'Nháp','da tra':'Đã chi','da thanh toan':'Đã chi','da tra luong':'Đã chi'}],
+  phatsinh:[TT_PS,{'da duyet':'Đã chấp thuận','duyet':'Đã chấp thuận','da phe duyet':'Đã chấp thuận','chap thuan':'Đã chấp thuận','cho duyet':'Chờ xử lý','moi':'Chờ xử lý','thuong luong':'Đang thương lượng','khong duyet':'Từ chối','da tu choi':'Từ chối','ky bo sung':'Đã ký bổ sung'}],
+  khongPH:[TT_NC,{'moi':'Mới ghi nhận','da dong':'Đóng','da xu ly':'Đã khắc phục'}],
+  ruiro:[TT_RR,{'theo doi':'Đang theo dõi','dong':'Đã đóng','chap nhan':'Chấp nhận rủi ro'}],
+  hosoTL:[TT_DOC,{'ban nhap':'Nháp','cho duyet':'Chờ lãnh đạo phê duyệt','cho phe duyet':'Chờ lãnh đạo phê duyệt','da duyet':'Đã phê duyệt','ban hanh':'Đã ban hành'}],
+  bienban:[TT_BB,{'huy':'Đã hủy','ban nhap':'Nháp','khong dat yeu cau':'Không đạt','dat yeu cau':'Đạt'}],
+  anToanCL:[TT_AT,{'moi':'Ghi nhận','da dong':'Đóng'}]
+};
+var PM_TT_DUYET=[['Chờ duyệt','Đã duyệt','Từ chối'],{'da phe duyet':'Đã duyệt','duyet':'Đã duyệt','khong duyet':'Từ chối','cho phe duyet':'Chờ duyệt'}];
+var PM_TEN_BANG={duan:'Dự án',congviec:'Công việc',thanhtoan:'Đợt thu tiền',ttthauphu:'Thanh toán thầu phụ',hdthauphu:'HĐ thầu phụ',tamung:'Tạm ứng',thaubo:'Nhà thầu phụ',lichhen:'Lịch hẹn',muasam:'Mua sắm',yeucaumua:'Yêu cầu mua',bangluong:'Bảng lương',phatsinh:'Phát sinh HĐ',khongPH:'Sự không phù hợp',ruiro:'Rủi ro',hosoTL:'Hồ sơ tài liệu',bienban:'Biên bản',anToanCL:'An toàn & CL',chiphi:'Chi phí',nhansu:'Nhân sự',thukhac:'Thu khác'};
+function pmTTChuan(t, v){
+  if(v===''||v==null || !t) return [v,true];
+  if(!t.mp){ var m={}; t[0].forEach(function(x){ m[pmN(x)]=x; }); Object.keys(t[1]).forEach(function(a){ m[pmN(a)]=t[1][a]; }); t.mp=m; }
+  var c=t.mp[pmN(v)]; return c?[c,true]:[String(v).trim(),false];
+}
+/* Chạy sau khi tải dữ liệu (Sheet hoặc bộ nhớ máy). Trả báo cáo cho trang Sức khỏe dữ liệu */
+function pmChuanHoaDuLieu(){
+  var bc={tt:0, tien:0, sdt:0, la:{}, vd:[]};
+  Object.keys(S||{}).forEach(function(bang){
+    var arr=S[bang]; if(!Array.isArray(arr) || bang==='leads') return;
+    arr.forEach(function(r){ if(!r || typeof r!=='object') return;
+      Object.keys(r).forEach(function(k){ var v=r[k]; if(v===''||v==null) return;
+        if(laKhoaSDT(k)){ var p=sdtChuan(v); if(p!==String(v)){ r[k]=p; bc.sdt++; } return; }
+        var ls=laCotSo(k);
+        if(ls){ if(typeof v==='number') return; var n=soVN(v); if(n!==null){ r[k]=ls==='tien'?Math.round(n):Math.round(n*100)/100; bc.tien++; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'"'); } return; }
+        var t=(k==='Trạng thái')?PM_TT[bang]:(k==='Trạng thái duyệt')?PM_TT_DUYET:null; if(!t) return;
+        var x=pmTTChuan(t,v); if(x[0]!==v){ r[k]=x[0]; bc.tt++; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'" → '+x[0]); }
+        if(!x[1]){ var kk=bang+'|'+k+'|'+x[0]; bc.la[kk]=(bc.la[kk]||0)+1; }
+      });
+    });
+  });
+  (S.leads||[]).forEach(function(l){ if(l && l.sdt){ var p=sdtChuan(l.sdt); if(p!==String(l.sdt)){ l.sdt=p; } } });
+  window.__pmBC=bc; return bc;
+}
+/* Ghi: chuẩn hóa SĐT trong bản ghi trước khi gửi (tiền/trạng thái backend v6.24 tự chuẩn khi lưu) */
+function pmChuanBanGhi(d){ if(!d || typeof d!=='object') return d; Object.keys(d).forEach(function(k){ if(laKhoaSDT(k) && d[k]) d[k]=sdtChuan(d[k]); }); return d; }
+
+/* ─── Sức khỏe dữ liệu: các kiểm tra chuẩn hóa bổ sung (gộp vào dataHealth) ─── */
+function pmKiemTraChuanHoa(add){
+  var dsDA=S.duan||[];
+  var saiSdt=dsDA.filter(function(d){ var p=sdtChuan(d['SĐT khách']); if(!p) return true; return p.split(' / ').some(function(x){ return !/^0\d{9,10}$/.test(x); }); });
+  if(saiSdt.length) add('vua','Chuẩn hóa','SĐT khách của dự án trống hoặc sai định dạng','Cổng khách hàng và liên kết CRM dựa vào SĐT — sai là khách không đăng nhập được.', saiSdt.length, null,
+    saiSdt.map(function(d){ return esc(d['Mã DA'])+' · '+esc(d['Tên dự án']||'')+' · <code>'+esc(d['SĐT khách']||'(trống)')+'</code>'; }));
+  var maKH={}; (S.leads||[]).forEach(function(l){ if(l && l.code) maKH[String(l.code)]=1; });
+  var coLead=Object.keys(maKH).length>0;
+  var chuaLK=dsDA.filter(function(d){ var k=String(d['Mã KH (CRM)']||''); return !k || (coLead && !maKH[k]); });
+  if(chuaLK.length) add('cao','Toàn vẹn','Dự án chưa liên kết khách hàng CRM','Thiếu "Mã KH (CRM)" hoặc mã không có bên CRM → báo cáo doanh thu CRM không gắn được về khách, hợp đồng/đợt thu không khớp.', chuaLK.length, null,
+    chuaLK.map(function(d){ return esc(d['Mã DA'])+' · '+esc(d['Tên dự án']||'')+(d['Mã KH (CRM)']?' · mã lạ <code>'+esc(d['Mã KH (CRM)'])+'</code>':' · (trống)'); }));
+  var bc=window.__pmBC||{tt:0,tien:0,sdt:0,la:{},vd:[]};
+  var tong=(bc.tien||0)+(bc.tt||0)+(bc.sdt||0);
+  if(tong) add('vua','Chuẩn hóa','Tiền dạng chữ · trạng thái viết lệch · SĐT mất số 0 trên Google Sheet','PM đã tự hiểu đúng khi tải về. Bấm "Xử lý" để sửa tận gốc trên Sheet (máy chủ tự sao lưu trước khi ghi).', tong, 'pmSuaSheet',
+    ['<b>'+bc.tien+'</b> ô tiền dạng chữ · <b>'+bc.tt+'</b> trạng thái lệch · <b>'+bc.sdt+'</b> SĐT'].concat(bc.vd.map(esc)));
+  var la=Object.keys(bc.la||{});
+  if(la.length) add('vua','Chuẩn hóa','Trạng thái lạ (không có trong danh sách chuẩn)','Bị rớt khỏi mọi bộ lọc/tổng hợp vì app so khớp đúng từng chữ. Sửa tay trên Sheet về một trạng thái chuẩn.', la.reduce(function(a,k){ return a+bc.la[k]; },0), null,
+    la.map(function(k){ var p=k.split('|'), t=(p[1]==='Trạng thái duyệt')?PM_TT_DUYET:PM_TT[p[0]]; return esc(PM_TEN_BANG[p[0]]||p[0])+' · '+esc(p[1])+': "<b>'+esc(p[2])+'</b>" × '+bc.la[k]+' <span class="muted">— chuẩn: '+esc(t[0].join(' · '))+'</span>'; }));
+  var CC_SET=['MAT','HDW','LAB','SUB','TRA','EQP','ADM','MKT','FIN','OTH'];
+  var cpThieu=(S.chiphi||[]).filter(function(c){ var k=String(c['Khoản mục']||'').trim().toUpperCase().slice(0,3); return !k || CC_SET.indexOf(k)<0; });
+  if(cpThieu.length && (S.chiphi||[]).some(function(c){ return 'Khoản mục' in c; })) add('thap','Chuẩn hóa','Chi phí chưa gắn khoản mục (MAT/LAB/SUB…)','Báo cáo lãi/lỗ theo khoản mục bị hụt.', cpThieu.length, null,
+    cpThieu.slice(0,200).map(function(c){ return esc(c['Mã CP']||'')+' · '+esc(c['Mã DA']||'')+' · '+fmtTr(c['Số tiền (đ)'])+' · <code>'+esc(c['Khoản mục']||'(trống)')+'</code>'; }));
+  var dotKH=(S.thanhtoan||[]).filter(function(t){ return !t['Mã HĐKH'] && t['Trạng thái']!=='Hủy'; });
+  if(dotKH.length) add('thap','Toàn vẹn','Đợt thu khách chưa gắn hợp đồng CRM (Mã HĐKH)','CRM phải đoán đợt thuộc HĐ thiết kế hay thi công. Chạy "Đồng bộ dữ liệu PM" ở CRM · Báo cáo doanh thu, hoặc chọn HĐ ở mục "chưa rõ thuộc hợp đồng nào".', dotKH.length, null,
+    dotKH.map(function(t){ return esc(t['Mã TT'])+' · '+esc(t['Mã DA']||'')+' · '+esc(t['Tên đợt']||'')+' · '+fmtTr(t['Giá trị (đ)']); }));
+  var tpSdt=(S.thaubo||[]).filter(function(t){ return t['Trạng thái']==='Đang hợp tác' && !/^0\d{9,10}$/.test(chuanSDT(t['SĐT'])); });
+  if(tpSdt.length) add('thap','Chuẩn hóa','Nhà thầu đang hợp tác thiếu / sai SĐT','Không liên hệ nhanh được khi cần.', tpSdt.length, null,
+    tpSdt.map(function(t){ return esc(t['Tên / Công ty']||'')+' · <code>'+esc(t['SĐT']||'(trống)')+'</code>'; }));
+}
+function pmSuaSheet(){
+  if(!can('staff')) return toast('Chỉ Admin được sửa dữ liệu gốc', true);
+  if(!store.api) return toast('Chưa kết nối Google Sheets', true);
+  openModal('🩺 Sửa dữ liệu tận gốc trên Google Sheet','<div class="muted" style="padding:8px">Đang quét toàn bộ Sheet (chỉ xem, chưa ghi)…</div>','');
+  apiPost('chuanHoaDuLieu',{ghi:false}).then(function(k){
+    if(!k || !k.ok) throw new Error((k&&k.error)||'Backend cần bản v6.24');
+    var li=function(x){ return '<li>'+x+'</li>'; };
+    var h='<div style="font-size:13px;line-height:1.6">Kết quả quét (chưa ghi gì):<ul style="margin:6px 0 10px 18px">'
+      +li('<b>'+k.sdt+'</b> ô SĐT')+li('<b>'+k.tien+'</b> ô tiền / % dạng chữ')+li('<b>'+k.tt+'</b> trạng thái viết lệch')+((k.doiTen||[]).length?li('Đổi tên cột: '+k.doiTen.map(esc).join(' · ')):'')+'</ul>'
+      +((k.vd||[]).length?'<details style="margin-bottom:10px"><summary style="cursor:pointer">Ví dụ ('+k.vd.length+')</summary><div class="muted" style="font-size:11.5px;max-height:200px;overflow:auto">'+k.vd.map(esc).join('<br>')+'</div></details>':'')
+      +'<div class="muted" style="font-size:12px">Khi ghi: máy chủ <b>sao lưu cả file Google Sheet</b> vào Drive rồi mới sửa. Chạy lại nhiều lần vẫn an toàn.</div></div>';
+    openModal('🩺 Sửa dữ liệu tận gốc trên Google Sheet', h,
+      '<button class="btn btn-ghost" onclick="closeModal()">Đóng</button>'+((k.sdt||k.tien||k.tt||(k.doiTen||[]).length)?'<button class="btn btn-brass" id="pmGhiBtn" onclick="pmGhiSheet()">✓ Sao lưu &amp; ghi</button>':''));
+  }).catch(function(e){ openModal('🩺 Sửa dữ liệu','<div style="color:var(--bad)">'+esc(e.message||String(e))+'</div>','<button class="btn btn-ghost" onclick="closeModal()">Đóng</button>'); });
+}
+function pmGhiSheet(){
+  var b=document.getElementById('pmGhiBtn'); if(b){ b.disabled=true; b.textContent='Đang sao lưu & ghi…'; }
+  apiPost('chuanHoaDuLieu',{ghi:true}).then(function(k){
+    if(!k || !k.ok) throw new Error((k&&k.error)||'Lỗi');
+    openModal('🩺 Đã chuẩn hóa','<div style="font-size:13px">✅ Đã sửa '+k.sdt+' ô SĐT · '+k.tien+' ô tiền · '+k.tt+' trạng thái.'+(k.saoLuu?'<br>Bản sao lưu: <a href="'+esc(k.saoLuu)+'" target="_blank">mở trong Drive</a>':'')+'</div>','<button class="btn btn-brass" onclick="closeModal()">Đóng</button>');
+    syncAll(true);
+  }).catch(function(e){ if(b){ b.disabled=false; b.textContent='✓ Sao lưu & ghi'; } toast('⛔ '+(e.message||e), true); });
+}
+/* Ô nhập tiền: hiện số tách hàng nghìn ngay dưới ô */
+function mhLaTien(el){
+  if(!el || el.type!=='number' || el.dataset.mh==='0') return false; if(el.dataset.mh==='1') return true;
+  var t=(el.id||'')+' '+(el.placeholder||'')+' '+(el.title||''), lb='';
+  try{ var p=el.parentElement; for(var i=0;i<2 && p && !lb;i++){ var L=p.querySelector('label'); if(L) lb=L.textContent||''; p=p.parentElement; } }catch(e){}
+  var ok=/(\(đ|đ\)|vnđ|giá trị|giá|tiền|chi phí|ngân sách|lương|phụ cấp|thưởng|thu\b|value|money|amount)/i.test(t+' '+lb) && !/%|tỷ lệ|số lượng|khối lượng|\bsl\b|kích thước|dài|rộng|cao|m²|mm\b|ngày|giờ|công\b/i.test(lb+' '+(el.placeholder||''));
+  el.dataset.mh=ok?'1':'0'; return ok;
+}
+function mhVe(el){ if(!mhLaTien(el)) return; var h=el.nextElementSibling; if(!(h && h.classList && h.classList.contains('money-hint'))){ h=document.createElement('div'); h.className='money-hint'; el.insertAdjacentElement('afterend',h); }
+  var v=Math.round(+el.value||0); h.textContent=Math.abs(v)>=1000?('= '+soTien(v)+' đ'):''; }
+document.addEventListener('input', function(e){ if(e.target && e.target.type==='number') mhVe(e.target); }, true);
+document.addEventListener('focusin', function(e){ if(e.target && e.target.type==='number') mhVe(e.target); }, true);
+/* ══════════════════ hết khối v8.0 ══════════════════ */
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toISOString().slice(0,10);
 function daysLeft(d){ if(!d) return null; return Math.ceil((new Date(d) - new Date(today())) / 86400000); }
@@ -1804,6 +1947,7 @@ const NAV_GROUPS = [
     {id:'lichhen',   name:'Lịch hẹn',        icon:'◷'},
     {id:'nhansu',    name:'Nhân sự',         icon:'◉'},
     {id:'congKH',    name:'Cổng khách hàng', icon:'🌐'},
+    {id:'kiemtra',   name:'Sức khỏe dữ liệu', icon:'✚'},   /* ★ v8.0 — trước đây trang có sẵn nhưng không có trên menu */
     {id:'caidat',    name:'Cài đặt',         icon:'⚙'},
   ]}
 ];
@@ -2924,7 +3068,7 @@ function fmtNum(n){ n=Math.round((Number(n)||0)*10)/10; return (n%1===0)?String(
 function nlsxNum(x){ const v=String(x==null?'':x).trim().replace(/\s/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.'); const n=parseFloat(v); return isNaN(n)?0:n; }
 function nlsxM2(r){ let n=nlsxNum(r.m2); if(n<=0) n=nlsxNum(r.kl); return n; }
 function nlsxQty(r,unit){ return (unit||nlsxUnit())==='gt' ? nlsxNum(r.tt)*nlsxGiaCong(r) : nlsxM2(r); }
-function nlsxFmt(v,unit){ return (unit||nlsxUnit())==='gt' ? (fmtNum((Number(v)||0)/1e6)+' tr') : fmtNum(v); }
+function nlsxFmt(v,unit){ return (unit||nlsxUnit())==='gt' ? (soTien(v)+' đ') : fmtNum(v); }
 function nlsxUnitLbl(unit){ return (unit||nlsxUnit())==='gt' ? 'giá trị' : 'm²'; }
 function nlsxToRes(r){ let n=r.to_nhom||'';
   if(!n){ const pl=vnorm(r.phanLoai||''); if(pl.indexOf('dr')>=0||pl.indexOf('do roi')>=0) n='TN đồ rời'; else if(pl.indexOf('lt')>=0||pl.indexOf('lien tuong')>=0) n='TN liền tường'; else n='Ván công nghiệp'; }
@@ -6611,7 +6755,7 @@ function blCalc(){
   const ht=(document.getElementById('blHT')||{}).value||'Tháng';
   const goc = ht==='Công nhật' ? g('blCong')*g('blDG') : g('blLCB');
   const tl = Math.round(goc + g('blPC') + g('blTC') + g('blThuong') - g('blTU') - g('blKT'));
-  const el=document.getElementById('blTL'); if(el) el.textContent = tl.toLocaleString('vi-VN')+' đ';
+  const el=document.getElementById('blTL'); if(el) el.textContent = soTien(tl)+' đ';
 }
 
 /* ---------- Trang Cài đặt ---------- */
@@ -9022,7 +9166,7 @@ function pjBienBan(d){
   const list=all.filter(x=>(!fLoai||x['Loại biên bản']===fLoai)&&(!fTT||x['Trạng thái']===fTT)
       &&(!q||((x['Mã BB']||'')+(x['Đối tượng nghiệm thu']||'')).toLowerCase().includes(q)))
     .sort((a,b)=>(b['Ngày nghiệm thu']||'')>(a['Ngày nghiệm thu']||'')?1:-1);
-  const pills=[['','Tất cả'],['Nháp','Nháp'],['Chờ ký','Chờ ký'],['Đã ký','Đã ký đủ'],['Đã huỷ','Đã huỷ']];
+  const pills=[['','Tất cả'],['Nháp','Nháp'],['Chờ ký','Chờ ký'],['Đã ký','Đã ký đủ'],['Đã hủy','Đã hủy']];
   let html='<div style="display:flex;justify-content:flex-end;margin-bottom:12px">'
     + (canEd?'<button class="btn btn-brass" onclick="window._bbDA=\''+code+'\';formBienBan()">+ Làm biên bản nghiệm thu</button>':'')+'</div>'
     + '<div class="cv-filter">'
@@ -10593,6 +10737,7 @@ function tempCode(prefix, arr, field){
 ================================================================ */
 (function init(){
   store.loadState();
+  try{ pmChuanHoaDuLieu(); }catch(_e){}   /* ★ v8.0 */
   pmkvMigrate();   // ★ v5.6 — chuyển dữ liệu kế hoạch cũ (localStorage) vào S.pmkv một lần
   // Phiên đăng nhập cũ
   const ses = store.session;
@@ -11653,7 +11798,8 @@ function kiemTraXoaNhanSu(ten){
 ================================================================ */
 function dataHealth(){
   const R = [];
-  const add = (mucdo, nhom, tieude, mota, n, fix) => R.push({mucdo, nhom, tieude, mota, n, fix});
+  const add = (mucdo, nhom, tieude, mota, n, fix, ct) => R.push({mucdo, nhom, tieude, mota, n, fix, ct});
+  try{ pmKiemTraChuanHoa(add); }catch(e){ console.warn('pmKiemTraChuanHoa', e); }   /* ★ v8.0 */
 
   /* --- 1. Bản ghi mồ côi: trỏ vào dự án không tồn tại --- */
   const maDA = new Set(S.duan.map(d=>d['Mã DA']));
@@ -11762,7 +11908,7 @@ function vDataHealth(){
   const cao = R.filter(x=>x.mucdo==='cao'), vua = R.filter(x=>x.mucdo==='vua'), thap = R.filter(x=>x.mucdo==='thap');
   const diem = Math.max(0, 100 - cao.length*10 - vua.length*4 - thap.length*1);
 
-  let html = '<div class="fin-hd"><h2>Kiểm tra dữ liệu</h2>'
+  let html = '<div class="fin-hd"><h2>Sức khỏe dữ liệu</h2>'
     + '<div class="sub">Rà soát toàn vẹn, chuẩn hóa và chất lượng dữ liệu — nên dọn sạch trước khi hợp nhất với CRM</div></div>';
 
   html += '<div class="card" style="margin-bottom:14px"><div class="card-body" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">'
@@ -11778,7 +11924,8 @@ function vDataHealth(){
       + '<div class="muted" style="margin-top:6px;font-size:12px">'
       + (R.length ? 'Bấm từng mục để xem và xử lý.' : '✓ Không phát hiện vấn đề nào — dữ liệu sạch.')
       + '</div></div>'
-    + '<button class="btn btn-ghost" onclick="render()">⟳ Kiểm tra lại</button>'
+    + '<button class="btn btn-ghost" onclick="syncAll(true)">⟳ Tải lại &amp; kiểm tra</button>'
+    + (can('staff')?'<button class="btn btn-brass" onclick="pmSuaSheet()">🛠 Sửa tận gốc trên Sheet…</button>':'')
     + '</div></div>';
 
   if(!R.length) return html + '<div class="empty"><b>🎉 Dữ liệu sạch</b>Hệ thống sẵn sàng để hợp nhất với CRM.</div>';
@@ -11791,7 +11938,9 @@ function vDataHealth(){
       + '<div class="tbl-wrap"><table class="tbl"><tbody>';
     items.sort((a,b)=>({cao:0,vua:1,thap:2}[a.mucdo]-{cao:0,vua:1,thap:2}[b.mucdo])).forEach(x=>{
       html += '<tr><td style="width:34px">'+(x.mucdo==='cao'?'🔴':x.mucdo==='vua'?'🟡':'⚪')+'</td>'
-        + '<td><b>'+esc(x.tieude)+'</b><div class="muted" style="font-size:11.5px;line-height:1.5">'+esc(x.mota)+'</div></td>'
+        + '<td><b>'+esc(x.tieude)+'</b><div class="muted" style="font-size:11.5px;line-height:1.5">'+esc(x.mota)+'</div>'
+        + (x.ct && x.ct.length ? '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:11.5px;color:var(--info,#1D4E89)">Xem chi tiết</summary><div style="font-size:12px;line-height:1.7;max-height:240px;overflow:auto;margin-top:4px">'+x.ct.slice(0,200).join('<br>')+(x.ct.length>200?'<br>… và '+(x.ct.length-200)+' mục khác':'')+'</div></details>' : '')
+        + '</td>'
         + '<td class="num" style="width:70px"><b style="font-size:15px;color:'
         + (x.mucdo==='cao'?'var(--bad)':x.mucdo==='vua'?'var(--warn)':'var(--ink-soft)')+'">'+x.n+'</b></td>'
         + '<td style="width:110px;text-align:right">'
