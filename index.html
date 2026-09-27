@@ -1892,6 +1892,55 @@ function mhVe(el){ if(!mhLaTien(el)) return; var h=el.nextElementSibling; if(!(h
 document.addEventListener('input', function(e){ if(e.target && e.target.type==='number') mhVe(e.target); }, true);
 document.addEventListener('focusin', function(e){ if(e.target && e.target.type==='number') mhVe(e.target); }, true);
 /* ══════════════════ hết khối v8.0 ══════════════════ */
+
+/* ══════════════════ ★ v8.1 — GIỮ LẠI BẢO HÀNH (hai chiều) ══════════════════
+   Khách giữ của MDC (đợt thu "Giữ lại bảo hành") · MDC giữ của thầu phụ (tỷ lệ giữ lại trên đợt đã chi + đợt "Giữ lại bảo hành" chưa hoàn). */
+function pmLaBH(x){ if(!x) return false; return x['Loại đợt']==='Giữ lại bảo hành' || x['Mã điều kiện']==='HET_BH' || /bao hanh|giu lai/.test(pmN(x['Tên đợt']||'')); }
+function pmBHKhach(){
+  return (S.thanhtoan||[]).filter(function(x){ return pmLaBH(x) && x['Trạng thái']!=='Hủy'; }).map(function(x){
+    var v=Number(x['Giá trị (đ)'])||0, t=Number(x['Đã thu (đ)'])||0; return {x:x, da:x['Mã DA'], v:v, t:t, con:Math.max(v-t,0), han:x['Ngày đến hạn']||''}; }).filter(function(r){ return r.con>0; });
+}
+function pmBHThauPhu(){
+  var out=[];
+  (S.hdthauphu||[]).forEach(function(h){
+    var dots=(S.ttthauphu||[]).filter(function(x){ return x['Mã HĐTP']===h['Mã HĐTP']; });
+    var giu=dots.filter(function(x){ return x['Trạng thái']==='Đã thanh toán' && x['Loại đợt']!=='Giữ lại bảo hành'; }).reduce(function(a,x){ return a+ttpGiuLai(x); },0);
+    var dotBH=dots.filter(function(x){ return x['Loại đợt']==='Giữ lại bảo hành' && x['Trạng thái']!=='Đã thanh toán'; });
+    var giuDot=dotBH.reduce(function(a,x){ return a+(Number(x['Giá trị (đ)'])||0); },0);
+    /* đợt BH riêng chỉ tính "đang giữ" khi các đợt khác đã chi hết */
+    var conDotKhac=dots.some(function(x){ return x['Loại đợt']!=='Giữ lại bảo hành' && x['Trạng thái']!=='Đã thanh toán'; });
+    var tong=giu+(conDotKhac?0:giuDot); if(tong<=0) return;
+    var ttCuoi=dots.map(function(x){ return x['Ngày thanh toán']||''; }).filter(Boolean).sort().pop()||'';
+    var thang=Number(h['Bảo hành (tháng)'])||12, han=dotBH[0]&&dotBH[0]['Ngày đến hạn']||'';
+    if(!han && ttCuoi){ var d=new Date(ttCuoi+'T00:00:00'); d.setMonth(d.getMonth()+thang); han=d.toISOString().slice(0,10); }
+    out.push({h:h, da:h['Mã DA'], tp:h['Thầu phụ'], con:tong, han:han, thang:thang, uoc:!dotBH.length||!dotBH[0]['Ngày đến hạn']});
+  });
+  return out;
+}
+function finBaoHanh(){
+  var K=pmBHKhach(), T=pmBHThauPhu();
+  var sK=K.reduce(function(a,r){ return a+r.con; },0), sT=T.reduce(function(a,r){ return a+r.con; },0);
+  var tenDA=function(da){ var d=(S.duan||[]).find(function(v){ return v['Mã DA']===da; })||{}; return d['Tên dự án']||da||'—'; };
+  var hanTxt=function(h){ if(!h) return '<span class="muted">chờ bàn giao</span>'; var n=daysLeft(h); return fmtDMY(h)+(n!=null?(n<0?' <span class="tag t-bad">quá '+Math.abs(n)+' ngày</span>':n<=30?' <span class="tag t-info">còn '+n+' ngày</span>':''):''); };
+  var html='<div class="fin-k4">'
+    +fkCard('Khách đang giữ của MDC', fmtTr(sK), '🛡', '#F1EAF8', '#5B3E8C', K.length+' đợt · thu khi hết hạn BH')
+    +fkCard('MDC đang giữ của thầu phụ', fmtTr(sT), '🔒', '#E8EEF7', '#2E5A8F', T.length+' hợp đồng · hoàn khi hết hạn BH')
+    +fkCard('Chênh lệch', (sK-sT>=0?'+':'')+fmtTr(sK-sT), '⚖', 'var(--ok-bg)', sK-sT>=0?'var(--ok)':'var(--bad)', 'Khách giữ − MDC giữ')
+    +fkCard('Đến hạn ≤ 30 ngày', fmtTr(K.filter(function(r){ var n=daysLeft(r.han); return r.han && n!=null && n<=30; }).reduce(function(a,r){ return a+r.con; },0)), '⏰', '#FFF3E0', '#E65100', 'Khoản khách cần thu sớm')
+    +'</div>';
+  html+='<div class="card"><div class="ct">🛡 Khách giữ lại bảo hành (MDC chờ thu)<span class="ct-r">'+fmtTr(sK)+'</span></div>'
+    +(K.length?'<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Dự án</th><th>Đợt</th><th>Hết hạn bảo hành</th><th class="num">Giá trị</th><th class="num">Còn giữ</th></tr></thead><tbody>'
+      +K.sort(function(a,b){ return (a.han||'9')>(b.han||'9')?1:-1; }).map(function(r){ return '<tr class="row-click" onclick="window._pjCode=\''+esc(r.da)+'\';window._pjTab=\'taichinh\';go(\'duanDetail\')"><td><b>'+esc(tenDA(r.da))+'</b></td><td>'+esc(r.x['Tên đợt']||'')+'</td><td>'+hanTxt(r.han)+'</td><td class="num">'+fmt(r.v)+'</td><td class="num"><b style="color:#5B3E8C">'+fmt(r.con)+'</b></td></tr>'; }).join('')
+      +'</tbody></table></div>':'<div class="empty">Không có khoản khách giữ lại.</div>')+'</div>';
+  html+='<div class="card"><div class="ct">🔒 MDC giữ lại của thầu phụ (phải hoàn)<span class="ct-r">'+fmtTr(sT)+'</span></div>'
+    +(T.length?'<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Thầu phụ</th><th>Dự án</th><th>Hợp đồng</th><th>Bảo hành</th><th>Hạn hoàn</th><th class="num">Đang giữ</th></tr></thead><tbody>'
+      +T.sort(function(a,b){ return (a.han||'9')>(b.han||'9')?1:-1; }).map(function(r){ return '<tr><td><b>'+esc(r.tp||'')+'</b></td><td>'+esc(tenDA(r.da))+'</td><td>'+esc(r.h['Số HĐ']||r.h['Mã HĐTP'])+'</td><td>'+r.thang+' tháng</td><td>'+hanTxt(r.han)+(r.uoc&&r.han?' <span class="muted" title="Ước tính từ lần chi cuối + thời hạn BH">(ước tính)</span>':'')+'</td><td class="num"><b>'+fmt(r.con)+'</b></td></tr>'; }).join('')
+      +'</tbody></table></div>':'<div class="empty">Không giữ lại của thầu phụ nào.</div>')+'</div>';
+  html+='<div class="rule">Khoản khách giữ là tiền của hợp đồng nhưng chỉ thu khi hết hạn bảo hành — CRM nhắc trước 30 ngày. Khoản MDC giữ của thầu phụ chỉ hoàn khi hết hạn bảo hành ghi trong hợp đồng thầu phụ và công trình không phát sinh lỗi.</div>';
+  return html;
+}
+/* ══════════════════ hết khối v8.1 ══════════════════ */
+
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toISOString().slice(0,10);
 function daysLeft(d){ if(!d) return null; return Math.ceil((new Date(d) - new Date(today())) / 86400000); }
@@ -8249,12 +8298,12 @@ function vFinance(){
     + '</div>';
 
   const tabs = [['thuchi','Thu và chi'],['tamung','Tạm ứng'],['congno','Công nợ phải thu'],
-                ['thukhac','Thu khác và vốn'],['lailo','Lãi/lỗ dự án'],['dutoan','Dự toán và chi phí']];
+                ['baohanh','Giữ lại bảo hành'],['thukhac','Thu khác và vốn'],['lailo','Lãi/lỗ dự án'],['dutoan','Dự toán và chi phí']];
   const cur = window._fnTab || 'thuchi';
   html += '<div class="fin-tabs">' + tabs.map(t=>
     '<button class="'+(cur===t[0]?'on':'')+'" onclick="window._fnTab=\''+t[0]+'\';render()">'+t[1]+'</button>').join('') + '</div>';
 
-  html += ({thuchi:finThuChi, tamung:finTamUng, congno:finCongNo,
+  html += ({thuchi:finThuChi, tamung:finTamUng, congno:finCongNo, baohanh:finBaoHanh,
             thukhac:finThuKhac, lailo:finLaiLo, dutoan:finDuToan}[cur] || finThuChi)(L);
   return html;
 }
@@ -8390,13 +8439,15 @@ function finCongNo(){
     {k:'Quá hạn >90',  f:x=>daysLeft(x['Ngày đến hạn'])<-90, hot:true}
   ];
   const tong = dot.reduce((a,x)=>a+con(x),0);
+  const laBHChua = x => pmLaBH(x) && !(x['Ngày đến hạn'] && daysLeft(x['Ngày đến hạn'])<0);   /* ★ v8.1 — giữ lại BH chưa đến hạn tách riêng */
+  const bhChua = dot.filter(laBHChua);
   let html = '<div class="age-grid">' + buckets.map(b=>{
-    const items = dot.filter(x=>x['Ngày đến hạn'] && b.f(x));
+    const items = dot.filter(x=>x['Ngày đến hạn'] && b.f(x) && !laBHChua(x));
     const v = items.reduce((a,x)=>a+con(x),0);
     return '<div class="age '+(b.hot&&v?'hot':'')+'"><div class="al">'+b.k+'</div>'
       + '<div class="av" style="color:'+(b.hot&&v?'var(--bad)':'inherit')+'">'+fmtTr(v)+'</div>'
       + '<div class="an">'+items.length+' đợt</div></div>';
-  }).join('') + '</div>';
+  }).join('') + (bhChua.length?'<div class="age" style="cursor:pointer" onclick="window._fnTab=\'baohanh\';render()"><div class="al">🛡 Giữ lại BH</div><div class="av" style="color:#5B3E8C">'+fmtTr(bhChua.reduce((a,x)=>a+con(x),0))+'</div><div class="an">'+bhChua.length+' đợt · chưa đến hạn</div></div>':'') + '</div>';
 
   if(!dot.length) return html+'<div class="empty"><b>Không có công nợ phải thu 🎉</b>Tất cả đợt thanh toán đã thu đủ</div>';
 
@@ -11800,6 +11851,9 @@ function dataHealth(){
   const R = [];
   const add = (mucdo, nhom, tieude, mota, n, fix, ct) => R.push({mucdo, nhom, tieude, mota, n, fix, ct});
   try{ pmKiemTraChuanHoa(add); }catch(e){ console.warn('pmKiemTraChuanHoa', e); }   /* ★ v8.0 */
+  try{ const bhQH=pmBHKhach().filter(r=>r.han && daysLeft(r.han)<0);   /* ★ v8.1 */
+    if(bhQH.length) add('cao','Tài chính','Tiền giữ lại bảo hành đã hết hạn nhưng chưa thu','Đã hết thời hạn bảo hành — lập biên bản hết bảo hành và đề nghị khách thanh toán.', bhQH.length, null,
+      bhQH.map(r=>esc(r.da)+' · '+esc(r.x['Tên đợt']||'')+' · hết hạn '+fmtDMY(r.han)+' · '+fmtTr(r.con))); }catch(e){}
 
   /* --- 1. Bản ghi mồ côi: trỏ vào dự án không tồn tại --- */
   const maDA = new Set(S.duan.map(d=>d['Mã DA']));
