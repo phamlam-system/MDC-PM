@@ -1766,14 +1766,14 @@ function sdtChuan(p){
   return raw.split(/\s*[\/;,|]\s*|\s+-\s+/).filter(Boolean).map(function(x){ var d=x.replace(/[^0-9]/g,''); return d.length<8?x.trim():chuanSDT(x); }).filter(Boolean).join(' / ');
 }
 function laKhoaSDT(k){ return /^(sđt|sdt|số điện thoại|điện thoại|phone)\b|sđt khách|sđt kh\b|điện thoại khách/i.test(String(k||'').trim()); }
-function laCotSo(h){ var k=String(h||'').trim(); if(/\(đ\)\s*$/i.test(k) || /^(đơn giá|thành tiền|tổng tiền|số tiền)( ước tính)?$/i.test(k)) return 'tien'; if(/%/.test(k)) return 'pct'; return ''; }
+function laCotSo(h){ var k=String(h||'').trim(); if(/\(đ\)\s*$/i.test(k) || /^(đơn giá|thành tiền|tổng tiền|số tiền)( ước tính)?$/i.test(k)) return 'tien'; if(/%/.test(k)) return 'pct'; if(/\((ngày|tháng|giờ)\)\s*$/i.test(k)) return 'nguyen'; return ''; }   /* ★ v8.9 */
 function soVN(v){
   if(typeof v==='number') return isFinite(v)?v:null;
   if(v===''||v==null) return null;
   var s=String(v).trim().toLowerCase().replace(/\s+/g,''), nhan=1;
   var m=s.match(/^(-?[\d.,]+)(tỷ|ty|tỉ|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)$/);
   if(m){ s=m[1]; nhan=/^t[yỷỉ]/.test(m[2])?1e9:/^tr/.test(m[2])?1e6:1e3; }
-  s=s.replace(/(đồng|dong|vnđ|vnd|đ|₫|%)$/,'');
+  s=s.replace(/(đồng|dong|vnđ|vnd|đ|₫|%|ngày|ngay|tháng|thang|giờ|gio)$/,'');
   if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s=s.replace(/\./g,'').replace(',','.');
   else if(/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s=s.replace(/,/g,'');
   else if(/^-?\d+,\d+$/.test(s)) s=s.replace(',','.');
@@ -1800,6 +1800,17 @@ var PM_TT = {
   bienban:[TT_BB,{'huy':'Đã hủy','ban nhap':'Nháp','khong dat yeu cau':'Không đạt','dat yeu cau':'Đạt'}],
   anToanCL:[TT_AT,{'moi':'Ghi nhận','da dong':'Đóng'}]
 };
+/* ★ v8.9 — lựa chọn khác (giống backend v6.31 & CRM v9.76) */
+var PM_TT_KHAC={
+  'Cách tính ngày':[['Lịch (cả CN, lễ)','Trừ Chủ nhật','Trừ CN & ngày lễ'],
+    {'lich':'Lịch (cả CN, lễ)','ngay lich':'Lịch (cả CN, lễ)','lich ca cn le':'Lịch (cả CN, lễ)','tinh ca chu nhat ngay le':'Lịch (cả CN, lễ)','tinh ca chu nhat va ngay le':'Lịch (cả CN, lễ)','ca cn le':'Lịch (cả CN, lễ)',
+     'tru cn':'Trừ Chủ nhật','khong tinh chu nhat':'Trừ Chủ nhật','khong tinh cn':'Trừ Chủ nhật','tru chu nhat':'Trừ Chủ nhật',
+     'tru cn le':'Trừ CN & ngày lễ','tru cn va ngay le':'Trừ CN & ngày lễ','tru chu nhat va ngay le':'Trừ CN & ngày lễ','tru chu nhat ngay le':'Trừ CN & ngày lễ','khong tinh chu nhat va ngay le':'Trừ CN & ngày lễ','khong tinh chu nhat ngay le':'Trừ CN & ngày lễ','ngay lam viec':'Trừ CN & ngày lễ'}],
+  'Giá nhập theo':[['Gồm VAT','Chưa gồm VAT'],
+    {'da gom vat':'Gồm VAT','bao gom vat':'Gồm VAT','co vat':'Gồm VAT','gom thue':'Gồm VAT','sau thue':'Gồm VAT','gom':'Gồm VAT',
+     'chua vat':'Chưa gồm VAT','chua bao gom vat':'Chưa gồm VAT','chua gom thue':'Chưa gồm VAT','truoc thue':'Chưa gồm VAT','khong vat':'Chưa gồm VAT','chua':'Chưa gồm VAT'}]
+};
+function pmNgayISO(v){ var m=String(v||'').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/); if(!m) return ''; var d=+m[1], mo=+m[2]; if(mo<1||mo>12||d<1||d>31) return ''; return m[3]+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
 var PM_TT_DUYET=[['Chờ duyệt','Đã duyệt','Từ chối'],{'da phe duyet':'Đã duyệt','duyet':'Đã duyệt','khong duyet':'Từ chối','cho phe duyet':'Chờ duyệt'}];
 var PM_TEN_BANG={duan:'Dự án',congviec:'Công việc',thanhtoan:'Đợt thu tiền',ttthauphu:'Thanh toán thầu phụ',hdthauphu:'HĐ thầu phụ',tamung:'Tạm ứng',thaubo:'Nhà thầu phụ',lichhen:'Lịch hẹn',muasam:'Mua sắm',yeucaumua:'Yêu cầu mua',bangluong:'Bảng lương',phatsinh:'Phát sinh HĐ',khongPH:'Sự không phù hợp',ruiro:'Rủi ro',hosoTL:'Hồ sơ tài liệu',bienban:'Biên bản',anToanCL:'An toàn & CL',chiphi:'Chi phí',nhansu:'Nhân sự',thukhac:'Thu khác'};
 function pmTTChuan(t, v){
@@ -1816,7 +1827,10 @@ function pmChuanHoaDuLieu(){
       Object.keys(r).forEach(function(k){ var v=r[k]; if(v===''||v==null) return;
         if(laKhoaSDT(k)){ var p=sdtChuan(v); if(p!==String(v)){ r[k]=p; bc.sdt++; } return; }
         var ls=laCotSo(k);
-        if(ls){ if(typeof v==='number') return; var n=soVN(v); if(n!==null){ r[k]=ls==='tien'?Math.round(n):Math.round(n*100)/100; bc.tien++; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'"'); } return; }
+        if(typeof v==='string' && /^ngày/i.test(k)){ var iso=pmNgayISO(v); if(iso){ r[k]=iso; bc.ngay=(bc.ngay||0)+1; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'" → '+iso); } return; }   /* ★ v8.9 */
+        if(typeof v==='string' && (k==='Số HĐ'||k==='Số hợp đồng')){ var sc=v.replace(/\s+/g,' ').trim(); if(sc!==v){ r[k]=sc; bc.soHD=(bc.soHD||0)+1; } return; }
+        if(PM_TT_KHAC[k]){ var xk=pmTTChuan(PM_TT_KHAC[k],v); if(xk[0]!==v){ r[k]=xk[0]; bc.tt++; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'" → '+xk[0]); } if(!xk[1]){ var kk2=bang+'|'+k+'|'+xk[0]; bc.la[kk2]=(bc.la[kk2]||0)+1; } return; }
+        if(ls){ if(typeof v==='number') return; var n=soVN(v); if(n!==null){ r[k]=(ls==='tien'||ls==='nguyen')?Math.round(n):Math.round(n*100)/100; bc.tien++; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'"'); } return; }
         var t=(k==='Trạng thái')?PM_TT[bang]:(k==='Trạng thái duyệt')?PM_TT_DUYET:null; if(!t) return;
         var x=pmTTChuan(t,v); if(x[0]!==v){ r[k]=x[0]; bc.tt++; if(bc.vd.length<12) bc.vd.push((PM_TEN_BANG[bang]||bang)+' · '+k+': "'+v+'" → '+x[0]); }
         if(!x[1]){ var kk=bang+'|'+k+'|'+x[0]; bc.la[kk]=(bc.la[kk]||0)+1; }
@@ -1824,6 +1838,11 @@ function pmChuanHoaDuLieu(){
     });
   });
   (S.leads||[]).forEach(function(l){ if(l && l.sdt){ var p=sdtChuan(l.sdt); if(p!==String(l.sdt)){ l.sdt=p; } } });
+  try{ var st=(S.pmkv||{}).khc; if(st && typeof st==='object') Object.keys(st).forEach(function(ma){ var k=st[ma]; if(!k || typeof k!=='object') return;   /* ★ v8.9 — kế hoạch chung */
+    if(k.hd_mode){ var x=pmTTChuan(PM_TT_KHAC['Cách tính ngày'],k.hd_mode); if(x[0]!==k.hd_mode){ k.hd_mode=x[0]; bc.khc=(bc.khc||0)+1; } }
+    if(k.tienDoHD!==undefined && k.tienDoHD!=='' && typeof k.tienDoHD==='string'){ var nn=soVN(k.tienDoHD); if(nn!==null && String(Math.round(nn))!==k.tienDoHD){ k.tienDoHD=String(Math.round(nn)); bc.khc=(bc.khc||0)+1; } }
+    ['ngayKy','htHD'].forEach(function(f){ if(typeof k[f]==='string'){ var i=pmNgayISO(k[f]); if(i){ k[f]=i; bc.khc=(bc.khc||0)+1; } } });
+    if(typeof k.soHD==='string'){ var s2=k.soHD.replace(/\s+/g,' ').trim(); if(s2!==k.soHD){ k.soHD=s2; bc.khc=(bc.khc||0)+1; } } }); }catch(_e){}
   window.__pmBC=bc; return bc;
 }
 /* Ghi: chuẩn hóa SĐT trong bản ghi trước khi gửi (tiền/trạng thái backend v6.24 tự chuẩn khi lưu) */
@@ -1841,9 +1860,12 @@ function pmKiemTraChuanHoa(add){
   if(chuaLK.length) add('cao','Toàn vẹn','Dự án chưa liên kết khách hàng CRM','Thiếu "Mã KH (CRM)" hoặc mã không có bên CRM → báo cáo doanh thu CRM không gắn được về khách, hợp đồng/đợt thu không khớp.', chuaLK.length, null,
     chuaLK.map(function(d){ return esc(d['Mã DA'])+' · '+esc(d['Tên dự án']||'')+(d['Mã KH (CRM)']?' · mã lạ <code>'+esc(d['Mã KH (CRM)'])+'</code>':' · (trống)'); }));
   var bc=window.__pmBC||{tt:0,tien:0,sdt:0,la:{},vd:[]};
-  var tong=(bc.tien||0)+(bc.tt||0)+(bc.sdt||0);
+  var tong=(bc.tien||0)+(bc.tt||0)+(bc.sdt||0)+(bc.ngay||0)+(bc.soHD||0);
   if(tong) add('vua','Chuẩn hóa','Tiền dạng chữ · trạng thái viết lệch · SĐT mất số 0 trên Google Sheet','PM đã tự hiểu đúng khi tải về. Bấm "Xử lý" để sửa tận gốc trên Sheet (máy chủ tự sao lưu trước khi ghi).', tong, 'pmSuaSheet',
-    ['<b>'+bc.tien+'</b> ô tiền dạng chữ · <b>'+bc.tt+'</b> trạng thái lệch · <b>'+bc.sdt+'</b> SĐT'].concat(bc.vd.map(esc)));
+    ['<b>'+bc.tien+'</b> ô số/tiền dạng chữ · <b>'+bc.tt+'</b> trạng thái/lựa chọn lệch · <b>'+bc.sdt+'</b> SĐT · <b>'+(bc.ngay||0)+'</b> ô ngày dd/mm/yyyy · <b>'+(bc.soHD||0)+'</b> số HĐ thừa khoảng trắng'].concat(bc.vd.map(esc)));
+  var lechK=pmLechKhcCRM();   /* ★ v8.9 */
+  if(lechK.length) add('vua','Liên thông','Kế hoạch chung lệch hợp đồng CRM (ngày ký · số HĐ · tiến độ · cách tính)','Hợp đồng bên CRM đã đổi nhưng ô nhập tay trong Kế hoạch chung vẫn giữ giá trị cũ. "Xử lý" = lấy theo CRM và tính lại ngày hoàn thành.', lechK.length, can('edit')?'pmDongBoKhcCRM':null,
+    lechK.map(function(x){ return esc(x.d['Mã DA'])+' · '+esc(x.d['Tên dự án']||'')+' · '+x.ds.map(function(y){ return esc(y.t)+': <code>'+esc(y.cu||'(trống)')+'</code> → <b>'+esc(y.moi)+'</b>'; }).join(' · '); }));
   var la=Object.keys(bc.la||{});
   if(la.length) add('vua','Chuẩn hóa','Trạng thái lạ (không có trong danh sách chuẩn)','Bị rớt khỏi mọi bộ lọc/tổng hợp vì app so khớp đúng từng chữ. Sửa tay trên Sheet về một trạng thái chuẩn.', la.reduce(function(a,k){ return a+bc.la[k]; },0), null,
     la.map(function(k){ var p=k.split('|'), t=(p[1]==='Trạng thái duyệt')?PM_TT_DUYET:PM_TT[p[0]]; return esc(PM_TEN_BANG[p[0]]||p[0])+' · '+esc(p[1])+': "<b>'+esc(p[2])+'</b>" × '+bc.la[k]+' <span class="muted">— chuẩn: '+esc(t[0].join(' · '))+'</span>'; }));
@@ -2183,6 +2205,26 @@ function pmApNgayKyCRM(){
   return n;
 }
 /* ══════════════════ hết khối v8.6 ══════════════════ */
+/* ══════════════════ ★ v8.9 — CHUẨN HÓA ĐỒNG BỘ VỚI CRM v9.76 / BACKEND v6.31 ══════════════════ */
+function pmLechKhcCRM(){
+  var st=khcStore()||{}, out=[];
+  (S.duan||[]).forEach(function(d){ var h=pmHDChinh(d), k=st[d['Mã DA']]; if(!h || !k || typeof k!=='object') return; var ds=[];
+    var so=String(h['Số HĐ']||'').replace(/\s+/g,' ').trim(), nk=pbNgay(h['Ngày ký']), td=Number(h['Tiến độ (ngày)'])||0, m=h['Cách tính ngày']||'';
+    if(so && k.soHD!==undefined && String(k.soHD).trim() && String(k.soHD).trim()!==so) ds.push({f:'soHD',t:'Số HĐ',cu:k.soHD,moi:so});
+    if(nk && k.ngayKy!==undefined && k.ngayKy && pbNgay(k.ngayKy)!==nk) ds.push({f:'ngayKy',t:'Ngày ký',cu:fmtDMY(pbNgay(k.ngayKy)),moi:fmtDMY(nk),v:nk});
+    if(td && k.tienDoHD!==undefined && String(k.tienDoHD)!=='' && Number(k.tienDoHD)!==td) ds.push({f:'tienDoHD',t:'Tiến độ',cu:k.tienDoHD+' ngày',moi:td+' ngày',v:String(td)});
+    if(m && KHC_MODES.includes(m) && k.hd_mode && k.hd_mode!==m) ds.push({f:'hd_mode',t:'Cách tính',cu:k.hd_mode,moi:m});
+    if(ds.length) out.push({d:d, ds:ds}); });
+  return out;
+}
+function pmDongBoKhcCRM(){
+  if(!can('edit')) return toast('Không có quyền sửa kế hoạch', true);
+  var L=pmLechKhcCRM(), st=khcStore(); if(!L.length) return toast('Kế hoạch chung đã khớp CRM');
+  L.forEach(function(x){ var k=st[x.d['Mã DA']]; x.ds.forEach(function(y){ k[y.f]=(y.v!==undefined?y.v:y.moi); if(y.f==='soHD') ksSetSoHD(x.d['Mã DA'], y.moi); }); k.__tinhLai='1'; });
+  khcSaveStore(st); var n=pmApNgayKyCRM();
+  toast('✓ Đồng bộ '+L.length+' dự án theo hợp đồng CRM'+(n?' · cập nhật '+n+' ngày hoàn thành':'')); render();
+}
+/* ══════════════════ hết khối v8.9 ══════════════════ */
 
 
 
@@ -2517,8 +2559,8 @@ function holDel(iso){ holSave(holList().filter(x=>x!==iso)); if(window.__holRend
 const KHC_CHUNG = [
   {leaf:'Số hợp đồng',       key:'soHD',     t:'text'},
   {leaf:'Ngày ký',           key:'ngayKy',   t:'date', def:d=>pmNgayKyCRM(d)||d['Ngày ký']||d['Ngày bắt đầu']||''},   /* ★ v8.6 — lấy ngày ký HĐ từ CRM */
-  {leaf:'Tiến độ HĐ (ngày)', key:'tienDoHD', t:'num',  def:d=>{const a=d['Ngày bắt đầu'],b=d['Ngày kết thúc DK']; return (a&&b)?Math.max(0,ksDiff(a,b)):'';}},
-  {leaf:'Cách tính ngày',    key:'hd_mode',  t:'sel', opts:KHC_MODES, def:()=>KHC_MODES[0]},
+  {leaf:'Tiến độ HĐ (ngày)', key:'tienDoHD', t:'num',  def:d=>{const h=pmHDChinh(d); if(h && Number(h['Tiến độ (ngày)'])>0) return String(Number(h['Tiến độ (ngày)'])); const a=d['Ngày bắt đầu'],b=d['Ngày kết thúc DK']; return (a&&b)?Math.max(0,ksDiff(a,b)):'';}},   /* ★ v8.8 — ưu tiên tiến độ HĐ ở CRM */
+  {leaf:'Cách tính ngày',    key:'hd_mode',  t:'sel', opts:KHC_MODES, def:d=>{const h=pmHDChinh(d); return (h && KHC_MODES.includes(h['Cách tính ngày']))?h['Cách tính ngày']:KHC_MODES[0];}},   /* ★ v8.8 */
   {leaf:'Hoàn thành HĐ (tính)', key:'htHD',  t:'calc'},
   {leaf:'Số ngày TH',        key:'soNgayTH', t:'calc'},
   {leaf:'Số ngày còn lại',   key:'soNgayCL', t:'calc'}
@@ -2617,7 +2659,8 @@ function khcCalc(d){
   const tienDo = Number(khcVal(d, khcColByKey('tienDoHD')))||0;
   const mode   = khcVal(d, khcColByKey('hd_mode')) || KHC_MODES[0];
   // Hoàn thành HĐ = ngày ký + tiến độ (theo cách tính); nếu thiếu → dùng giá trị nhập tay/ngày kết thúc DK
-  let htHD = (ngayKy && tienDo>0) ? khcAddDays(ngayKy, tienDo, mode) : '';
+  let _bd = ngayKy; try{ const _h=pmHDChinh(d); if(_h && pbNgay(_h['Ngày bắt đầu TH']) && pbNgay(_h['Ngày ký'])===pbNgay(ngayKy)) _bd=pbNgay(_h['Ngày bắt đầu TH']); }catch(e){}   /* ★ v8.8 — CRM có ngày bắt đầu tính tiến độ */
+  let htHD = (_bd && tienDo>0) ? khcAddDays(_bd, tienDo, mode) : '';
   if(!htHD){ const raw=khcRaw(ma,'htHD'); htHD = (raw!==undefined && raw!=='') ? raw : (d['Ngày kết thúc DK']||''); }
   const soNgayTH = ngayKy?Math.max(0,ksDiff(ngayKy,today())):'';
   const soNgayCL = htHD?ksDiff(today(),htHD):'';
