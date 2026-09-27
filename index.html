@@ -1540,6 +1540,7 @@ async function syncAll(manual){
         Object.keys(localKV).forEach(function(k){ if(j.pmkv[k]===undefined && localKV[k]!=null) pmkvSet(k, localKV[k]); });
       } else { S.pmkv = S.pmkv || {}; }
       try{ pmChuanHoaDuLieu(); }catch(_e){ console.warn('chuẩn hóa', _e); }   /* ★ v8.0 */
+      try{ pmApDungDonVi(); }catch(_e){}   /* ★ v8.2 — hồ sơ đơn vị */
       store.saveState();
       setSync('ok','Đồng bộ ' + new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}));
       if(user) render();
@@ -1940,6 +1941,31 @@ function finBaoHanh(){
   return html;
 }
 /* ══════════════════ hết khối v8.1 ══════════════════ */
+
+/* ══════════════════ ★ v8.2 — HỒ SƠ ĐƠN VỊ (đọc từ Google Sheet · sửa ở CRM → Cài đặt) ══════════════════ */
+var PM_DV_DEF={loaiHinh:'congty', ten:'CÔNG TY TNHH NỘI THẤT MỘC ĐÔNG CHÂU', tenTM:'MDC Interior', tenGoi:'Mộc Đông Châu', vietTat:'MDC', slogan:'Thiết kế · Sản xuất · Thi công nội thất', logo:'', diaChi:'', dienThoai:'', email:'', website:'', mst:'', daiDien:'', chucVu:'', taiKhoan:'', nganHang:'', chiNhanh:'', tenPM:'Quản lý dự án', tenPortal:'Cổng khách hàng'};
+function pmDV(){ var o={}, s=(S.pmkv&&(S.pmkv.don_vi||S.pmkv.crm_company))||{}; Object.keys(PM_DV_DEF).forEach(function(k){ o[k]=(s[k]!=null&&s[k]!=='')?s[k]:PM_DV_DEF[k]; }); Object.keys(s).forEach(function(k){ if(o[k]==null) o[k]=s[k]; }); return o; }
+function pmDVMark(){ var d=pmDV(); return d.logo?'<img src="'+esc(d.logo)+'" alt="" style="width:100%;height:100%;object-fit:contain">':esc(String(d.vietTat||'M').charAt(0)); }
+function pmApDungDonVi(){
+  var d=pmDV();
+  try{ document.title=(d.vietTat||'')+' · '+d.tenPM; }catch(e){}
+  document.querySelectorAll('#loginScreen .tag, .side-brand .tag').forEach(function(e){ e.textContent=d.tenGoi||d.tenTM; });
+  var h1=document.querySelector('#loginScreen h1'); if(h1) h1.textContent=d.tenPM+' '+(d.vietTat||'')+'-PM';
+  var nm=document.querySelector('.side-brand .name'); if(nm) nm.textContent=(d.vietTat||'')+'-PM';
+  var sub=document.querySelector('#loginScreen .sub'); if(sub) sub.textContent=d.slogan||'';
+  document.querySelectorAll('.login-mark .mark-block, .side-brand .mark-block').forEach(function(e){ e.innerHTML=pmDVMark(); if(d.logo){ e.style.background='#fff'; e.style.padding='3px'; } });
+}
+function pmDVCard(){
+  var d=pmDV(), dong=function(l,v){ return '<div style="display:flex;gap:10px;font-size:13px;padding:3px 0"><span class="muted" style="min-width:130px">'+l+'</span><b style="font-weight:600">'+(v?esc(v):'<span class="muted" style="font-weight:400">— chưa nhập —</span>')+'</b></div>'; };
+  return '<div class="card"><div class="card-head"><h3>🏢 Hồ sơ đơn vị</h3></div><div class="card-body">'
+    +'<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><div style="width:54px;height:54px;border-radius:10px;background:var(--ink,#2B211A);color:#D4AF6A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;overflow:hidden;'+(d.logo?'background:#fff;border:1px solid var(--line)':'')+'">'+pmDVMark()+'</div><div><b>'+esc(d.tenTM)+'</b><div class="muted" style="font-size:12px">'+esc(d.slogan||'')+'</div></div></div>'
+    +dong('Loại hình',({congty:'Công ty / Doanh nghiệp',hokd:'Hộ kinh doanh',canhan:'Cá nhân'})[d.loaiHinh||'congty'])
+    +dong(d.loaiHinh==='canhan'?'Họ và tên':d.loaiHinh==='hokd'?'Tên hộ kinh doanh':'Tên pháp lý',d.ten)+dong(d.loaiHinh==='hokd'?'Mã số hộ KD':d.loaiHinh==='canhan'?'Số định danh (MST)':'Mã số thuế',d.mst)+dong(d.loaiHinh==='canhan'?'Địa chỉ thường trú':'Địa chỉ',d.diaChi)+(d.loaiHinh==='canhan'?'':dong(d.loaiHinh==='hokd'?'Chủ hộ':'Người đại diện',d.daiDien?(d.daiDien+(d.chucVu&&d.loaiHinh!=='hokd'?' — '+d.chucVu:'')):''))+dong('Hotline',d.dienThoai)+dong('Tài khoản',d.taiKhoan?(d.taiKhoan+' · '+d.nganHang+(d.chiNhanh?' – '+d.chiNhanh:'')):'')
+    +'<p class="muted" style="margin-top:10px;font-size:12px">Dữ liệu tham chiếu dùng chung toàn hệ thống — chỉnh sửa tại <b>CRM → Cài đặt → Dữ liệu tham chiếu của đơn vị</b> (Admin). PM tự cập nhật khi đồng bộ.</p></div></div>';
+}
+function pmDVDocHead(){ var d=pmDV(); return (d.logo?'<img src="'+esc(d.logo)+'" style="height:34px;max-width:140px;object-fit:contain;vertical-align:middle;margin-right:8px">':'')+esc(String(d.ten).toUpperCase()); }
+/* ══════════════════ hết khối v8.2 ══════════════════ */
+
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toISOString().slice(0,10);
@@ -3068,12 +3094,12 @@ function khsxPrint(da){
   list.forEach((x,i)=>{ const r=x.r; body+='<tr><td>'+(i+1)+'</td><td class="l">'+esc(x.d['Tên dự án']||x.d['Mã DA'])+'</td>'
     + cols.map(c=>{ let v=(r[c.key]==null)?'':r[c.key]; if(c.t==='date'&&v)v=fmtDMY(v); if(c.key==='pct'&&v!=='')v=v+'%'; return '<td'+(c.cls==='ks-name'?' class="l"':'')+'>'+esc(v)+'</td>'; }).join('')+'</tr>'; });
   const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại', true); return; }
-  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Phân bổ & Kế hoạch sản xuất — MDC</title>'
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Phân bổ & Kế hoạch sản xuất — '+esc(pmDV().vietTat)+'</title>'
     + '<style>@page{size:A1 landscape;margin:7mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:8px;color:#222;margin:0}'
     + 'h2{margin:0 0 2px;color:#7A5A2E;font-size:15px} .sub{color:#666;font-size:10px;margin-bottom:6px}'
     + 'table{border-collapse:collapse;width:100%} th,td{border:1px solid #9a9a9a;padding:2px 3px;text-align:center;vertical-align:middle;white-space:nowrap}'
     + 'thead th{background:#F0E9DB;color:#5A4A2E} td.l{text-align:left} tbody tr:nth-child(even){background:#FAF7F1}</style></head><body>'
-    + '<h2>PHÂN BỔ & KẾ HOẠCH SẢN XUẤT — MDC (Mộc Đông Châu)</h2>'
+    + '<h2>PHÂN BỔ & KẾ HOẠCH SẢN XUẤT — '+esc(pmDV().vietTat)+' ('+esc(pmDV().tenGoi)+')</h2>'
     + '<div class="sub">'+(da?('Dự án: '+esc(projName(da))+' · '):'')+'Ngày in: '+fmtDMY(today())+' · '+list.length+' hạng mục</div>'
     + '<table><thead>'+h1+h2+'</thead><tbody>'+body+'</tbody></table></body></html>');
   w.document.close(); w.focus(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 400);
@@ -3699,12 +3725,12 @@ function ksPrint(){
   });
   const w=window.open('','_blank');
   if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại', true); return; }
-  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Kế hoạch chung các dự án — MDC</title>'
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Kế hoạch chung các dự án — '+esc(pmDV().vietTat)+'</title>'
     + '<style>@page{size:A2 landscape;margin:8mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:8.5px;color:#222;margin:0}'
     + 'h2{margin:0 0 2px;color:#7A5A2E;font-size:15px} .sub{color:#666;font-size:10px;margin-bottom:6px}'
     + 'table{border-collapse:collapse;width:100%} th,td{border:1px solid #9a9a9a;padding:2px 3px;text-align:center;vertical-align:middle;white-space:nowrap}'
     + 'thead th{background:#F0E9DB;color:#5A4A2E} td.l{text-align:left} tbody tr:nth-child(even){background:#FAF7F1}</style></head><body>'
-    + '<h2>KẾ HOẠCH CHUNG CÁC DỰ ÁN — MDC (Mộc Đông Châu)</h2>'
+    + '<h2>KẾ HOẠCH CHUNG CÁC DỰ ÁN — '+esc(pmDV().vietTat)+' ('+esc(pmDV().tenGoi)+')</h2>'
     + '<div class="sub">Ngày in: '+fmtDMY(today())+' · '+list.length+' dự án</div>'
     + '<table><thead>'+h1+h2+'</thead><tbody>'+body+'</tbody></table></body></html>');
   w.document.close(); w.focus();
@@ -5194,7 +5220,7 @@ function gvPrintCore(p){
   const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại',true); return; }
   const esc2=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   let body='<h2>BẢNG GIAO VIỆC</h2>'
-    + '<div class="sub">CÔNG TY MỘC ĐÔNG CHÂU (MDC) · Thiết kế – Sản xuất – Thi công nội thất</div>'
+    + '<div class="sub">'+esc2(String(pmDV().ten).toUpperCase())+(pmDV().vietTat?' ('+esc2(pmDV().vietTat)+')':'')+' · '+esc2(pmDV().slogan||'')+'</div>'
     + '<table class="meta"><tr><td><b>Dự án:</b> '+esc2(d['Tên dự án']||ma)+'</td><td><b>'+esc2(doiTuong)+'</b></td></tr>'
     + '<tr><td><b>Người giao việc:</b> '+esc2(nguoiGiao||'……………………')+'</td><td><b>Ngày giao:</b> '+esc2(fmtDMY(ngayGiao))+'</td></tr></table>';
   body+='<table class="main"><thead><tr><th style="width:34px">STT</th><th>Hạng mục</th><th style="width:80px">ĐVT/SL</th><th style="width:150px">Thời gian</th>'+(mode==='bp'?'<th style="width:110px">Người thực hiện</th>':'')+'<th>Nội dung / yêu cầu</th><th style="width:70px">Xác nhận</th></tr></thead><tbody>';
@@ -6810,7 +6836,7 @@ function blCalc(){
 /* ---------- Trang Cài đặt ---------- */
 function vSettings(){
   const pend = store.pending.length;
-  return '<div class="card"><div class="card-head"><h3>Kết nối Google Sheets</h3></div><div class="card-body">'
+  return pmDVCard() + '<div class="card"><div class="card-head"><h3>Kết nối Google Sheets</h3></div><div class="card-body">'
     + '<div class="field"><label>URL Apps Script (kết thúc bằng /exec)</label><input id="apiUrlInput" value="'+esc(store.api)+'" placeholder="https://script.google.com/macros/s/…/exec"></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-brass" onclick="saveApi()">Lưu & kiểm tra kết nối</button>'
     + '<button class="btn btn-ghost" onclick="syncAll(true)">Đồng bộ ngay</button></div>'
@@ -7382,7 +7408,7 @@ function formTask(code){
   const roBanner = readOnly ? '<div style="background:#FBF4E6;border:1px solid var(--brass-soft);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:10px;font-size:13px;color:var(--brass-deep)">👁️ Chế độ chỉ xem — chỉ người phụ trách dự án này mới được cập nhật công việc.</div>' : '';
   openModal(isNew ? 'Giao việc mới' : 'Công việc ' + code,
     roBanner
-    + (isNew ? '<div class="field"><label>⚡ Chọn nhanh từ thư viện công việc chuẩn MDC</label>'
+    + (isNew ? '<div class="field"><label>⚡ Chọn nhanh từ thư viện công việc chuẩn '+esc(pmDV().vietTat)+'</label>'
         + selTVTask('tvPick', (S.duan.find(x=>x['Mã DA']===(window._ftp||''))||{})['Loại hình']||'')
         + '<div class="tv-hint" id="tvHint"></div></div>' : '')
     + fld('Tên công việc *', inp('tTen', c?.['Tên công việc'],'text','vd: Shop drawing tủ bếp tầng 1'))
@@ -9152,7 +9178,7 @@ function vBaoCaoPB(){
 function rpPrint(){
   const rg=rpRange(); const k=window._rpDept||'all';
   const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại',true); return; }
-  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo '+esc(rpDeptTen(k))+' — MDC</title>'
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo '+esc(rpDeptTen(k))+' — '+esc(pmDV().vietTat)+'</title>'
     + '<style>@page{size:A4;margin:12mm} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#222;margin:0}'
     + 'h2{margin:0 0 2px;color:#6b4e22} h3{color:#6b4e22;margin:14px 0 6px} h4{margin:12px 0 5px;color:#4a3c22} .sub{color:#666;font-size:11px;margin-bottom:10px}'
     + 'table{border-collapse:collapse;width:100%;margin:6px 0;font-size:11px} th,td{border:1px solid #bbb;padding:4px 6px;text-align:left} th{background:#f0e9db;color:#5a4a2e} .num{text-align:right} .muted{color:#666}'
@@ -9330,7 +9356,7 @@ function bbPrint(code){
     ['Thành phần tham gia', x['Thành phần tham gia']||'—']
   ];
   const html='<div class="doc-print">'
-    + '<div class="doc-head"><div class="doc-org">CÔNG TY MDC – MỘC ĐÔNG CHÂU</div><div class="doc-sub">Thiết kế · Sản xuất · Thi công nội thất</div></div>'
+    + '<div class="doc-head"><div class="doc-org">'+pmDVDocHead()+'</div><div class="doc-sub">'+esc(pmDV().slogan||'')+(pmDV().diaChi?' · '+esc(pmDV().diaChi):'')+(pmDV().dienThoai?' · ĐT: '+esc(pmDV().dienThoai):'')+'</div></div>'
     + '<h1 class="doc-title">BIÊN BẢN NGHIỆM THU</h1>'
     + '<div class="doc-loai">'+esc(x['Loại biên bản']||'')+'</div>'
     + '<table class="doc-info">'+rowsInfo.map(r=>'<tr><td class="k">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table>'
@@ -10789,6 +10815,7 @@ function tempCode(prefix, arr, field){
 (function init(){
   store.loadState();
   try{ pmChuanHoaDuLieu(); }catch(_e){}   /* ★ v8.0 */
+  try{ pmApDungDonVi(); }catch(_e){}   /* ★ v8.2 */
   pmkvMigrate();   // ★ v5.6 — chuyển dữ liệu kế hoạch cũ (localStorage) vào S.pmkv một lần
   // Phiên đăng nhập cũ
   const ses = store.session;
